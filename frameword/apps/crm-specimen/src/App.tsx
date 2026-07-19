@@ -14,7 +14,7 @@ import { BlockDemo } from "./BlockDemo";
 import { CanvasBoard, NodeInspector, EdgeInspector, board, boardFromPrompt } from "./CanvasBoard";
 import { BlockLive } from "./BlockLive";
 import { ProfileBody, AvatarBubble, useProfile } from "./Profile";
-import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, notesApp, useNotesApp } from "./NotesApp";
+import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, FolderPanel, notesApp, useNotesApp } from "./NotesApp";
 
 /* ── registry : width belongs to the KIND, not the user ──────────────── */
 const REGISTRY: PanelRegistry = {
@@ -38,6 +38,7 @@ const REGISTRY: PanelRegistry = {
   blocklive: { size: "XL" },
   profile: { size: "M" },
   notes: { size: "M" },
+  notefolder: { size: "M" },
   tasks: { size: "XL" },
   note: { size: "M" },
   task: { size: "S" },
@@ -121,6 +122,7 @@ const titleOfKey = (key: string): string =>
   (key.startsWith("cvn:") ? board.node(key.slice(4))?.label ?? "Node"
     : key.startsWith("cve:") ? (board.edge(key.slice(4))?.label || "Connection")
     : key.startsWith("nte:") ? (notesApp.note(key.slice(4))?.title || "Note")
+    : key.startsWith("nfd:") ? (notesApp.folder(key.slice(4))?.name || "Folder")
     : key.startsWith("tsk:") ? (notesApp.task(key.slice(4))?.label || "Task")
     : key);
 
@@ -639,10 +641,11 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   const be = p.target.panelType === "canvasedge" ? board.edge(p.target.resourceKey.slice(4)) : null;
   const nt = p.target.panelType === "note" ? notesApp.note(p.target.resourceKey.slice(4)) : null;
   const tk = p.target.panelType === "task" ? notesApp.task(p.target.resourceKey.slice(4)) : null;
+  const fd = p.target.panelType === "notefolder" ? notesApp.folder(p.target.resourceKey.slice(4)) : null;
   const n = DOMAIN[p.target.resourceKey] ?? {
     panelType: p.target.panelType,
-    title: nt ? "" : tk ? tk.label : be ? (be.label || "Connection") : bn?.label ?? "Node",
-    eyebrow: bn ? "canvas · " + bn.kind : be ? "canvas · link" : nt ? "note" : tk ? "task" : undefined,
+    title: nt ? "" : fd ? fd.name : tk ? tk.label : be ? (be.label || "Connection") : bn?.label ?? "Node",
+    eyebrow: bn ? "canvas · " + bn.kind : be ? "canvas · link" : nt ? "note" : fd ? "folder" : tk ? "task" : undefined,
     subtitle: bn?.sub,
   };
   const isCanvas = p.target.panelType === "canvas";
@@ -723,6 +726,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
             {p.target.panelType === "notes" && <NotesRoot panelId={id} />}
             {p.target.panelType === "tasks" && <TasksRoot panelId={id} />}
             {p.target.panelType === "note" && <NoteEditor noteKey={p.target.resourceKey} panelId={id} />}
+            {p.target.panelType === "notefolder" && <FolderPanel folderKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "task" && <TaskDetail taskKey={p.target.resourceKey} panelId={id} />}
             {(n.blocks ?? []).map((b, i) =>
               b.kind === "diagram" ? (
@@ -860,16 +864,28 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
           </div>
         ) : p.target.panelType === "note" ? (
           <div className="foot-actions">
-            <button className="d-btn outline sm" aria-pressed={!!notesApp.note(p.target.resourceKey.slice(4))?.pinned}
-              onClick={() => {
-                const nid = p.target.resourceKey.slice(4);
-                notesApp.patchNote(nid, { pinned: !notesApp.note(nid)?.pinned });
-              }}>
-              {notesApp.note(p.target.resourceKey.slice(4))?.pinned ? "Unpin ✶" : "Pin ✶"}
-            </button>
             <button className="d-btn destructive sm"
               onClick={() => { notesApp.removeNote(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
               Delete note
+            </button>
+          </div>
+        ) : p.target.panelType === "notes" ? (
+          <div className="foot-actions">
+            <button className="foot-cta"
+              onClick={() => ws.openDetail(id, { panelType: "note", resourceKey: "nte:" + notesApp.addNote() })}>
+              + New note
+            </button>
+            <button className="d-btn outline sm" onClick={() => notesApp.addFolder()}>+ New folder</button>
+          </div>
+        ) : p.target.panelType === "notefolder" ? (
+          <div className="foot-actions">
+            <button className="foot-cta"
+              onClick={() => ws.openDetail(id, { panelType: "note", resourceKey: "nte:" + notesApp.addNote(p.target.resourceKey.slice(4)) })}>
+              + New note here
+            </button>
+            <button className="d-btn destructive sm"
+              onClick={() => { notesApp.removeFolder(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
+              Delete folder
             </button>
           </div>
         ) : p.target.panelType === "task" ? (

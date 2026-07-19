@@ -34,6 +34,11 @@ import { useWorkspace } from "@frameword/panels-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import Link from "@tiptap/extension-link";
+import Underline from "@tiptap/extension-underline";
+import Highlight from "@tiptap/extension-highlight";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
 
 /* ── shared board store ──────────────────────────────────────────────── */
 export interface CvSub { id: string; label: string; done?: boolean }
@@ -765,7 +770,15 @@ export function boardFromPrompt(q: string): string | null {
 /* ── RichNotes — THE notes editor, shared by every notes surface ─────── */
 export function RichNotes({ html, onChange, placeholder }: { html: string; onChange: (html: string) => void; placeholder?: string }) {
   const editor = useEditor({
-    extensions: [StarterKit, Placeholder.configure({ placeholder: placeholder ?? "Write the full story of this element — headings, lists, quotes…" })],
+    extensions: [
+      StarterKit,
+      Placeholder.configure({ placeholder: placeholder ?? "Write the full story of this element — headings, lists, quotes…" }),
+      Link.configure({ openOnClick: false, autolink: true }),
+      Underline,
+      Highlight,
+      TaskList,
+      TaskItem.configure({ nested: true }),
+    ],
     content: html || "",
     onUpdate: ({ editor: ed }) => onChange(ed.getHTML()),
   });
@@ -773,15 +786,38 @@ export function RichNotes({ html, onChange, placeholder }: { html: string; onCha
   const B = ({ on, label, run, title }: { on?: boolean; label: string; run: () => void; title: string }) => (
     <button className={on ? "on" : ""} title={title} onMouseDown={(e) => { e.preventDefault(); run(); }}>{label}</button>
   );
+  const Sep = () => <span className="tt-sep" />;
+  const setLink = () => {
+    const prev = editor.getAttributes("link").href as string | undefined;
+    const url = window.prompt("Link URL", prev ?? "https://");
+    if (url === null) return;
+    if (url === "") editor.chain().focus().unsetLink().run();
+    else editor.chain().focus().setLink({ href: url }).run();
+  };
   return (
     <div className="tt-wrap cv-notes">
       <div className="tt-toolbar">
+        <B on={editor.isActive("heading", { level: 1 })} label="H1" title="Title" run={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} />
         <B on={editor.isActive("heading", { level: 2 })} label="H2" title="Heading" run={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} />
-        <B on={editor.isActive("bold")} label="B" title="Bold" run={() => editor.chain().focus().toggleBold().run()} />
-        <B on={editor.isActive("italic")} label="I" title="Italic" run={() => editor.chain().focus().toggleItalic().run()} />
+        <B on={editor.isActive("heading", { level: 3 })} label="H3" title="Subheading" run={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} />
+        <Sep />
+        <B on={editor.isActive("bold")} label="B" title="Bold — ⌘B" run={() => editor.chain().focus().toggleBold().run()} />
+        <B on={editor.isActive("italic")} label="I" title="Italic — ⌘I" run={() => editor.chain().focus().toggleItalic().run()} />
+        <B on={editor.isActive("underline")} label="U" title="Underline — ⌘U" run={() => editor.chain().focus().toggleUnderline().run()} />
+        <B on={editor.isActive("strike")} label="S̶" title="Strikethrough" run={() => editor.chain().focus().toggleStrike().run()} />
+        <B on={editor.isActive("highlight")} label="▍" title="Highlight" run={() => editor.chain().focus().toggleHighlight().run()} />
+        <Sep />
         <B on={editor.isActive("bulletList")} label="••" title="Bullet list" run={() => editor.chain().focus().toggleBulletList().run()} />
+        <B on={editor.isActive("orderedList")} label="1." title="Numbered list" run={() => editor.chain().focus().toggleOrderedList().run()} />
+        <B on={editor.isActive("taskList")} label="☑" title="Checklist" run={() => editor.chain().focus().toggleTaskList().run()} />
+        <Sep />
         <B on={editor.isActive("blockquote")} label="❝" title="Quote" run={() => editor.chain().focus().toggleBlockquote().run()} />
-        <B on={editor.isActive("codeBlock")} label="{ }" title="Code" run={() => editor.chain().focus().toggleCodeBlock().run()} />
+        <B on={editor.isActive("codeBlock")} label="{ }" title="Code block" run={() => editor.chain().focus().toggleCodeBlock().run()} />
+        <B on={editor.isActive("link")} label="⌁" title="Link" run={setLink} />
+        <B label="—" title="Divider" run={() => editor.chain().focus().setHorizontalRule().run()} />
+        <Sep />
+        <B label="↶" title="Undo" run={() => editor.chain().focus().undo().run()} />
+        <B label="↷" title="Redo" run={() => editor.chain().focus().redo().run()} />
       </div>
       <EditorContent editor={editor} className="tiptap" />
     </div>

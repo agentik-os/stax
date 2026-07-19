@@ -14,11 +14,12 @@ import { RichNotes } from "./CanvasBoard";
 
 /* ── shared store ────────────────────────────────────────────────────── */
 export type Prio = "low" | "med" | "high";
-export interface Note { id: string; title: string; body: string; ts: number; pinned?: boolean }
+export interface Note { id: string; title: string; body: string; ts: number; pinned?: boolean; folder?: string }
+export interface Folder { id: string; name: string }
 export interface TaskSub { id: string; label: string; done?: boolean }
 export interface Task { id: string; label: string; done: boolean; prio: Prio; cat?: string; subs?: TaskSub[]; due?: string; dueTime?: string; notes?: string; ts: number }
 export interface Category { id: string; name: string }
-interface NotesState { notes: Note[]; tasks: Task[]; cats: Category[]; view?: "list" | "kanban" }
+interface NotesState { notes: Note[]; tasks: Task[]; cats: Category[]; folders?: Folder[]; view?: "list" | "kanban" }
 
 const KEY = "frameword-notesapp";
 const now = Date.now();
@@ -90,11 +91,25 @@ export const notesApp = {
     notesApp.update((s) => ({ ...s, notes: s.notes.map((n) => (n.id === id ? { ...n, ...patch, ts: Date.now() } : n)) })),
   patchTask: (id: string, patch: Partial<Task>) =>
     notesApp.update((s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch, ts: Date.now() } : t)) })),
-  addNote: (): string => {
+  addNote: (folder?: string): string => {
     const id = uid("n");
-    notesApp.update((s) => ({ ...s, notes: [{ id, title: "Untitled note", body: "", ts: Date.now() }, ...s.notes] }));
+    notesApp.update((s) => ({ ...s, notes: [{ id, title: "Untitled note", body: "", ts: Date.now(), folder }, ...s.notes] }));
     return id;
   },
+  folder: (id: string) => (state.folders ?? []).find((f) => f.id === id),
+  addFolder: (name?: string): string => {
+    const id = uid("f");
+    notesApp.update((s) => ({ ...s, folders: [...(s.folders ?? []), { id, name: name ?? "Folder " + ((s.folders?.length ?? 0) + 1) }] }));
+    return id;
+  },
+  renameFolder: (id: string, name: string) =>
+    notesApp.update((s) => ({ ...s, folders: (s.folders ?? []).map((f) => (f.id === id ? { ...f, name } : f)) })),
+  removeFolder: (id: string) =>
+    notesApp.update((s) => ({
+      ...s,
+      folders: (s.folders ?? []).filter((f) => f.id !== id),
+      notes: s.notes.map((n) => (n.folder === id ? { ...n, folder: undefined } : n)),
+    })),
   addTask: (label: string, cat?: string): string => {
     const id = uid("t");
     notesApp.update((s) => ({ ...s, tasks: [...s.tasks, { id, label, done: false, prio: "med" as Prio, cat: cat ?? s.cats[0]?.id ?? "inbox", ts: Date.now() }] }));
@@ -156,33 +171,101 @@ export function NotesRoot({ panelId }: { panelId: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
 
-  const notes = [...s.notes].sort((a, b) =>
-    Number(!!b.pinned) - Number(!!a.pinned) || b.ts - a.ts);
+  const folders = s.folders ?? [];
+  const loose = [...s.notes].filter((n) => !n.folder || !folders.some((f) => f.id === n.folder))
+    .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.ts - a.ts);
   const openNote = (id: string) =>
     ws.openDetail(panelId, { panelType: "note", resourceKey: "nte:" + id });
-  const newNote = () => openNote(notesApp.addNote());
+  const openFolder = (id: string) =>
+    ws.openDetail(panelId, { panelType: "notefolder", resourceKey: "nfd:" + id });
 
   return (
     <div className="card">
       <div className="lab">Notes · {s.notes.length}</div>
-      {s.notes.length === 0 && <p style={{ marginTop: 6 }}>No notes yet — start one below.</p>}
+      {s.notes.length === 0 && folders.length === 0 && <p style={{ marginTop: 6 }}>No notes yet — start one from the foot.</p>}
       <div className="drills" style={{ marginTop: 8 }}>
-        {notes.map((n) => (
-          <button key={n.id} className="drill" onClick={() => openNote(n.id)}>
-            <span className="no">{n.pinned ? "✶" : "§"}</span>
-            <span className="bd">
-              <span className="tt" style={{ display: "block" }}>{n.title || "Untitled note"}</span>
-              <span className="ss" style={{ display: "block" }}>
-                {ago(n.ts)}{stripHtml(n.body) ? " · " + stripHtml(n.body).slice(0, 72) : " · empty"}
+        {folders.map((f) => {
+          const count = s.notes.filter((n) => n.folder === f.id).length;
+          return (
+            <button key={f.id} className="drill" onClick={() => openFolder(f.id)}>
+              <span className="no">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.2 3.9A2 2 0 0 0 7.5 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /></svg>
               </span>
-            </span>
-            <span className="arr">→</span>
-          </button>
+              <span className="bd">
+                <span className="tt" style={{ display: "block" }}>{f.name}</span>
+                <span className="ss" style={{ display: "block" }}>{count} note{count === 1 ? "" : "s"}</span>
+              </span>
+              <span className="arr">→</span>
+            </button>
+          );
+        })}
+        {loose.map((n) => (
+          <div key={n.id} className="cv-conn-row">
+            <button className="drill" onClick={() => openNote(n.id)}>
+              <span className="bd">
+                <span className="tt" style={{ display: "block" }}>{n.pinned ? "✶ " : ""}{n.title || "Untitled note"}</span>
+                <span className="ss" style={{ display: "block" }}>
+                  {ago(n.ts)}{stripHtml(n.body) ? " · " + stripHtml(n.body).slice(0, 68) : " · empty"}
+                </span>
+              </span>
+              <span className="arr">→</span>
+            </button>
+            <button className="cv-conn-edit" title={n.pinned ? "Unpin" : "Pin to top"}
+              onClick={() => notesApp.patchNote(n.id, { pinned: !n.pinned })}>✶</button>
+          </div>
         ))}
       </div>
-      <button className="d-btn outline sm" style={{ marginTop: 10 }} onClick={newNote}>
-        New note
-      </button>
+    </div>
+  );
+}
+
+/* ── folder panel — a folder opens its own panel of notes ────────────── */
+export function FolderPanel({ folderKey, panelId }: { folderKey: string; panelId: string }) {
+  const ws = useWorkspace();
+  const s = useNotesApp();
+  const id = folderKey.slice(4);
+  const folder = (s.folders ?? []).find((f) => f.id === id);
+  const [ren, setRen] = useState<string | null>(null);
+  if (!folder) return <div className="leaf-note">This folder was deleted.</div>;
+  const notes = s.notes.filter((n) => n.folder === id)
+    .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.ts - a.ts);
+  return (
+    <div className="card">
+      <div className="lab" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {ren !== null ? (
+          <input className="inline-edit" autoFocus value={ren}
+            onChange={(e) => setRen(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { notesApp.renameFolder(id, ren.trim() || folder.name); setRen(null); }
+              if (e.key === "Escape") setRen(null);
+            }}
+            onBlur={() => { notesApp.renameFolder(id, ren.trim() || folder.name); setRen(null); }} />
+        ) : (
+          <span style={{ flex: 1 }} onDoubleClick={() => setRen(folder.name)}>{folder.name} · {notes.length}</span>
+        )}
+        <button className="cv-conn-edit" title="Rename folder" style={{ width: 22, height: 22 }}
+          onClick={() => setRen(folder.name)}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
+        </button>
+      </div>
+      {notes.length === 0 && <p style={{ marginTop: 6 }}>Empty folder — add a note from the foot.</p>}
+      <div className="drills" style={{ marginTop: 8 }}>
+        {notes.map((n) => (
+          <div key={n.id} className="cv-conn-row">
+            <button className="drill" onClick={() => ws.openDetail(panelId, { panelType: "note", resourceKey: "nte:" + n.id })}>
+              <span className="bd">
+                <span className="tt" style={{ display: "block" }}>{n.pinned ? "✶ " : ""}{n.title || "Untitled note"}</span>
+                <span className="ss" style={{ display: "block" }}>
+                  {ago(n.ts)}{stripHtml(n.body) ? " · " + stripHtml(n.body).slice(0, 68) : " · empty"}
+                </span>
+              </span>
+              <span className="arr">→</span>
+            </button>
+            <button className="cv-conn-edit" title={n.pinned ? "Unpin" : "Pin to top"}
+              onClick={() => notesApp.patchNote(n.id, { pinned: !n.pinned })}>✶</button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -376,31 +459,13 @@ export function TasksRoot({ panelId }: { panelId: string }) {
 
 /* ── note body — a real Tiptap editor, keyed by note id ──────────────── */
 function NoteDoc({ noteId, html }: { noteId: string; html: string }) {
-  const editor = useEditor({
-    extensions: [StarterKit, Placeholder.configure({ placeholder: "Write the note — headings, lists, quotes…" })],
-    content: html || "",
-    onUpdate: ({ editor: ed }) => {
-      notesApp.update((s) => ({
-        ...s,
-        notes: s.notes.map((n) => (n.id === noteId ? { ...n, body: ed.getHTML(), ts: Date.now() } : n)),
-      }));
-    },
-  });
-  if (!editor) return null;
-  const B = ({ on, label, run, title }: { on?: boolean; label: string; run: () => void; title: string }) => (
-    <button className={on ? "on" : ""} title={title} onMouseDown={(e) => { e.preventDefault(); run(); }}>{label}</button>
-  );
   return (
-    <div className="tt-wrap nt-doc">
-      <div className="tt-toolbar">
-        <B on={editor.isActive("heading", { level: 2 })} label="H2" title="Heading" run={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} />
-        <B on={editor.isActive("bold")} label="B" title="Bold" run={() => editor.chain().focus().toggleBold().run()} />
-        <B on={editor.isActive("italic")} label="I" title="Italic" run={() => editor.chain().focus().toggleItalic().run()} />
-        <B on={editor.isActive("bulletList")} label="••" title="Bullet list" run={() => editor.chain().focus().toggleBulletList().run()} />
-        <B on={editor.isActive("blockquote")} label="❝" title="Quote" run={() => editor.chain().focus().toggleBlockquote().run()} />
-        <B on={editor.isActive("codeBlock")} label="{ }" title="Code" run={() => editor.chain().focus().toggleCodeBlock().run()} />
-      </div>
-      <EditorContent editor={editor} className="tiptap" style={{ minHeight: 320 }} />
+    <div className="nt-docwrap">
+      <RichNotes key={noteId} html={html} placeholder="Write the note — headings, lists, checklists, links…"
+        onChange={(h) => notesApp.update((st) => ({
+          ...st,
+          notes: st.notes.map((n) => (n.id === noteId ? { ...n, body: h, ts: Date.now() } : n)),
+        }))} />
     </div>
   );
 }
@@ -422,7 +487,14 @@ export function NoteEditor({ noteKey, panelId }: { noteKey: string; panelId: str
           border: "none", outline: "none", background: "transparent",
           width: "100%", color: "var(--foreground)", padding: 0,
         }} />
-      <div className="pop-sub">{n.pinned ? "✶ pinned · " : ""}edited {ago(n.ts)}</div>
+      {(s.folders?.length ?? 0) > 0 && (
+        <select className="d-input" style={{ alignSelf: "flex-start", marginBottom: 8 }}
+          value={n.folder ?? ""} title="Folder"
+          onChange={(e) => notesApp.patchNote(id, { folder: e.target.value || undefined })}>
+          <option value="">No folder</option>
+          {(s.folders ?? []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+        </select>
+      )}
       <NoteDoc key={id} noteId={id} html={n.body} />
     </>
   );
