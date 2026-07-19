@@ -1,0 +1,708 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameword — démo live du modèle v2</title>
+<style>
+  :root{
+    --bg:#EEF0F4; --surface:#FBFCFD; --surface2:#F3F5F8; --line:#D8DDE6; --line-soft:#E4E8EF;
+    --ink:#191D26; --ink2:#5A6274; --ink3:#8891A3;
+    --ac:#3452D9; --ac-ink:#FFFFFF; --ac-soft:rgba(52,82,217,.10); --ac-line:rgba(52,82,217,.45);
+    --warn:#B45309; --warn-soft:rgba(217,119,6,.12); --warn-line:rgba(217,119,6,.55);
+    --ok:#0F7B4D; --ok-soft:rgba(15,123,77,.10);
+    --ref:#7C3AED; --ref-soft:rgba(124,58,237,.10); --ref-line:rgba(124,58,237,.45);
+    --bezel:#14161B;
+    --shadow:0 10px 28px rgba(20,26,40,.12);
+    --mono:ui-monospace,"SF Mono","Cascadia Mono","JetBrains Mono",Menlo,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#101319; --surface:#181C24; --surface2:#1F2430; --line:#2A3140; --line-soft:#232936;
+      --ink:#E7EAF2; --ink2:#9AA3B8; --ink3:#6A7388;
+      --ac:#7B93FF; --ac-ink:#0E1220; --ac-soft:rgba(123,147,255,.14); --ac-line:rgba(123,147,255,.5);
+      --warn:#F5B04C; --warn-soft:rgba(245,176,76,.12); --warn-line:rgba(245,176,76,.5);
+      --ok:#4CC38A; --ok-soft:rgba(76,195,138,.12);
+      --ref:#B08CFF; --ref-soft:rgba(176,140,255,.14); --ref-line:rgba(176,140,255,.5);
+      --bezel:#3A4152;
+      --shadow:0 10px 28px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#EEF0F4; --surface:#FBFCFD; --surface2:#F3F5F8; --line:#D8DDE6; --line-soft:#E4E8EF;
+    --ink:#191D26; --ink2:#5A6274; --ink3:#8891A3;
+    --ac:#3452D9; --ac-ink:#FFFFFF; --ac-soft:rgba(52,82,217,.10); --ac-line:rgba(52,82,217,.45);
+    --warn:#B45309; --warn-soft:rgba(217,119,6,.12); --warn-line:rgba(217,119,6,.55);
+    --ok:#0F7B4D; --ok-soft:rgba(15,123,77,.10);
+    --ref:#7C3AED; --ref-soft:rgba(124,58,237,.10); --ref-line:rgba(124,58,237,.45);
+    --bezel:#14161B;
+    --shadow:0 10px 28px rgba(20,26,40,.12);
+  }
+  :root[data-theme="dark"]{
+    --bg:#101319; --surface:#181C24; --surface2:#1F2430; --line:#2A3140; --line-soft:#232936;
+    --ink:#E7EAF2; --ink2:#9AA3B8; --ink3:#6A7388;
+    --ac:#7B93FF; --ac-ink:#0E1220; --ac-soft:rgba(123,147,255,.14); --ac-line:rgba(123,147,255,.5);
+    --warn:#F5B04C; --warn-soft:rgba(245,176,76,.12); --warn-line:rgba(245,176,76,.5);
+    --ok:#4CC38A; --ok-soft:rgba(76,195,138,.12);
+    --ref:#B08CFF; --ref-soft:rgba(176,140,255,.14); --ref-line:rgba(176,140,255,.5);
+    --bezel:#3A4152;
+    --shadow:0 10px 28px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);
+    display:grid;grid-template-rows:auto 1fr auto;height:100dvh;overflow:hidden}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+  button:focus-visible,[tabindex]:focus-visible,input:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:4px}
+
+  /* ── hero ──────────────────────────────────────── */
+  .hero{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:12px 20px;border-bottom:1px solid var(--line);background:var(--surface)}
+  .hero h1{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
+  .hero .thesis{color:var(--ink2);font-size:13px;margin-top:2px;max-width:70ch}
+  .hero .thesis b{color:var(--ink);font-weight:600}
+  .hero-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface2)}
+  .seg button{padding:6px 12px;font-size:12px;color:var(--ink2)}
+  .seg button.on{background:var(--ac);color:var(--ac-ink);font-weight:600}
+  .ghost{border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--ink2)}
+  .ghost:hover{border-color:var(--ink3);color:var(--ink)}
+
+  /* ── shell ─────────────────────────────────────── */
+  .app{display:grid;grid-template-columns:200px 1fr;min-height:0}
+  .sidebar{border-right:1px solid var(--line);background:var(--surface);padding:14px 10px;display:flex;flex-direction:column;gap:2px;min-height:0}
+  .sb-label{font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);padding:4px 10px 8px}
+  .sb-item{display:flex;align-items:center;gap:8px;text-align:left;padding:8px 10px;border-radius:8px;color:var(--ink2);font-weight:500}
+  .sb-item:hover{background:var(--surface2);color:var(--ink)}
+  .sb-item.active{background:var(--ac-soft);color:var(--ac);font-weight:600}
+  .sb-item .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.55}
+  .sb-hint{margin-top:auto;padding:10px;border:1px dashed var(--line);border-radius:8px;color:var(--ink3);font-size:11.5px}
+  .sb-hint b{color:var(--ink2)}
+
+  .main{display:grid;grid-template-rows:auto 1fr;min-width:0;min-height:0}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:8px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+  .crumbs{display:flex;align-items:center;gap:2px;font:12px var(--mono);color:var(--ink3);flex-wrap:wrap;min-width:0}
+  .crumbs button{padding:3px 7px;border-radius:6px;color:var(--ink2)}
+  .crumbs button:hover{background:var(--surface2);color:var(--ink)}
+  .crumbs .sep{opacity:.45;user-select:none}
+  .crumbs .here{color:var(--ac);font-weight:700}
+  kbd{font:11px var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:var(--surface2);color:var(--ink2)}
+
+  .tb-right{display:flex;align-items:center;gap:6px;flex:none}
+  .tb-search{position:relative;display:flex;align-items:center}
+  .tb-search input{font:12px var(--sans);color:var(--ink);background:var(--surface2);border:1px solid var(--line);
+    border-radius:7px;padding:5px 40px 5px 10px;width:170px;outline:none}
+  .tb-search input:focus{border-color:var(--ac-line);background:var(--surface)}
+  .tb-kbd{position:absolute;right:6px;pointer-events:none;font-size:10px}
+  .q-pop{position:absolute;top:calc(100% + 6px);right:0;width:290px;max-height:320px;overflow-y:auto;z-index:60;
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:6px}
+  .q-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:7px 9px;border-radius:7px;font-size:12.5px}
+  .q-item:hover{background:var(--ac-soft)}
+  .q-item .qe{font:600 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);flex:none;width:64px}
+  .q-item .qt{font-weight:600}
+  .q-item .qp{color:var(--ink3);font-size:10.5px;display:block}
+  .q-empty{padding:10px;color:var(--ink3);font-size:12px;text-align:center}
+  .tb-btn{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;
+    background:var(--surface2);color:var(--ink2);font-size:13px;position:relative}
+  .tb-btn:hover{border-color:var(--ink3);color:var(--ink)}
+  .tb-btn[aria-expanded="true"]{background:var(--ac-soft);border-color:var(--ac-line);color:var(--ac)}
+  .tb-badge{position:absolute;top:-5px;right:-5px;background:var(--ref);color:#fff;font:700 9px var(--mono);
+    border-radius:8px;min-width:14px;height:14px;display:grid;place-items:center;padding:0 3px}
+
+  /* ── device frame ──────────────────────────────── */
+  #stage-wrap{min-height:0;overflow:hidden;display:flex;justify-content:center;align-items:flex-start}
+  .frame{display:grid;grid-template-rows:auto 1fr;min-height:0;width:100%;height:100%;transform-origin:top center}
+  .frame.iphone{border:9px solid var(--bezel);border-radius:40px;overflow:hidden;background:var(--bg);box-shadow:var(--shadow)}
+  .frame.ipad{border:11px solid var(--bezel);border-radius:26px;overflow:hidden;background:var(--bg);box-shadow:var(--shadow)}
+
+  /* ── stage : ContextRail + ReferenceRail ───────── */
+  .stage{display:flex;gap:10px;padding:14px;overflow:hidden;min-height:0;align-items:stretch}
+  .empty{margin:auto;text-align:center;color:var(--ink3);max-width:36ch}
+  .empty .big{font-size:34px;margin-bottom:8px}
+  .empty b{color:var(--ink2)}
+
+  .rail-sep{flex:0 0 1px;background:var(--ref-line);margin:6px 2px;border-radius:1px;position:relative}
+  .rail-sep::after{content:"RÉFÉRENCES";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(90deg);
+    font:700 8px var(--mono);letter-spacing:.18em;color:var(--ref);background:var(--bg);padding:4px 6px;white-space:nowrap}
+
+  .col{flex:1 1 300px;min-width:230px;max-width:600px;display:flex;flex-direction:column;min-height:0;background:var(--surface);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative;
+    transition:box-shadow .18s,border-color .18s,opacity .18s;
+    container-type:inline-size}
+  .col.focused{box-shadow:var(--shadow);border-color:var(--ink3)}
+  .col:not(.focused){opacity:.9}
+  .col.preview{border-style:dashed;border-color:var(--warn-line)}
+  .col.retained{border-color:var(--ac-line)}
+  .col.retained::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--ac);z-index:1}
+  .col.reference{flex:0 0 210px;min-width:190px;border-color:var(--ref-line);background:var(--surface2)}
+  .col.reference::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--ref);z-index:1}
+  @keyframes slidein{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes flash{0%,100%{box-shadow:0 0 0 0 transparent}35%{box-shadow:0 0 0 3px var(--warn-line)}}
+  @keyframes dedup{0%,100%{box-shadow:0 0 0 0 transparent}35%{box-shadow:0 0 0 3px var(--ac-line)}}
+  @keyframes detachfx{0%,100%{box-shadow:0 0 0 0 transparent}35%{box-shadow:0 0 0 3px var(--ref-line)}}
+  .col.enter{animation:slidein .2s ease-out}
+  .col.replaced-in{animation:flash .7s ease-out}
+  .col.dedup{animation:dedup .7s ease-out}
+  .col.detached-in{animation:detachfx .8s ease-out}
+  @media (prefers-reduced-motion: reduce){.col,.spine{animation:none!important;transition:none}}
+
+  .spine{flex:0 0 34px;min-width:34px;display:flex;flex-direction:column;align-items:center;gap:8px;
+    padding:10px 0;background:var(--surface2);border:1px solid var(--line);border-radius:10px;
+    color:var(--ink3);animation:slidein .2s ease-out}
+  .spine:hover{border-color:var(--ac-line);color:var(--ac);background:var(--ac-soft)}
+  .spine .v{writing-mode:vertical-rl;font:600 11px var(--mono);letter-spacing:.06em;max-height:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .spine .n{font:600 9px var(--mono);border:1px solid var(--line);border-radius:4px;padding:2px 4px 1px;background:var(--surface)}
+  .spine.retained{border-color:var(--ac-line);color:var(--ac)}
+
+  .col-head{display:flex;align-items:center;justify-content:space-between;gap:8px;height:44px;flex:none;
+    padding:0 10px 0 14px;border-bottom:1px solid var(--line)}
+  .eyebrow{font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:7px;min-width:0}
+  .eyebrow .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .badge{font:700 9px/1 var(--mono);letter-spacing:.08em;border-radius:4px;padding:3px 5px 2px;flex:none}
+  .badge.root{background:var(--surface2);color:var(--ink2);border:1px solid var(--line)}
+  .badge.preview{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn-line)}
+  .badge.pin{background:var(--ac-soft);color:var(--ac);border:1px solid var(--ac-line)}
+  .badge.ref{background:var(--ref-soft);color:var(--ref);border:1px solid var(--ref-line)}
+  .ctrls{display:flex;align-items:center;gap:2px;flex:none}
+  .ctrls button{width:24px;height:24px;display:grid;place-items:center;border-radius:6px;color:var(--ink3);font-size:12px}
+  .ctrls button:hover:not(:disabled){background:var(--surface2);color:var(--ink)}
+  .ctrls button:disabled{opacity:.3;cursor:default}
+  .ctrls button.pin-on{color:var(--ac);background:var(--ac-soft)}
+
+  .col-body{overflow-y:auto;padding:14px;flex:1;min-height:0}
+  .col-title{font-size:16px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px}
+  .col-sub{color:var(--ink2);font-size:12.5px;margin:0 0 12px}
+
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+  .kpi{border:1px solid var(--line-soft);border-radius:8px;padding:8px 10px;background:var(--surface2)}
+  .kpi .kv{font:700 16px/1.2 var(--sans);font-variant-numeric:tabular-nums}
+  .kpi .kl{font:600 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+  @container (max-width: 339px){
+    .kpis{grid-template-columns:1fr}
+    .kpi{display:flex;align-items:baseline;gap:8px}
+    .kpi .kv{font-size:14px}
+  }
+
+  .drill{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;border:1px solid var(--line-soft);
+    border-radius:8px;margin-bottom:6px;background:var(--surface)}
+  .drill:hover{border-color:var(--ac-line);background:var(--ac-soft)}
+  .drill:hover .chev{color:var(--ac);transform:translateX(2px)}
+  .drill .num{font:600 10px var(--mono);color:var(--ink3);flex:none;width:20px}
+  .drill .dt{font-weight:600;font-size:13px;display:block}
+  .drill .ds{color:var(--ink3);font-size:11.5px;display:block}
+  .drill .db{flex:1;min-width:0}
+  .drill .chev{color:var(--ink3);flex:none;transition:transform .15s}
+  .drill.seealso{border-style:dashed}
+  .drill.seealso .num{color:var(--ref)}
+  .leaf-note{border:1px solid var(--line-soft);border-radius:8px;padding:12px;color:var(--ink2);font-size:12.5px;background:var(--surface2);margin-bottom:6px}
+  .leaf-note p{margin:0 0 8px}.leaf-note p:last-child{margin:0}
+
+  .col-foot{flex:none;border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:8px;align-items:center;background:var(--surface2)}
+  .col-foot .composer{flex:1;border:1px solid var(--line);border-radius:7px;padding:6px 10px;color:var(--ink3);font-size:12px;background:var(--surface)}
+  .col-foot .go{background:var(--ac);color:var(--ac-ink);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;flex:none}
+  .col-foot .resume{flex:1;background:var(--ref);color:#fff;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;text-align:center}
+  .foot-note{font:10px var(--mono);color:var(--ink3);letter-spacing:.05em}
+
+  .backbar{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--line);background:var(--surface2);flex-wrap:wrap}
+  .backbar button.bk{display:flex;align-items:center;gap:6px;color:var(--ac);font-weight:600;font-size:13px}
+  .backbar .pos{margin-left:auto;font:11px var(--mono);color:var(--ink3)}
+  .ref-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--ref-line);color:var(--ref);
+    background:var(--ref-soft);border-radius:14px;padding:3px 10px;font-size:11px;font-weight:600}
+
+  /* ── learn strip ───────────────────────────────── */
+  .learn{display:grid;grid-template-columns:1fr 420px;border-top:1px solid var(--line);background:var(--surface);max-height:235px;min-height:0}
+  .missions{padding:12px 20px;overflow-y:auto;border-right:1px solid var(--line)}
+  .learn h2{margin:0 0 8px;font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+  .m-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px}
+  .mission{display:flex;gap:9px;align-items:flex-start;padding:7px 9px;border:1px solid var(--line-soft);border-radius:8px;font-size:12px;color:var(--ink2)}
+  .mission .chk{flex:none;width:16px;height:16px;border:1.5px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:9px;margin-top:1px;color:transparent}
+  .mission.done{border-color:var(--ok);background:var(--ok-soft);color:var(--ink)}
+  .mission.done .chk{background:var(--ok);border-color:var(--ok);color:#fff}
+  .mission .op{font:600 10px var(--mono);color:var(--ac);display:block;letter-spacing:.04em}
+  .mission.done .op{color:var(--ok)}
+  .m-count{font:11px var(--mono);color:var(--ink3);margin-left:8px}
+
+  .statebox{padding:12px 20px;overflow-y:auto;background:var(--surface2)}
+  .statebox pre{margin:0;font:11.5px/1.7 var(--mono);white-space:pre-wrap;word-break:break-all;color:var(--ink2)}
+  .statebox .k{color:var(--ink3)} .statebox .v{color:var(--ink)} .statebox .p{color:var(--ac);font-weight:700} .statebox .r{color:var(--ref);font-weight:700}
+  .statebox .op-line{color:var(--warn);display:block;margin-bottom:6px;font-weight:600}
+  .statebox .pres{color:var(--ink3);display:block;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+  .statebox .pres b{color:var(--ink2)}
+  .state-note{font-size:11px;color:var(--ink3);margin-top:8px}
+
+  /* ── UtilityDrawer ─────────────────────────────── */
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:300px;z-index:70;background:var(--surface);
+    border-left:1px solid var(--line);box-shadow:var(--shadow);display:none;flex-direction:column;gap:14px;padding:18px}
+  .drawer.open{display:flex}
+  .drawer h3{margin:0;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .drawer h3 button{width:26px;height:26px;display:grid;place-items:center;border-radius:6px;color:var(--ink3)}
+  .drawer h3 button:hover{background:var(--surface2);color:var(--ink)}
+  .drawer .d-note{border:1px dashed var(--line);border-radius:8px;padding:10px;color:var(--ink2);font-size:12px}
+  .drawer .d-note b{color:var(--ink)}
+  .d-group{display:flex;flex-direction:column;gap:6px}
+  .d-label{font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+  .d-seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface2);align-self:flex-start}
+  .d-seg button{padding:6px 12px;font-size:12px;color:var(--ink2)}
+  .d-seg button.on{background:var(--ac);color:var(--ac-ink);font-weight:600}
+
+  @media (max-width:860px){
+    .app{grid-template-columns:64px 1fr}
+    .sidebar .sb-item span:not(.dot){display:none}
+    .sb-hint,.sb-label{display:none}
+    .learn{grid-template-columns:1fr;max-height:260px}
+    .statebox{border-top:1px solid var(--line)}
+    .hero .thesis{display:none}
+    .tb-search input{width:110px}
+  }
+</style>
+
+<header class="hero">
+  <div>
+    <h1>Frameword — démo live du modèle v2</h1>
+    <div class="thesis">L'ascendance est un <b>arbre de liens parent</b> (jamais l'ordre visuel). Le <b>ContextPath</b> en dérive. Un épinglé orphelin devient une <b>référence détachée</b> (rail violet) — il ne ment jamais sur sa parenté.</div>
+  </div>
+  <div class="hero-right">
+    <div class="seg" role="group" aria-label="Appareil simulé">
+      <button id="dev-fluid" class="on" title="Largeur réelle de la fenêtre">🖥 Fluide</button>
+      <button id="dev-ipad" title="Cadre 834px — budget 2 colonnes">iPad</button>
+      <button id="dev-iphone" title="Cadre 390px — pile push/pop + tray de références">📱 iPhone</button>
+    </div>
+    <button class="ghost" id="reset">Réinitialiser</button>
+  </div>
+</header>
+
+<div class="app">
+  <aside class="sidebar" aria-label="ApplicationDock — Spaces">
+    <div class="sb-label">Spaces</div>
+    <button class="sb-item" data-space="sec:projets"><span class="dot"></span><span>Projets</span></button>
+    <button class="sb-item" data-space="sec:clients"><span class="dot"></span><span>Clients</span></button>
+    <button class="sb-item" data-space="sec:biblio"><span class="dot"></span><span>Bibliothèque</span></button>
+    <div class="sb-hint"><b>openSpace :</b> changer de Space vide les deux rails (politique V1 sûre). Deux Spaces ne se mélangent jamais.</div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <nav class="crumbs" id="crumbs" aria-label="ContextPath — fil d'ariane dérivé des liens parent"></nav>
+      <div class="tb-right">
+        <div class="tb-search">
+          <input id="q" placeholder="Rechercher…" aria-label="Recherche — ouvre par deep-link" autocomplete="off">
+          <kbd class="tb-kbd">⌘K</kbd>
+          <div id="q-pop" class="q-pop" hidden></div>
+        </div>
+        <button class="tb-btn" id="theme-btn" title="Thème : auto → clair → sombre">🌓</button>
+        <button class="tb-btn" id="drawer-btn" title="Outils — UtilityDrawer en OVERLAY, hors rails" aria-expanded="false">⚙<span class="tb-badge" id="ref-count" hidden></span></button>
+      </div>
+    </div>
+    <div id="stage-wrap">
+      <div class="frame" id="frame">
+        <div id="backbar"></div>
+        <div class="stage" id="stage"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<aside class="drawer" id="drawer" role="complementary" aria-label="Tiroir utilitaire">
+  <h3>Outils <span style="font:600 9px var(--mono);color:var(--ink3);letter-spacing:.08em">UTILITYDRAWER</span> <button id="drawer-close" title="Fermer le tiroir">✕</button></h3>
+  <div class="d-note"><b>Overlay, pas rail.</b> Ouvre-le et regarde l'état en bas à droite : le <b>WorkspaceState ne change pas</b>. Les outils transversaux vivent ici, jamais dans le fil de navigation.</div>
+  <div class="d-group">
+    <span class="d-label">Thème</span>
+    <div class="d-seg" id="theme-seg">
+      <button data-t="" class="on">Auto</button><button data-t="light">Clair</button><button data-t="dark">Sombre</button>
+    </div>
+  </div>
+  <div class="d-note"><b>Précédence Échap :</b> recherche → tiroir → panneau actif (invariant 14). Essaie <kbd>Échap</kbd> maintenant.</div>
+</aside>
+
+<footer class="learn">
+  <div class="missions">
+    <h2>À essayer — dans l'ordre <span class="m-count" id="mcount"></span></h2>
+    <div class="m-grid" id="missions"></div>
+  </div>
+  <div class="statebox">
+    <h2>WorkspaceState — c'est tout ce qui existe</h2>
+    <pre id="statejson"></pre>
+    <div class="state-note"><b>ContextPath</b> (URL-partageable) est <b>dérivé</b> des liens parent — jamais stocké comme ordre. Les <b>références</b> sont locales à l'appareil.</div>
+  </div>
+</footer>
+
+<script>
+/* ═══ CONTENU (arbre neutre + un « voir aussi » intra-Space) ═══ */
+const TREE = {
+  'sec:projets':{eyebrow:'space',title:'Projets',sub:'3 projets actifs — clique une ligne pour ouvrir le détail à droite.',children:['prj:atlas','prj:borea','prj:cygne'],composer:'Nouveau projet…',
+    kpis:[{v:'3',l:'actifs'},{v:'12',l:'tâches'},{v:'67%',l:'avancement'}]},
+  'prj:atlas':{eyebrow:'projet',title:'Atlas',sub:'Refonte du site public.',children:['lot:atlas-design','lot:atlas-dev'],composer:'Ajouter un lot…'},
+  'prj:borea':{eyebrow:'projet',title:'Boréa',sub:'App mobile interne.',children:['lot:borea-audit','lot:borea-mvp'],composer:'Ajouter un lot…'},
+  'prj:cygne':{eyebrow:'projet',title:'Cygne',sub:'Automatisation facturation.',children:['lot:cygne-spec'],composer:'Ajouter un lot…'},
+  'lot:atlas-design':{eyebrow:'lot',title:'Design',sub:'2 tâches.',children:['tsk:a1','tsk:a2'],composer:'Ajouter une tâche…'},
+  'lot:atlas-dev':{eyebrow:'lot',title:'Développement',sub:'2 tâches.',children:['tsk:a3','tsk:a4'],composer:'Ajouter une tâche…'},
+  'lot:borea-audit':{eyebrow:'lot',title:'Audit existant',sub:'1 tâche.',children:['tsk:b1'],composer:'Ajouter une tâche…'},
+  'lot:borea-mvp':{eyebrow:'lot',title:'MVP',sub:'2 tâches.',children:['tsk:b2','tsk:b3'],composer:'Ajouter une tâche…'},
+  'lot:cygne-spec':{eyebrow:'lot',title:'Spécification',sub:'1 tâche.',children:['tsk:c1'],composer:'Ajouter une tâche…'},
+  'tsk:a1':{eyebrow:'tâche',title:'Maquettes accueil',leaf:'Panneau feuille. Note le footer — la zone d’action persistante (PanelFooter).'},
+  'tsk:a2':{eyebrow:'tâche',title:'Design system',leaf:'Chaque niveau est le MÊME composant Panel. La récursivité est gratuite.'},
+  'tsk:a3':{eyebrow:'tâche',title:'Setup Next.js',leaf:'Même cible + même parent = révéler (pas de doublon). Autre parent = instance distincte.'},
+  'tsk:a4':{eyebrow:'tâche',title:'Intégration CMS',leaf:'Le lien pointillé ci-dessous ouvre une fiche déjà connue SOUS CE parent : instance distincte, autre fil de pensée.',seealso:['lot:atlas-design']},
+  'tsk:b1':{eyebrow:'tâche',title:'Cartographier l’existant',leaf:'Le parent reste visible à gauche : le contexte n’est jamais perdu.'},
+  'tsk:b2':{eyebrow:'tâche',title:'Écrans clés',leaf:'Épingle ce panneau (📌) puis drille ailleurs depuis un ancêtre : il deviendra une RÉFÉRENCE.'},
+  'tsk:b3':{eyebrow:'tâche',title:'Auth',leaf:'Échap ferme le panneau actif (après la recherche et le tiroir — précédence).'},
+  'tsk:c1':{eyebrow:'tâche',title:'Règles de facturation',leaf:'Clique un segment du ContextPath : la branche en dessous suit la politique de sous-arbre.'},
+  'sec:clients':{eyebrow:'space',title:'Clients',sub:'2 comptes — même mécanique, autre Space.',children:['cli:nova','cli:helios'],composer:'Nouveau client…',
+    kpis:[{v:'2',l:'comptes'},{v:'3',l:'contrats'},{v:'9,4k€',l:'encours'}]},
+  'cli:nova':{eyebrow:'client',title:'Nova SARL',sub:'2 contrats.',children:['ctr:n1','ctr:n2'],composer:'Nouveau contrat…'},
+  'cli:helios':{eyebrow:'client',title:'Hélios & Co',sub:'1 contrat.',children:['ctr:h1'],composer:'Nouveau contrat…'},
+  'ctr:n1':{eyebrow:'contrat',title:'Maintenance 2026',leaf:'Un contrat, une fiche : la profondeur s’arrête quand le contenu s’arrête.'},
+  'ctr:n2':{eyebrow:'contrat',title:'Refonte T3',leaf:'Ouvrir l’autre contrat du même parent REMPLACE cet aperçu (retention: preview).'},
+  'ctr:h1':{eyebrow:'contrat',title:'Forfait conseil',leaf:'Le ContextPath est un fil de pensée : une seule lignée active à la fois.'},
+  'sec:biblio':{eyebrow:'space',title:'Bibliothèque',sub:'2 collections de référence.',children:['col:guides','col:notes'],composer:'Nouvelle collection…',
+    kpis:[{v:'2',l:'collections'},{v:'3',l:'fiches'},{v:'J-2',l:'dern. ajout'}]},
+  'col:guides':{eyebrow:'collection',title:'Guides',sub:'2 fiches.',children:['doc:g1','doc:g2'],composer:'Nouvelle fiche…'},
+  'col:notes':{eyebrow:'collection',title:'Notes',sub:'1 fiche.',children:['doc:n1'],composer:'Nouvelle fiche…'},
+  'doc:g1':{eyebrow:'fiche',title:'Conventions d’équipe',leaf:'Un lecteur de document est un Panel comme un autre.'},
+  'doc:g2':{eyebrow:'fiche',title:'Process de livraison',leaf:'Dashboard, formulaire, chat, lecteur : une seule coquille de Panel.'},
+  'doc:n1':{eyebrow:'fiche',title:'Idées en vrac',leaf:'Fin de la visite — regarde le WorkspaceState en bas à droite.'},
+};
+const PARENT={};
+for(const [k,v] of Object.entries(TREE)) (v.children||[]).forEach(c=>PARENT[c]=k);
+
+/* ═══ MOTEUR v2 — WorkspaceState : arbre de liens parent, ContextPath dérivé ═══ */
+let W=null; let seq=0;
+const nid=()=>'p'+(++seq);
+function freshW(){return {spaceKey:null, rootId:null, contextLeafId:null, focusedId:null, panels:{}, refOrder:[]};}
+W=freshW();
+let lastOp='—'; let fx={}; // instanceId -> 'enter'|'replaced-in'|'dedup'|'detached-in'
+
+function contextPath(){ const out=[]; let id=W.contextLeafId;
+  while(id){out.unshift(id); id=W.panels[id]?W.panels[id].parentId:null;} return out; }
+function subtreeOf(pid){ // descendants attachés de pid (hors pid), ordre profondeur
+  const out=[]; const walk=(id)=>{ Object.values(W.panels).forEach(p=>{
+    if(p.parentId===id && p.placement==='context'){ out.push(p.instanceId); walk(p.instanceId); }});};
+  walk(pid); return out; }
+function attachedChild(pid,key){ return Object.values(W.panels).find(p=>p.parentId===pid&&p.placement==='context'&&p.key===key); }
+
+/* politique de sous-arbre : previews ferment, retenus se DÉTACHENT en références */
+function branchPolicy(parentId){
+  const subs=subtreeOf(parentId); let detached=0;
+  subs.forEach(id=>{ const p=W.panels[id]; if(!p) return;
+    if(p.retention==='retained'){
+      const dupe=W.refOrder.find(r=>W.panels[r].key===p.key);
+      if(dupe){ delete W.panels[id]; fx[dupe]='dedup'; }         // la référence existante gagne
+      else { p.placement='reference'; p.parentId=null; W.refOrder.push(id); fx[id]='detached-in'; detached++; }
+    } else { delete W.panels[id]; }
+  });
+  if(detached) check('detach');
+}
+
+const Cmd={
+  openSpace(key){
+    if(W.rootId && W.panels[W.rootId].key===key){ fx[W.rootId]='dedup'; return; }
+    const prev=W.rootId?W.panels[W.rootId].key:null;
+    W=freshW(); W.spaceKey=key;                                   // V1 sûr : changer de Space vide les DEUX rails
+    const id=nid();
+    W.panels[id]={instanceId:id,key,parentId:null,role:'root',retention:'retained',placement:'context'};
+    W.rootId=id; W.contextLeafId=id; W.focusedId=id; fx[id]='enter';
+    if(prev&&prev!==key&&done.has('drill')) check('lineage'); check('root');
+  },
+  openDetail(parentId,key){
+    const existing=attachedChild(parentId,key);
+    if(existing){ W.focusedId=existing.instanceId; fx[existing.instanceId]='dedup'; return; } // même cible + même parent = révéler
+    const hadSub=subtreeOf(parentId).length>0;
+    const hadPreview=subtreeOf(parentId).some(id=>W.panels[id].retention==='preview');
+    branchPolicy(parentId);
+    const id=nid();
+    W.panels[id]={instanceId:id,key,parentId,role:'detail',retention:'preview',placement:'context'};
+    W.contextLeafId=id; W.focusedId=id; fx[id]=hadPreview?'replaced-in':'enter';
+    check('drill'); if(hadPreview) check('replace');
+    const twin=Object.values(W.panels).some(p=>p.instanceId!==id&&p.key===key);
+    if(twin) check('twin');
+  },
+  pinPanel(id){ const p=W.panels[id]; if(!p||p.role==='root'||p.placement!=='context') return;
+    p.retention=p.retention==='retained'?'preview':'retained';
+    if(p.retention==='retained') check('pin'); },
+  closePanel(id){ const p=W.panels[id]; if(!p) return;
+    if(p.role==='root'){ W=freshW(); return; }                    // fermer la racine = accueil
+    if(p.placement==='reference'){ W.refOrder=W.refOrder.filter(r=>r!==id); delete W.panels[id]; return; }
+    branchPolicy(id);                                             // ses descendants : previews ferment, retenus détachent
+    const parent=p.parentId; delete W.panels[id];
+    if(!W.panels[W.contextLeafId]) W.contextLeafId=parent;
+    if(!W.panels[W.focusedId]) W.focusedId=parent;
+    check('popto'); },
+  navigateTo(id){ // clic ContextPath : la feuille devient cet ancêtre; la branche en dessous suit la politique
+    if(!W.panels[id]) return; branchPolicy(id);
+    W.contextLeafId=id; W.focusedId=id; check('popto'); },
+  focusPanel(id){ if(W.panels[id]) W.focusedId=id; },
+  resumeReference(id){ const p=W.panels[id]; if(!p) return;
+    W.refOrder=W.refOrder.filter(r=>r!==id); delete W.panels[id];
+    openPath(p.key,'resumeReference'); check('resume'); },
+};
+
+function openPath(key,opName){ // deep-link : reconstruit l'ascendance depuis l'arbre de contenu
+  const chain=[key]; let p=PARENT[key]; while(p){chain.unshift(p); p=PARENT[p];}
+  Cmd.openSpace(chain[0]);
+  let cur=W.rootId;
+  for(let i=1;i<chain.length;i++){
+    const existing=attachedChild(cur,chain[i]);
+    if(existing){ cur=existing.instanceId; }                     // révéler = avancer, ne jamais dupliquer
+    else { Cmd.openDetail(cur,chain[i]); cur=W.contextLeafId; }
+  }
+  branchPolicy(cur);                                             // la branche sous la cible suit la politique
+  W.contextLeafId=cur; W.focusedId=cur;
+  lastOp=(opName||'deepLink')+'("'+key+'") → ascendance reconstruite';
+  if(!opName) check('deeplink');
+}
+
+/* ═══ MISSIONS ═══ */
+const MISSIONS=[
+  {id:'root',   op:'openSpace',      txt:'Ouvre un Space dans le dock. Le RootPanel apparaît.'},
+  {id:'drill',  op:'openDetail',     txt:'Clique une ligne → un DetailPanel s’ouvre à droite. Le parent reste.'},
+  {id:'replace',op:'aperçu',         txt:'Depuis le MÊME parent, ouvre un autre enfant : l’aperçu (ambre) est remplacé.'},
+  {id:'pin',    op:'pinPanel',       txt:'Épingle un panneau (📌) : retention passe à « retained » (bleu).'},
+  {id:'detach', op:'détachement',    txt:'Épinglé + redrille depuis un ANCÊTRE : il file dans le rail RÉFÉRENCES (violet) au lieu de mentir sur sa parenté.'},
+  {id:'resume', op:'resumeReference',txt:'Clique ▶ Reprendre sur une référence : son ascendance complète est reconstruite.'},
+  {id:'twin',   op:'2 instances',    txt:'Dans Atlas › Développement › Intégration CMS, ouvre « voir aussi ↗ Design » : même fiche, autre parent → instance distincte.'},
+  {id:'popto',  op:'navigateTo',     txt:'Clique un segment du ContextPath (ou Échap) : la branche en dessous suit la politique de sous-arbre.'},
+  {id:'lineage',op:'openSpace ×2',   txt:'Ouvre un AUTRE Space : les deux rails sont vidés (politique V1).'},
+  {id:'deeplink',op:'deep-link',     txt:'Cherche « maquettes » (⌘K) et ouvre le résultat : l’ascendance entière se reconstruit.'},
+  {id:'spine',  op:'épines',         txt:'Drille profond : les ancêtres hors budget se replient en ÉPINES. Clique une épine = focus.'},
+  {id:'hosts',  op:'2 rendus',       txt:'Passe en 📱 iPhone : même état, rendu en pile + tray de références.'},
+  {id:'drawer', op:'overlay',        txt:'Ouvre ⚙ : le tiroir flotte HORS état. Échap le ferme en premier (précédence).'},
+];
+const done=new Set();
+function check(id){ if(!done.has(id)){done.add(id); renderMissions();} }
+
+function dispatch(name,...args){ Cmd[name](...args);
+  if(name!=='focusPanel') lastOp=name+'('+args.map(a=>typeof a==='string'?'"'+a+'"':shortId(a)).join(', ')+')';
+  anchor=null; render(); }
+const shortId=(id)=>{const p=W.panels[id]; return p?('«'+TREE[p.key].title+'»'):JSON.stringify(id);};
+
+/* ═══ PRÉSENTATION — budget de slots + épines (locale à l'appareil) ═══ */
+let device='fluid'; let anchor=null;
+const DEVICES={fluid:{w:null,host:'cols'},ipad:{w:834,host:'cols'},iphone:{w:390,host:'push'}};
+function slotBudget(availW){ return Math.max(1, Math.floor((availW-28)/300)); }
+function computeVisible(path,k){
+  if(path.length<=k) return new Set(path);
+  const vis=new Set();
+  if(anchor!=null && path.includes(anchor)){
+    const ai=Math.min(Math.max(path.indexOf(anchor),0),path.length-k);
+    for(let i=ai;i<ai+k;i++) vis.add(path[i]); return vis;
+  }
+  vis.add(path[path.length-1]);
+  for(let i=path.length-2;i>=0&&vis.size<k;i--) if(W.panels[path[i]].retention==='retained') vis.add(path[i]);
+  for(let i=path.length-2;i>=0&&vis.size<k;i--) vis.add(path[i]);
+  return vis;
+}
+
+/* ═══ RENDU ═══ */
+const $=(id)=>document.getElementById(id);
+const esc=(t)=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function colEl(p,posInfo){
+  const n=TREE[p.key]; const focused=p.instanceId===W.focusedId;
+  const isRef=p.placement==='reference';
+  const isPreview=!isRef&&p.retention==='preview'&&p.role!=='root'&&p.instanceId===W.contextLeafId;
+  const el=document.createElement('div');
+  el.className='col'+(focused?' focused':'')+(isRef?' reference':p.retention==='retained'&&p.role!=='root'?' retained':'')+(isPreview?' preview':'');
+  if(fx[p.instanceId]) el.classList.add(fx[p.instanceId]);
+  el.dataset.iid=p.instanceId;
+  const badge= p.role==='root'?'<span class="badge root">racine</span>'
+    : isRef?'<span class="badge ref">réf. détachée</span>'
+    : p.retention==='retained'?'<span class="badge pin">📌 retenu</span>'
+    : isPreview?'<span class="badge preview">aperçu</span>':'';
+  const ctrls= p.role==='root'
+    ? `<button title="Fermer le Space (retour accueil)" data-a="close" data-id="${p.instanceId}">✕</button>`
+    : isRef
+    ? `<button title="Fermer cette référence" data-a="close" data-id="${p.instanceId}">✕</button>`
+    : `<button title="${p.retention==='retained'?'Détacher (redevient aperçu)':'Épingler — retention: retained'}" class="${p.retention==='retained'?'pin-on':''}" data-a="pin" data-id="${p.instanceId}">📌</button>
+       <button title="Fermer ce panneau (sous-arbre : previews ferment, retenus détachent)" data-a="close" data-id="${p.instanceId}">✕</button>`;
+  const kpis=n.kpis&&!isRef?`<div class="kpis">${n.kpis.map(x=>`<div class="kpi"><span class="kv">${esc(x.v)}</span> <span class="kl">${esc(x.l)}</span></div>`).join('')}</div>`:'';
+  const rows=isRef?'':((n.children||[]).map((cid,k)=>{const c=TREE[cid];
+    return `<button class="drill" data-child="${cid}" data-from="${p.instanceId}">
+      <span class="num">${String(k+1).padStart(2,'0')}</span>
+      <span class="db"><span class="dt">${esc(c.title)}</span><span class="ds">${esc(c.sub||c.eyebrow)}</span></span>
+      <span class="chev">›</span></button>`;}).join('')
+    +(n.seealso||[]).map(cid=>{const c=TREE[cid];
+    return `<button class="drill seealso" data-child="${cid}" data-from="${p.instanceId}">
+      <span class="num">↗</span>
+      <span class="db"><span class="dt">voir aussi — ${esc(c.title)}</span><span class="ds">même cible, CE parent → instance distincte</span></span>
+      <span class="chev">›</span></button>`;}).join(''));
+  const leaf=n.leaf&&!isRef?`<div class="leaf-note"><p>${esc(n.leaf)}</p></div>`:'';
+  const refBody=isRef?`<div class="leaf-note"><p>Référence détachée : <b>parentInstanceId = null</b>. Elle ne prétend plus appartenir au fil actif — reprends-la pour reconstruire son ascendance.</p></div>`:'';
+  const foot=isRef
+    ?`<div class="col-foot"><button class="resume" data-a="resume" data-id="${p.instanceId}">▶ Reprendre</button></div>`
+    :(n.composer
+      ?`<div class="col-foot"><span class="composer">${esc(n.composer)}</span><button class="go">＋</button></div>`
+      :`<div class="col-foot"><span class="foot-note">PanelFooter = action persistante — jamais flottante dans le corps</span></div>`);
+  el.innerHTML=`
+    <div class="col-head">
+      <span class="eyebrow"><span class="txt">§ ${esc(n.eyebrow)}</span>${badge}</span>
+      <span class="ctrls">${ctrls}</span>
+    </div>
+    <div class="col-body">
+      <h3 class="col-title">${esc(n.title)}</h3>
+      ${n.sub&&!isRef?`<p class="col-sub">${esc(n.sub)}</p>`:''}
+      ${kpis}${rows}${refBody}${leaf}
+    </div>${foot}`;
+  return el;
+}
+
+function spineEl(p,idx){
+  const el=document.createElement('button');
+  el.className='spine'+(p.retention==='retained'?' retained':'');
+  el.title='Focus « '+TREE[p.key].title+' »';
+  el.dataset.spine=p.instanceId;
+  el.innerHTML=`<span class="n">${idx===0?'§':String(idx).padStart(2,'0')}</span><span class="v">${esc(TREE[p.key].title)}</span>${p.retention==='retained'?'<span aria-hidden="true">📌</span>':''}`;
+  return el;
+}
+
+function layoutFrame(){
+  const wrap=$('stage-wrap'), frame=$('frame');
+  const d=DEVICES[device];
+  frame.classList.toggle('iphone',device==='iphone');
+  frame.classList.toggle('ipad',device==='ipad');
+  if(!d.w){ frame.style.width='100%'; frame.style.height='100%'; frame.style.transform='none'; return; }
+  const availW=wrap.clientWidth-16, availH=wrap.clientHeight-12;
+  const s=Math.min(1, availW/d.w);
+  frame.style.width=d.w+'px';
+  frame.style.height=Math.max(320, availH/s)+'px';
+  frame.style.transform='scale('+s+')';
+}
+
+function render(){
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.toggle('active',W.spaceKey===b.dataset.space));
+  const path=contextPath();
+  $('crumbs').innerHTML=`<button data-crumb="home">démo</button>`+path.map((id,i)=>
+    `<span class="sep">›</span><button data-crumb="${id}" class="${i===path.length-1?'here':''}">${esc(TREE[W.panels[id].key].title)}</button>`).join('');
+  $('ref-count').hidden=W.refOrder.length===0;
+  $('ref-count').textContent=W.refOrder.length;
+
+  layoutFrame();
+  const host=DEVICES[device].host;
+  const st=$('stage'); st.innerHTML='';
+  const bb=$('backbar'); bb.innerHTML='';
+  let k=0, folded=[];
+
+  if(!W.rootId){
+    st.innerHTML=`<div class="empty"><div class="big">⬅︎</div><b>Aucun Space ouvert.</b><br>Choisis un Space dans le dock — openSpace crée le RootPanel et démarre le ContextPath.</div>`;
+  } else if(host==='cols'){
+    const availW=DEVICES[device].w||$('stage-wrap').clientWidth;
+    const budgetW=W.refOrder.length?availW-220*Math.min(W.refOrder.length,2):availW;
+    k=slotBudget(budgetW);
+    const vis=computeVisible(path,k);
+    path.forEach((id,i)=>{ const p=W.panels[id];
+      if(vis.has(id)) st.appendChild(colEl(p)); else { folded.push(i); st.appendChild(spineEl(p,i)); }});
+    if(W.refOrder.length){
+      const sep=document.createElement('div'); sep.className='rail-sep'; st.appendChild(sep);
+      W.refOrder.forEach(id=>st.appendChild(colEl(W.panels[id])));
+    }
+  } else {
+    const leafId=path[path.length-1]; k=1;
+    const chips=W.refOrder.map(id=>`<button class="ref-chip" data-a="resume" data-id="${id}" title="Reprendre">📌 ${esc(TREE[W.panels[id].key].title)} ▶</button>`).join(' ');
+    if(path.length>1){ const parent=W.panels[path[path.length-2]];
+      bb.innerHTML=`<div class="backbar"><button class="bk" data-a="close" data-id="${leafId}">‹ ${esc(TREE[parent.key].title)}</button>${chips}<span class="pos">panneau ${path.length} / ${path.length} — même état, autre rendu</span></div>`;
+    } else bb.innerHTML=`<div class="backbar"><span style="font-size:12px;color:var(--ink3)">racine</span>${chips}<span class="pos">1 / 1</span></div>`;
+    st.appendChild(colEl(W.panels[leafId]));
+  }
+
+  const refs=W.refOrder.map(id=>W.panels[id].key);
+  $('statejson').innerHTML=`<span class="op-line">dernière op : ${esc(lastOp)}</span>`+
+    `<span class="k">ContextPath</span> (dérivé) = [${path.map(id=>`<span class="v">"${W.panels[id].key}"</span>`).join(', ')}]\n`+
+    `<span class="k">contextLeafId</span> = <span class="v">${W.contextLeafId||'null'}</span> · <span class="k">focusedId</span> = <span class="v">${W.focusedId||'null'}</span>\n`+
+    `<span class="k">panels</span> = {${Object.values(W.panels).map(p=>`\n  <span class="v">${p.instanceId}</span>: { <span class="k">key</span>:"${p.key}", <span class="k">parent</span>:${p.parentId?'<span class="v">'+p.parentId+'</span>':'<span class="r">null</span>'}, <span class="k">retention</span>:${p.retention==='retained'?'<span class="p">retained</span>':'preview'}, <span class="k">placement</span>:${p.placement==='reference'?'<span class="r">reference</span>':'context'} }`).join(',')}${Object.keys(W.panels).length?'\n':''}}\n`+
+    `<span class="k">referenceRailOrder</span> = [${refs.map(r=>`<span class="r">"${r}"</span>`).join(', ')}]`+
+    `<span class="pres"><b>présentation</b> (locale, PAS dans l'état) : appareil=<b>${device}</b> · host=<b>${DEVICES[device].host}</b>${DEVICES[device].host==='cols'&&W.rootId?` · slots=<b>${k}</b> · épines=<b>[${folded.join(', ')}]</b>`:''}</span>`;
+  fx={};
+}
+
+function renderMissions(){
+  $('missions').innerHTML=MISSIONS.map(m=>`<div class="mission ${done.has(m.id)?'done':''}"><span class="chk">✓</span><span><span class="op">${m.op}</span>${m.txt}</span></div>`).join('');
+  $('mcount').textContent=done.size+' / '+MISSIONS.length;
+}
+
+/* ═══ ÉVÉNEMENTS ═══ */
+document.querySelector('.sidebar').addEventListener('click',e=>{
+  const b=e.target.closest('[data-space]'); if(b) dispatch('openSpace',b.dataset.space);
+});
+$('crumbs').addEventListener('click',e=>{
+  const b=e.target.closest('[data-crumb]'); if(!b) return;
+  if(b.dataset.crumb==='home'){ W=freshW(); lastOp='closePanel(racine)'; render(); }
+  else dispatch('navigateTo',b.dataset.crumb);
+});
+$('stage-wrap').addEventListener('click',e=>{
+  const sp=e.target.closest('[data-spine]');
+  if(sp){ anchor=sp.dataset.spine; check('spine'); lastOp='(présentation) déplier l’épine'; Cmd.focusPanel(sp.dataset.spine); render(); return; }
+  const d=e.target.closest('[data-child]');
+  if(d){ dispatch('openDetail',d.dataset.from,d.dataset.child); return; }
+  const a=e.target.closest('[data-a]');
+  if(a){ const id=a.dataset.id;
+    if(a.dataset.a==='close') dispatch('closePanel',id);
+    if(a.dataset.a==='pin') dispatch('pinPanel',id);
+    if(a.dataset.a==='resume') dispatch('resumeReference',id);
+    return; }
+  const col=e.target.closest('.col[data-iid]');
+  if(col){ Cmd.focusPanel(col.dataset.iid); render(); }
+});
+$('backbar')?.addEventListener('click',()=>{}); // délégué par stage-wrap? backbar est hors stage-wrap → attacher :
+document.querySelector('.main').addEventListener('click',e=>{
+  if(e.target.closest('#stage-wrap')) return; // déjà géré
+});
+
+/* backbar est DANS #stage-wrap (frame) — la délégation ci-dessus suffit */
+
+/* CommandBar : recherche = deep-link */
+const qInput=$('q'), qPop=$('q-pop');
+function qClose(){qPop.hidden=true;}
+qInput.addEventListener('input',()=>{
+  const q=qInput.value.trim().toLowerCase();
+  if(!q){qClose();return;}
+  const hits=Object.entries(TREE).filter(([,n])=>n.title.toLowerCase().includes(q)).slice(0,8);
+  qPop.innerHTML=hits.length?hits.map(([key,n])=>{
+    const path=[]; let p=PARENT[key]; while(p){path.unshift(TREE[p].title); p=PARENT[p];}
+    return `<button class="q-item" data-open="${key}"><span class="qe">${esc(n.eyebrow)}</span><span><span class="qt">${esc(n.title)}</span><span class="qp">${path.length?esc(path.join(' › ')):'racine'}</span></span></button>`;
+  }).join(''):'<div class="q-empty">Aucun résultat</div>';
+  qPop.hidden=false;
+});
+qPop.addEventListener('click',e=>{const b=e.target.closest('[data-open]'); if(b){openPath(b.dataset.open); qClose(); qInput.value=''; render();}});
+document.addEventListener('click',e=>{if(!e.target.closest('.tb-search')) qClose();});
+
+/* UtilityDrawer + thème */
+const drawer=$('drawer'), drawerBtn=$('drawer-btn');
+function setDrawer(open){drawer.classList.toggle('open',open);drawerBtn.setAttribute('aria-expanded',open);if(open)check('drawer');}
+drawerBtn.addEventListener('click',()=>setDrawer(!drawer.classList.contains('open')));
+$('drawer-close').addEventListener('click',()=>setDrawer(false));
+const THEMES=['','light','dark'];
+function setTheme(t){
+  if(t) document.documentElement.dataset.theme=t; else delete document.documentElement.dataset.theme;
+  document.querySelectorAll('#theme-seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+}
+$('theme-seg').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)setTheme(b.dataset.t);});
+$('theme-btn').addEventListener('click',()=>{
+  const cur=document.documentElement.dataset.theme||'';
+  setTheme(THEMES[(THEMES.indexOf(cur)+1)%THEMES.length]);
+});
+
+/* Précédence Échap : recherche → tiroir → panneau actif */
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(!qPop.hidden){qClose();return;}
+    if(drawer.classList.contains('open')){setDrawer(false);return;}
+    if(W.contextLeafId&&W.panels[W.contextLeafId].role!=='root') dispatch('closePanel',W.contextLeafId);
+    else if(W.rootId){ W=freshW(); lastOp='closePanel(racine)'; render(); }
+    return;
+  }
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();qInput.focus();}
+});
+
+/* appareils */
+function setDevice(d){
+  device=d; anchor=null;
+  ['fluid','ipad','iphone'].forEach(x=>$('dev-'+x).classList.toggle('on',x===d));
+  if(d==='iphone') check('hosts');
+  render();
+}
+$('dev-fluid').addEventListener('click',()=>setDevice('fluid'));
+$('dev-ipad').addEventListener('click',()=>setDevice('ipad'));
+$('dev-iphone').addEventListener('click',()=>setDevice('iphone'));
+$('reset').addEventListener('click',()=>{W=freshW();seq=0;done.clear();lastOp='—';anchor=null;setTheme('');device='fluid';setDevice('fluid');renderMissions();});
+window.addEventListener('resize',()=>render());
+
+renderMissions(); render();
+</script>

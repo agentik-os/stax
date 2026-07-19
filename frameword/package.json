@@ -1,0 +1,13 @@
+{
+  "name": "frameword",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "bun test packages/panels-core",
+    "build": "cd apps/crm-specimen && bunx vite build",
+    "dev": "cd apps/crm-specimen && bunx vite --port 5799"
+  }
+}
