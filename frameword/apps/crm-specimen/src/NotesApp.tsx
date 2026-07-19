@@ -109,86 +109,91 @@ export function NotesRoot({ panelId }: { panelId: string }) {
 
   const notes = [...s.notes].sort((a, b) =>
     Number(!!b.pinned) - Number(!!a.pinned) || b.ts - a.ts);
-  const tasks = [...s.tasks].sort((a, b) => Number(a.done) - Number(b.done));
-  const open = s.tasks.filter((t) => !t.done).length;
-
   const openNote = (id: string) =>
     ws.openDetail(panelId, { panelType: "note", resourceKey: "nte:" + id });
-  const openTask = (id: string) =>
-    ws.openDetail(panelId, { panelType: "task", resourceKey: "tsk:" + id });
   const newNote = () => openNote(notesApp.addNote());
 
   return (
-    <>
-      <div className="card">
-        <div className="lab">Notes · {s.notes.length}</div>
-        {s.notes.length === 0 && <p style={{ marginTop: 6 }}>No notes yet — start one below.</p>}
-        <div className="drills" style={{ marginTop: 8 }}>
-          {notes.map((n) => (
-            <button key={n.id} className="drill" onClick={() => openNote(n.id)}>
-              <span className="no">{n.pinned ? "✶" : "§"}</span>
-              <span className="bd">
-                <span className="tt" style={{ display: "block" }}>{n.title || "Untitled note"}</span>
-                <span className="ss" style={{ display: "block" }}>
-                  {ago(n.ts)}{stripHtml(n.body) ? " · " + stripHtml(n.body).slice(0, 72) : " · empty"}
-                </span>
+    <div className="card">
+      <div className="lab">Notes · {s.notes.length}</div>
+      {s.notes.length === 0 && <p style={{ marginTop: 6 }}>No notes yet — start one below.</p>}
+      <div className="drills" style={{ marginTop: 8 }}>
+        {notes.map((n) => (
+          <button key={n.id} className="drill" onClick={() => openNote(n.id)}>
+            <span className="no">{n.pinned ? "✶" : "§"}</span>
+            <span className="bd">
+              <span className="tt" style={{ display: "block" }}>{n.title || "Untitled note"}</span>
+              <span className="ss" style={{ display: "block" }}>
+                {ago(n.ts)}{stripHtml(n.body) ? " · " + stripHtml(n.body).slice(0, 72) : " · empty"}
               </span>
-              <span className="arr">→</span>
-            </button>
-          ))}
-        </div>
-        <button className="d-btn outline sm" style={{ marginTop: 10 }} onClick={newNote}>
-          New note
-        </button>
+            </span>
+            <span className="arr">→</span>
+          </button>
+        ))}
       </div>
+      <button className="d-btn outline sm" style={{ marginTop: 10 }} onClick={newNote}>
+        New note
+      </button>
+    </div>
+  );
+}
 
-      <div className="card">
-        <div className="lab">Tasks · {open}/{s.tasks.length}</div>
-        <form style={{ display: "flex", gap: 6, marginTop: 8 }}
-          onSubmit={(e) => {
-            e.preventDefault();
-            const inp = (e.target as HTMLFormElement).elements.namedItem("qtask") as HTMLInputElement;
-            const v = inp.value.trim();
-            if (!v) return;
-            notesApp.addTask(v);
-            inp.value = "";
-          }}>
-          <input name="qtask" className="d-input" style={{ flex: 1 }} placeholder="Add a task…" />
-          <button className="d-btn outline sm" type="submit">Add</button>
-        </form>
-        <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
-          {tasks.map((t) => (
-            <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <button
-                title={t.done ? "Mark as open" : "Mark as done"} aria-pressed={t.done}
-                onClick={() => notesApp.patchTask(t.id, { done: !t.done })}
-                style={{
-                  width: 18, height: 18, flex: "none", borderRadius: 5,
-                  border: "1px solid " + (t.done ? "var(--accent)" : "var(--border)"),
-                  background: t.done ? "var(--accent)" : "transparent",
-                  color: t.done ? "var(--background)" : "transparent",
-                  fontSize: "calc(var(--fz-mono, 10px) + 1px)", lineHeight: 1, cursor: "pointer",
-                }}>
-                ✓
-              </button>
-              <button onClick={() => openTask(t.id)}
-                style={{
-                  flex: 1, minWidth: 0, textAlign: "left", background: "transparent", border: "none",
-                  padding: "3px 0", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  fontSize: "var(--fz-body, 13.5px)",
-                  color: t.done ? "var(--muted-foreground)" : "var(--foreground)",
-                  textDecoration: t.done ? "line-through" : "none", textUnderlineOffset: 2,
-                }}>
-                {t.label}
-              </button>
-              <span title={"Priority — " + t.prio}
-                style={{ width: 7, height: 7, flex: "none", borderRadius: 999, background: PRIO_DOT[t.prio] }} />
-              {t.due && <span className="tag" style={{ flex: "none" }}>{fmtDue(t.due)}</span>}
-            </div>
-          ))}
-        </div>
+export function TasksRoot({ panelId }: { panelId: string }) {
+  const ws = useWorkspace();
+  const s = useNotesApp();
+
+  const tasks = [...s.tasks].sort((a, b) => Number(a.done) - Number(b.done));
+  const open = s.tasks.filter((t) => !t.done).length;
+  const openTask = (id: string) =>
+    ws.openDetail(panelId, { panelType: "task", resourceKey: "tsk:" + id });
+
+  return (
+    <div className="card">
+      <div className="lab">Tasks · {open}/{s.tasks.length}</div>
+      <form style={{ display: "flex", gap: 6, marginTop: 8 }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          const inp = (e.target as HTMLFormElement).elements.namedItem("qtask") as HTMLInputElement;
+          const v = inp.value.trim();
+          if (!v) return;
+          notesApp.addTask(v);
+          inp.value = "";
+        }}>
+        <input name="qtask" className="d-input" style={{ flex: 1 }} placeholder="Add a task…" />
+        <button className="d-btn outline sm" type="submit">Add</button>
+      </form>
+      <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
+        {tasks.map((t) => (
+          <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <button
+              title={t.done ? "Mark as open" : "Mark as done"} aria-pressed={t.done}
+              onClick={() => notesApp.patchTask(t.id, { done: !t.done })}
+              style={{
+                width: 18, height: 18, flex: "none", borderRadius: 5,
+                border: "1px solid " + (t.done ? "var(--accent)" : "var(--border)"),
+                background: t.done ? "var(--accent)" : "transparent",
+                color: t.done ? "var(--background)" : "transparent",
+                fontSize: "calc(var(--fz-mono, 10px) + 1px)", lineHeight: 1, cursor: "pointer",
+              }}>
+              ✓
+            </button>
+            <button onClick={() => openTask(t.id)}
+              style={{
+                flex: 1, minWidth: 0, textAlign: "left", background: "transparent", border: "none",
+                padding: "3px 0", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                fontSize: "var(--fz-body, 13.5px)",
+                color: t.done ? "var(--muted-foreground)" : "var(--foreground)",
+                textDecoration: t.done ? "line-through" : "none", textUnderlineOffset: 2,
+              }}>
+              {t.label}
+            </button>
+            <span title={"Priority — " + t.prio}
+              style={{ width: 7, height: 7, flex: "none", borderRadius: 999, background: PRIO_DOT[t.prio] }} />
+            {t.due && <span className="tag" style={{ flex: "none" }}>{fmtDue(t.due)}</span>}
+          </div>
+        ))}
       </div>
-    </>
+    </div>
   );
 }
 

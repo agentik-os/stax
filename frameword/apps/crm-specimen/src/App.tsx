@@ -14,7 +14,7 @@ import { BlockDemo } from "./BlockDemo";
 import { CanvasBoard, NodeInspector, EdgeInspector, board, boardFromPrompt } from "./CanvasBoard";
 import { BlockLive } from "./BlockLive";
 import { ProfileBody, AvatarBubble, useProfile } from "./Profile";
-import { NotesRoot, NoteEditor, TaskDetail, notesApp } from "./NotesApp";
+import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, notesApp } from "./NotesApp";
 
 /* ── registry : width belongs to the KIND, not the user ──────────────── */
 const REGISTRY: PanelRegistry = {
@@ -37,7 +37,8 @@ const REGISTRY: PanelRegistry = {
   canvasedge: { size: "S" },
   blocklive: { size: "XL" },
   profile: { size: "M" },
-  notes: { size: "L" },
+  notes: { size: "M" },
+  tasks: { size: "M" },
   note: { size: "M" },
   task: { size: "S" },
 };
@@ -356,8 +357,11 @@ function Shell() {
         <button className="tb-goto" onClick={() => setPalette(true)}>
           GO TO<span className="kbd" style={{ minWidth: 0 }}>⌘K</span>
         </button>
-        <button className="tb-btn" title="Notes & Tasks" onClick={() => ws.openSpace("notes", targetOf("sec:notes"))}>
+        <button className="tb-btn" title="Notes" onClick={() => ws.openSpace("notes", targetOf("sec:notes"))}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3v5h5" /><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7z" /><path d="M9 13h6M9 17h4" /></svg>
+        </button>
+        <button className="tb-btn" title="Tasks" onClick={() => ws.openSpace("tasks", targetOf("sec:tasks"))}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="4" /><path d="M8 12l3 3 5-6" /></svg>
         </button>
         <button className="tb-btn" title="Canvas board — your whiteboard" onClick={() => ws.openSpace("canvas", targetOf("sec:canvas"))}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M12 17v4" /><path d="M8 21h8" /><path d="M7.5 12l3-3.5 2.5 2 3.5-4" /></svg>
@@ -716,6 +720,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
             {p.target.panelType === "blocklive" && <BlockLive name={p.target.resourceKey} />}
             {p.target.panelType === "profile" && <ProfileBody />}
             {p.target.panelType === "notes" && <NotesRoot panelId={id} />}
+            {p.target.panelType === "tasks" && <TasksRoot panelId={id} />}
             {p.target.panelType === "note" && <NoteEditor noteKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "task" && <TaskDetail taskKey={p.target.resourceKey} panelId={id} />}
             {(n.blocks ?? []).map((b, i) =>
@@ -1025,7 +1030,8 @@ function Palette({ onClose, deepLink, say, setTheme }: {
     out.push({ tag: "action", label: "Open Canvas board", run: () => ws.openSpace("canvas", targetOf("sec:canvas")) });
     out.push({ tag: "action", label: "Open Agent — ⌘J", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", metaKey: true })) });
     out.push({ tag: "action", label: "Open Profile", run: () => ws.openSpace("profile", targetOf("sys:profile")) });
-    out.push({ tag: "action", label: "Open Notes & Tasks", run: () => ws.openSpace("notes", targetOf("sec:notes")) });
+    out.push({ tag: "action", label: "Open Notes", run: () => ws.openSpace("notes", targetOf("sec:notes")) });
+    out.push({ tag: "action", label: "Open Tasks", run: () => ws.openSpace("tasks", targetOf("sec:tasks")) });
     out.push({ tag: "action", label: "Theme — light", run: () => setTheme("light") });
     out.push({ tag: "action", label: "Theme — dark", run: () => setTheme("dark") });
     out.push({ tag: "action", label: "Theme — system", run: () => setTheme("system") });

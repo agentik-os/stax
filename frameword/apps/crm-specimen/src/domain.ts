@@ -547,8 +547,12 @@ DOMAIN["sec:canvas"] = {
 
 /* system panels — reachable from the account menu & the palette, in no dashboard */
 DOMAIN["sec:notes"] = {
-  panelType: "notes", title: "Notes & Tasks", eyebrow: "Personal",
-  subtitle: "Your notes and your task list — every item opens as the next panel.",
+  panelType: "notes", title: "Notes", eyebrow: "Personal",
+  subtitle: "Your notes — each one opens as the next panel, written in rich text.",
+};
+DOMAIN["sec:tasks"] = {
+  panelType: "tasks", title: "Tasks", eyebrow: "Personal",
+  subtitle: "Your task list — check things off, drill a task for details.",
 };
 DOMAIN["sys:profile"] = {
   panelType: "profile", title: "Profile", eyebrow: "Account",
