@@ -87,7 +87,7 @@ const Ph = ({ w = "100%", h = 8 }: { w?: number | string; h?: number }) => (
 );
 const muted = { color: "var(--muted-foreground)" } as const;
 const mono10 = { fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted-foreground)" } as const;
-const serifV = { fontFamily: "var(--font-serif)", fontVariantNumeric: "tabular-nums" } as const;
+const serifV = { fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" } as const;
 const Delta = ({ v, neg }: { v: string; neg?: boolean }) => (
   <span style={{ fontSize: 11, fontWeight: 600, color: neg ? "var(--accent)" : "var(--foreground)", background: neg ? "var(--accent-soft)" : "var(--secondary)", borderRadius: 9999, padding: "2px 7px 1px" }}>{neg ? "▼" : "▲"} {v}</span>
 );

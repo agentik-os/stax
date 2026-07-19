@@ -149,7 +149,7 @@ img.avatar { border: 1px solid var(--border); }
 .stats { display: flex; gap: 10px; margin-bottom: 16px; }
 .stat { flex: 1; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
 .stat .lab { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); }
-.stat .val { font-family: var(--font-serif); font-size: 32px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat .val { font-family: var(--font-mono); font-size: calc(var(--fz-title, 27px) * 1.0); line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; font-weight: 500; }
 
 /* section card */
 .card { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
@@ -497,20 +497,20 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .cv-boardbtn:hover { border-color: var(--ink-4); color: var(--foreground); }
 .cv-boardbtn .sig { color: var(--accent); }
 .cv-boardbtn .caret { font-size: 9px; color: var(--muted-foreground); }
-.cv-boardbar .cv-fly { left: 0; right: auto; top: 38px; min-width: 210px; }
-.cv-fly { position: absolute; right: 46px; top: 0; min-width: 168px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 5px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 1px; z-index: 20; animation: fadeIn 110ms var(--ease); }
+.cv-boardbar .cv-fly { left: 0; right: auto; top: 36px; min-width: 185px; }
+.cv-fly { position: absolute; right: 46px; top: 0; min-width: 132px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 3px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 0; z-index: 20; animation: fadeIn 110ms var(--ease); }
 .cv-toolbar .cv-fly { top: 4px; }
 .fly-row { display: flex; align-items: center; gap: 2px; }
 .fly-row.on .fly-main { font-weight: 600; color: var(--foreground); }
-.fly-main { flex: 1; text-align: left; padding: 7px 10px; border-radius: 8px; font-size: calc(var(--fz-body, 13.5px) - 1px); color: var(--ink-2); min-width: 0; white-space: nowrap; }
+.fly-main { flex: 1; text-align: left; padding: 5px 9px; border-radius: 6px; font-size: calc(var(--fz-body, 13.5px) - 2.5px); color: var(--ink-2); min-width: 0; white-space: nowrap; line-height: 1.5; }
 .fly-main:hover { background: var(--secondary); color: var(--foreground); }
 .fly-main.danger { color: var(--destructive); }
 .fly-main.danger:hover { background: var(--accent-soft); }
-.fly-ico { width: 26px; height: 26px; flex: none; border-radius: 7px; color: var(--muted-foreground); display: grid; place-items: center; font-size: 10px; }
+.fly-ico { width: 22px; height: 22px; flex: none; border-radius: 7px; color: var(--muted-foreground); display: grid; place-items: center; font-size: 10px; }
 .fly-ico:hover { background: var(--secondary); color: var(--foreground); }
-.fly-new { margin-top: 3px; border-top: 1px solid var(--rule-1); padding: 8px 10px 5px; text-align: left; font-size: calc(var(--fz-body, 13.5px) - 1.5px); color: var(--accent); font-weight: 500; }
-.fly-seg { display: flex; gap: 3px; padding: 3px 8px 5px; }
-.fly-seg button { flex: 1; padding: 4px 0; border: 1px solid var(--border); border-radius: 7px; font-family: var(--font-mono); font-size: 10px; color: var(--muted-foreground); }
+.fly-new { margin-top: 2px; border-top: 1px solid var(--rule-1); padding: 6px 9px 4px; text-align: left; font-size: calc(var(--fz-body, 13.5px) - 2.5px); color: var(--accent); font-weight: 500; }
+.fly-seg { display: flex; gap: 3px; padding: 2px 7px 4px; }
+.fly-seg button { flex: 1; padding: 3px 0; border: 1px solid var(--border); border-radius: 7px; font-family: var(--font-mono); font-size: 10px; color: var(--muted-foreground); }
 .fly-seg button.on { background: var(--accent-soft); border-color: color-mix(in oklab, var(--accent) 40%, var(--border)); color: var(--accent); }
 /* step node */
 .cv-step { display: flex; align-items: center; gap: 9px; background: var(--card); border: 1px solid var(--border); border-radius: 9999px; padding: 6px 16px 6px 7px; box-shadow: var(--shadow-xs); }

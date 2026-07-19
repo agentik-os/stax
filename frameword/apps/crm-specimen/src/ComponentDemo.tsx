@@ -308,7 +308,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
         <Zone><div className="d-card" style={{ position: "relative" }}>
           <span className="d-badge soft" style={{ position: "absolute", top: 10, right: 10 }}>New</span>
           <div style={{ ...mono10, marginBottom: 4 }}>Pipeline</div>
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: 30 }}>46k€</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 26, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>46k€</div>
           <div style={{ fontSize: 12, color: "var(--foreground)" }}>▲ +12% vs June</div>
         </div></Zone>
       ) : (
@@ -1378,8 +1378,8 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
         </Zone>
       ) : (
         <Zone col>
-          <div className="d-row" style={{ justifyContent: "space-between" }}><span style={{ ...mono10 }}>MRR</span><span style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontVariantNumeric: "tabular-nums" }}>8 214 €</span></div>
-          <div className="d-row" style={{ justifyContent: "space-between" }}><span style={{ ...mono10 }}>Win rate</span><span style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontVariantNumeric: "tabular-nums" }}>37,2 %</span></div>
+          <div className="d-row" style={{ justifyContent: "space-between" }}><span style={{ ...mono10 }}>MRR</span><span style={{ fontFamily: "var(--font-mono)", fontSize: 21, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>8 214 €</span></div>
+          <div className="d-row" style={{ justifyContent: "space-between" }}><span style={{ ...mono10 }}>Win rate</span><span style={{ fontFamily: "var(--font-mono)", fontSize: 21, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>37,2 %</span></div>
         </Zone>
       )}<Note>V1 the three voices · V2 article rhythm · V3 data typography. Serif speaks, sans works, mono measures.</Note></>);
 
