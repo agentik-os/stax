@@ -394,7 +394,7 @@ export function NoteEditor({ noteKey, panelId }: { noteKey: string; panelId: str
   if (!n) return <div className="leaf-note">This note was deleted.</div>;
   return (
     <>
-      <input
+      <input autoFocus
         value={n.title} placeholder="Untitled note" aria-label="Note title"
         onChange={(e) => notesApp.patchNote(id, { title: e.target.value })}
         style={{
@@ -404,16 +404,6 @@ export function NoteEditor({ noteKey, panelId }: { noteKey: string; panelId: str
         }} />
       <div className="pop-sub">{n.pinned ? "✶ pinned · " : ""}edited {ago(n.ts)}</div>
       <NoteDoc key={id} noteId={id} html={n.body} />
-      <div style={{ display: "flex", gap: 8 }}>
-        <button className="d-btn outline sm" aria-pressed={!!n.pinned}
-          onClick={() => notesApp.patchNote(id, { pinned: !n.pinned })}>
-          {n.pinned ? "Unpin" : "Pin"}
-        </button>
-        <button className="d-btn destructive sm"
-          onClick={() => { notesApp.removeNote(id); ws.closePanel(panelId); }}>
-          Delete note
-        </button>
-      </div>
     </>
   );
 }
@@ -437,7 +427,7 @@ export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: str
       <div className="card">
         <div className="lab">Task</div>
         <div className="pop-sub" style={{ marginTop: 8 }}>Label</div>
-        <input className="d-input" style={{ width: "100%", marginBottom: 8 }} value={t.label}
+        <input className="d-input" autoFocus style={{ width: "100%", marginBottom: 8 }} value={t.label}
           onChange={(e) => patch({ label: e.target.value })} />
         <div className="pop-sub">Status</div>
         <div style={{ marginTop: 4, marginBottom: 8 }}>
@@ -500,10 +490,6 @@ export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: str
         <RichNotes key={id} html={t.notes ?? ""} placeholder="Context, links, next steps…"
           onChange={(h) => patch({ notes: h })} />
       </div>
-      <button className="d-btn destructive sm" style={{ alignSelf: "flex-start" }}
-        onClick={() => { notesApp.removeTask(id); ws.closePanel(panelId); }}>
-        Delete task
-      </button>
     </>
   );
 }

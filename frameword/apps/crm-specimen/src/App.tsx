@@ -14,7 +14,7 @@ import { BlockDemo } from "./BlockDemo";
 import { CanvasBoard, NodeInspector, EdgeInspector, board, boardFromPrompt } from "./CanvasBoard";
 import { BlockLive } from "./BlockLive";
 import { ProfileBody, AvatarBubble, useProfile } from "./Profile";
-import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, notesApp } from "./NotesApp";
+import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, notesApp, useNotesApp } from "./NotesApp";
 
 /* ── registry : width belongs to the KIND, not the user ──────────────── */
 const REGISTRY: PanelRegistry = {
@@ -634,6 +634,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   const [q, setQ] = useState("");
   const p: PanelInstance | undefined = ws.state.panelsById[id];
   if (!p) return null;
+  useNotesApp(); // foot actions (pin state, counts) re-render with the notes store
   const bn = p.target.panelType === "canvasnode" ? board.node(p.target.resourceKey.slice(4)) : null;
   const be = p.target.panelType === "canvasedge" ? board.edge(p.target.resourceKey.slice(4)) : null;
   const nt = p.target.panelType === "note" ? notesApp.note(p.target.resourceKey.slice(4)) : null;
@@ -827,8 +828,57 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
           ))
         ) : isCanvas ? (
           <span className="foot-note">Canvas — click a node to inspect · drag a handle to connect</span>
-        ) : p.target.panelType === "canvasnode" || p.target.panelType === "canvasedge" ? (
-          <span className="foot-note">Live — edits sync to the board instantly</span>
+        ) : p.target.panelType === "canvasnode" ? (
+          <div className="foot-actions">
+            <button className="d-btn outline sm"
+              onClick={() => {
+                const nid = p.target.resourceKey.slice(4);
+                const src = board.node(nid);
+                if (src) board.update((st) => ({ ...st, seq: st.seq + 1, nodes: [...st.nodes, { ...src, id: "n" + (st.seq + 1), x: src.x + 24, y: src.y + 24 }] }));
+              }}>
+              Duplicate — ⌘D
+            </button>
+            <button className="d-btn destructive sm"
+              onClick={() => {
+                const nid = p.target.resourceKey.slice(4);
+                board.update((st) => ({ ...st, nodes: st.nodes.filter((x) => x.id !== nid), edges: st.edges.filter((e) => e.source !== nid && e.target !== nid) }));
+                ws.closePanel(id);
+              }}>
+              Delete element
+            </button>
+          </div>
+        ) : p.target.panelType === "canvasedge" ? (
+          <div className="foot-actions">
+            <button className="d-btn destructive sm"
+              onClick={() => {
+                const eid = p.target.resourceKey.slice(4);
+                board.update((st) => ({ ...st, edges: st.edges.filter((x) => x.id !== eid) }));
+                ws.closePanel(id);
+              }}>
+              Delete link
+            </button>
+          </div>
+        ) : p.target.panelType === "note" ? (
+          <div className="foot-actions">
+            <button className="d-btn outline sm" aria-pressed={!!notesApp.note(p.target.resourceKey.slice(4))?.pinned}
+              onClick={() => {
+                const nid = p.target.resourceKey.slice(4);
+                notesApp.patchNote(nid, { pinned: !notesApp.note(nid)?.pinned });
+              }}>
+              {notesApp.note(p.target.resourceKey.slice(4))?.pinned ? "Unpin ✶" : "Pin ✶"}
+            </button>
+            <button className="d-btn destructive sm"
+              onClick={() => { notesApp.removeNote(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
+              Delete note
+            </button>
+          </div>
+        ) : p.target.panelType === "task" ? (
+          <div className="foot-actions">
+            <button className="d-btn destructive sm"
+              onClick={() => { notesApp.removeTask(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
+              Delete task
+            </button>
+          </div>
         ) : p.target.panelType === "tasks" ? (
           <button className="foot-cta" onClick={() => notesApp.addCategory()}>+ New category</button>
         ) : p.target.panelType === "block" ? (

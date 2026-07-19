@@ -184,6 +184,11 @@ function CardNode({ data, selected }: NodeProps) {
     <div className={"cv-card" + (selected ? " sel" : "")}
       style={d.color && d.color !== "plain" ? { borderTop: `3px solid color-mix(in oklab, var(--accent) ${d.color === "soft" ? 100 : d.color === "tint" ? 55 : 30}%, var(--border))` } : undefined}>
       <Handles />
+      {d.pinned && (
+        <span className="cv-pin" title="Position locked">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="4" y="11" width="16" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+        </span>
+      )}
       <div className="cv-eyebrow"><span className="sig">§</span> CARD</div>
       <div className="cv-title">{d.label}</div>
       {d.sub && <div className="cv-sub">{d.sub}</div>}
@@ -798,7 +803,7 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
       <div className="card">
         <div className="lab">Element</div>
         <div className="pop-sub" style={{ marginTop: 8 }}>Label</div>
-        <input className="d-input" style={{ width: "100%", marginBottom: 8 }} value={n.label}
+        <input className="d-input" autoFocus style={{ width: "100%", marginBottom: 8 }} value={n.label}
           onChange={(e) => upd({ label: e.target.value })} />
         {n.kind === "card" && (<>
           <div className="pop-sub">Subtitle</div>
@@ -916,19 +921,6 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
           </button>
         </div>
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <button className="d-btn outline sm"
-          onClick={() => board.update((st) => ({ ...st, seq: st.seq + 1, nodes: [...st.nodes, { ...n, id: "n" + (st.seq + 1), x: n.x + 24, y: n.y + 24 }] }))}>
-          Duplicate — ⌘D
-        </button>
-        <button className="d-btn destructive sm"
-          onClick={() => {
-            board.update((st) => ({ ...st, nodes: st.nodes.filter((x) => x.id !== id), edges: st.edges.filter((e) => e.source !== id && e.target !== id) }));
-            ws.closePanel(panelId);
-          }}>
-          Delete element
-        </button>
-      </div>
     </>
   );
 }
@@ -952,7 +944,7 @@ export function EdgeInspector({ edgeKey, panelId }: { edgeKey: string; panelId: 
       <div className="card">
         <div className="lab">Link</div>
         <div className="pop-sub" style={{ marginTop: 8 }}>Label</div>
-        <input className="d-input" style={{ width: "100%", marginBottom: 8 }} value={e.label ?? ""}
+        <input className="d-input" autoFocus style={{ width: "100%", marginBottom: 8 }} value={e.label ?? ""}
           placeholder="Name this connection…" onChange={(ev) => upd({ label: ev.target.value })} />
         <div className="pop-sub">Style</div>
         <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
@@ -984,13 +976,6 @@ export function EdgeInspector({ edgeKey, panelId }: { edgeKey: string; panelId: 
           ))}
         </div>
       </div>
-      <button className="d-btn destructive sm" style={{ alignSelf: "flex-start" }}
-        onClick={() => {
-          board.update((st) => ({ ...st, edges: st.edges.filter((x) => x.id !== id) }));
-          ws.closePanel(panelId);
-        }}>
-        Delete link
-      </button>
     </>
   );
 }
