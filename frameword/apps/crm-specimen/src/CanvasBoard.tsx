@@ -513,7 +513,7 @@ function BoardInner({ panelId }: { panelId: string }) {
             addAt("card", Math.round(p.x - 90), Math.round(p.y - 30));
           }
         }}
-        fitView proOptions={{ hideAttribution: true }}
+        fitView fitViewOptions={{ padding: 0.2, maxZoom: 1 }} proOptions={{ hideAttribution: true }}
         minZoom={0.3} maxZoom={2}
       >
         <Background variant={BackgroundVariant.Dots} gap={ui.grid} size={1.2} color="color-mix(in oklab, var(--foreground) 14%, transparent)" />
@@ -567,7 +567,7 @@ function BoardInner({ panelId }: { panelId: string }) {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
         </button>
         <span className="cv-sep" />
-        <button title="Fit view" onClick={() => rf.fitView({ padding: 0.2, duration: 300 })}>
+        <button title="Fit view" onClick={() => rf.fitView({ padding: 0.2, duration: 300, maxZoom: 1 })}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
         </button>
         <button title="Undo — ⌘Z" disabled={!board.canUndo()} onClick={() => board.undo()}>
