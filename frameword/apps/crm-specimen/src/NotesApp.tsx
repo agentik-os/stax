@@ -10,6 +10,7 @@ import { useWorkspace } from "@frameword/panels-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import { RichNotes } from "./CanvasBoard";
 
 /* ── shared store ────────────────────────────────────────────────────── */
 export type Prio = "low" | "med" | "high";
@@ -220,6 +221,20 @@ export function TasksRoot({ panelId }: { panelId: string }) {
     </div>
   );
 
+  const SubRows = ({ t, indent }: { t: Task; indent?: boolean }) => (
+    (t.subs?.length ?? 0) > 0 ? (
+      <div className="nt-subs" style={indent ? { marginLeft: 26 } : undefined}>
+        {t.subs!.map((f) => (
+          <button key={f.id} className={"cv-subrow" + (f.done ? " done" : "")}
+            title={f.done ? "Mark as open" : "Mark as done"}
+            onClick={(e) => { e.stopPropagation(); notesApp.patchTask(t.id, { subs: (t.subs ?? []).map((x) => (x.id === f.id ? { ...x, done: !x.done } : x)) }); }}>
+            <span className="cv-subdot" />{f.label}
+          </button>
+        ))}
+      </div>
+    ) : null
+  );
+
   const QuickAdd = ({ cat }: { cat?: string }) => (
     <form style={{ display: "flex", gap: 6 }}
       onSubmit={(e) => {
@@ -262,7 +277,12 @@ export function TasksRoot({ panelId }: { panelId: string }) {
               )}
             </div>
             <div style={{ margin: "10px 0", display: "flex", flexDirection: "column", gap: 4 }}>
-              {list.map((t) => <TaskRow key={t.id} t={t} />)}
+              {list.map((t) => (
+                <div key={t.id}>
+                  <TaskRow t={t} />
+                  <SubRows t={t} indent />
+                </div>
+              ))}
               {list.length === 0 && <p style={{ margin: 0 }}>Nothing here.</p>}
             </div>
             <QuickAdd cat={c.id} />
@@ -313,6 +333,7 @@ export function TasksRoot({ panelId }: { panelId: string }) {
                       onClick={() => openTask(t.id)}
                       role="button" tabIndex={0}>
                       <div className="nt-ktitle">{t.label}</div>
+                      <SubRows t={t} />
                       <div className="nt-kmeta">
                         <span style={{ width: 6, height: 6, borderRadius: 999, background: PRIO_DOT[t.prio], flex: "none" }} />
                         {t.due && <span>{fmtDue(t.due)}{t.dueTime ? " " + t.dueTime : ""}</span>}
@@ -476,9 +497,8 @@ export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: str
       </div>
       <div className="card">
         <div className="lab">Notes</div>
-        <textarea className="d-input" style={{ width: "100%", height: 80, resize: "vertical", marginTop: 8 }}
-          value={t.notes ?? ""} placeholder="Context, links, next steps…"
-          onChange={(e) => patch({ notes: e.target.value })} />
+        <RichNotes key={id} html={t.notes ?? ""} placeholder="Context, links, next steps…"
+          onChange={(h) => patch({ notes: h })} />
       </div>
       <button className="d-btn destructive sm" style={{ alignSelf: "flex-start" }}
         onClick={() => { notesApp.removeTask(id); ws.closePanel(panelId); }}>

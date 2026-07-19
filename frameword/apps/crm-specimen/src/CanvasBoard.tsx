@@ -44,7 +44,7 @@ export interface CvEdge {
   dash?: boolean; animated?: boolean; arrow?: boolean;
   shape?: "smoothstep" | "default" | "straight" | "step";
 }
-interface BoardUi { snap: boolean; grid: number; locked: boolean }
+interface BoardUi { snap: boolean; grid: number; locked: boolean; showNotes?: boolean }
 interface BoardState { nodes: CvNode[]; edges: CvEdge[]; seq: number; ui: BoardUi }
 
 const DEFAULT_UI: BoardUi = { snap: true, grid: 18, locked: false };
@@ -176,8 +176,10 @@ function Handles() {
     <Handle id="b" type="source" position={Position.Bottom} className="cv-handle" />
   </>);
 }
+const stripNotes = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 function CardNode({ data, selected }: NodeProps) {
   const d = data as unknown as CvNode;
+  const show = !!useBoard().ui.showNotes;
   return (
     <div className={"cv-card" + (selected ? " sel" : "")}
       style={d.color && d.color !== "plain" ? { borderTop: `3px solid color-mix(in oklab, var(--accent) ${d.color === "soft" ? 100 : d.color === "tint" ? 55 : 30}%, var(--border))` } : undefined}>
@@ -190,9 +192,13 @@ function CardNode({ data, selected }: NodeProps) {
           {d.subs!.map((f) => (
             <div key={f.id} className={"cv-subrow" + (f.done ? " done" : "")}>
               <span className="cv-subdot" />{f.label}
+              <Handle id={"s:" + f.id} type="source" position={Position.Right} className="cv-handle cv-subhandle" />
             </div>
           ))}
         </div>
+      )}
+      {show && d.notes && stripNotes(d.notes) && (
+        <div className="cv-notesprev">{stripNotes(d.notes).slice(0, 220)}</div>
       )}
     </div>
   );
@@ -628,6 +634,7 @@ function BoardInner({ panelId }: { panelId: string }) {
                 <button key={g} className={ui.grid === g ? "on" : ""} onClick={() => setUi({ grid: g })}>{g}</button>
               ))}
             </div>
+            <button className="fly-main" onClick={() => setUi({ showNotes: !ui.showNotes })}>{ui.showNotes ? "✓ " : ""}Notes on cards</button>
             <button className="fly-main" onClick={() => { setUi({ locked: !ui.locked }); setMenu(null); }}>{ui.locked ? "✓ " : ""}Lock board</button>
           </div>
         )}
@@ -750,14 +757,12 @@ export function boardFromPrompt(q: string): string | null {
   return `Built a board with ${nodes.length} cards and ${edges.length} links${chains.length > 1 ? ` across ${chains.length} branches` : ""}. It replaced the previous board (⌘Z on the canvas restores it). Click any card to open its inspector — notes support rich text.`;
 }
 
-/* ── rich notes — a real Tiptap editor, blog-grade, per node ─────────── */
-function NotesEditor({ nodeId, html }: { nodeId: string; html: string }) {
+/* ── RichNotes — THE notes editor, shared by every notes surface ─────── */
+export function RichNotes({ html, onChange, placeholder }: { html: string; onChange: (html: string) => void; placeholder?: string }) {
   const editor = useEditor({
-    extensions: [StarterKit, Placeholder.configure({ placeholder: "Write the full story of this element — headings, lists, quotes…" })],
+    extensions: [StarterKit, Placeholder.configure({ placeholder: placeholder ?? "Write the full story of this element — headings, lists, quotes…" })],
     content: html || "",
-    onUpdate: ({ editor: ed }) => {
-      board.update((st) => ({ ...st, nodes: st.nodes.map((x) => (x.id === nodeId ? { ...x, notes: ed.getHTML() } : x)) }), false);
-    },
+    onUpdate: ({ editor: ed }) => onChange(ed.getHTML()),
   });
   if (!editor) return null;
   const B = ({ on, label, run, title }: { on?: boolean; label: string; run: () => void; title: string }) => (
@@ -812,7 +817,8 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
       </div>
       <div className="card">
         <div className="lab">Notes — write like a blog</div>
-        <NotesEditor key={id} nodeId={id} html={n.notes ?? ""} />
+        <RichNotes key={id} html={n.notes ?? ""}
+          onChange={(h) => board.update((st) => ({ ...st, nodes: st.nodes.map((x) => (x.id === id ? { ...x, notes: h } : x)) }), false)} />
       </div>
       <div className="card">
         <div className="lab">Sub-cards · {n.subs?.length ?? 0}</div>
@@ -845,7 +851,11 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
               </button>
               <button className="cv-conn-edit" title="Remove"
-                onClick={() => upd({ subs: (n.subs ?? []).filter((x) => x.id !== f.id) })}>✕</button>
+                onClick={() => board.update((st) => ({
+                  ...st,
+                  nodes: st.nodes.map((x) => (x.id === id ? { ...x, subs: (x.subs ?? []).filter((y) => y.id !== f.id) } : x)),
+                  edges: st.edges.filter((e) => e.sourceHandle !== "s:" + f.id && e.targetHandle !== "s:" + f.id),
+                }))}>✕</button>
             </div>
           ))}
         </div>

@@ -482,6 +482,13 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .cv-selbar button.danger { color: var(--destructive); }
 .cv-selbar button.danger:hover { background: var(--accent-soft); }
 /* sub-cards inside a card node */
+.cv-subrow { position: relative; }
+.cv-subhandle { right: -19px !important; }
+.cv-notesprev { margin-top: 8px; border-top: 1px solid var(--rule-1); padding-top: 7px; font-size: calc(var(--fz-body, 13px) * 0.8); line-height: 1.5; color: var(--muted-foreground); max-width: 176px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.nt-subs { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 6px; }
+.nt-subs .cv-subrow { text-align: left; padding: 1px 0; cursor: pointer; border: none; background: transparent; }
+.nt-subs .cv-subrow:hover .cv-subdot { transform: scale(1.35); }
+
 .cv-subs { margin-top: 8px; border-top: 1px solid var(--rule-1); padding-top: 7px; display: flex; flex-direction: column; gap: 3px; }
 .cv-subrow { display: flex; align-items: center; gap: 7px; font-size: calc(var(--fz-body, 13px) * 0.82); color: var(--ink-2); line-height: 1.35; }
 .cv-subrow.done { color: var(--muted-foreground); text-decoration: line-through; text-decoration-color: var(--border); }
@@ -588,7 +595,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 /* the board fills the panel: full-height columns, real tracks */
 .panel-body:has(.nt-kanban) { display: flex; flex-direction: column; }
 .nt-kanban { flex: 1 1 auto; min-height: 0; display: flex; gap: 12px; align-items: stretch; overflow-x: auto; padding-bottom: 2px; }
-.nt-col { flex: 1 0 216px; min-width: 216px; max-width: 300px; display: flex; flex-direction: column; min-height: 0; background: var(--secondary); border: 1px solid var(--border); border-radius: 12px; transition: border-color 120ms var(--ease), background 120ms var(--ease); }
+.nt-col { flex: 1 0 264px; min-width: 264px; max-width: 360px; display: flex; flex-direction: column; min-height: 0; background: var(--secondary); border: 1px solid var(--border); border-radius: 12px; transition: border-color 120ms var(--ease), background 120ms var(--ease); }
 .nt-col.over { border-color: color-mix(in oklab, var(--accent) 50%, transparent); background: color-mix(in oklab, var(--accent) 5%, var(--secondary)); }
 .nt-colhead { flex: none; display: flex; align-items: center; gap: 7px; padding: 10px 12px 9px; border-bottom: 1px solid var(--border); }
 .nt-colhead .nm { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
