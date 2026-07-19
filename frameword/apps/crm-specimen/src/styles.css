@@ -112,8 +112,8 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 .usage-track { height: 4px; border-radius: 9999px; background: color-mix(in oklab, var(--foreground) 12%, transparent); overflow: hidden; }
 .usage-fill { height: 100%; background: var(--accent); border-radius: 9999px; }
 .usage-sub { font-size: 10.5px; color: var(--muted-foreground); margin-top: 9px; line-height: 1.4; }
-.account { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--secondary); width: 100%; text-align: left; }
-.account:hover { background: var(--border); }
+.account { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); width: 100%; text-align: left; }
+.account:hover { background: var(--secondary); }
 img.avatar { border: 1px solid var(--border); }
 .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--foreground); color: var(--background); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 11px; flex: none; }
 .account .nm { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--foreground); }
@@ -659,7 +659,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .tiptap ul[data-type="taskList"] li > label { cursor: pointer; }
 
 /* click-away backdrop for popovers/menus (below .dp-pop 30 / .tt-menu 30 / .cv-fly 20) */
-.pop-bg { position: fixed; inset: 0; z-index: 15; }
+.pop-bg { position: fixed; inset: 0; z-index: 5; }
 .dp-pop, .tt-menu { z-index: 30; }
 
 /* shadcn-style date & time pickers */

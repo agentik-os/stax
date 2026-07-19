@@ -644,7 +644,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   const fd = p.target.panelType === "notefolder" ? notesApp.folder(p.target.resourceKey.slice(4)) : null;
   const n = DOMAIN[p.target.resourceKey] ?? {
     panelType: p.target.panelType,
-    title: nt ? "" : fd ? fd.name : tk ? tk.label : be ? (be.label || "Connection") : bn?.label ?? "Node",
+    title: nt || tk ? "" : fd ? fd.name : be ? (be.label || "Connection") : bn?.label ?? "Node",
     eyebrow: bn ? "canvas · " + bn.kind : be ? "canvas · link" : nt ? "note" : fd ? "folder" : tk ? "task" : undefined,
     subtitle: bn?.sub,
   };
