@@ -5,7 +5,7 @@
  * keeps the root list and every open editor in sync — each keystroke writes
  * the store, the list re-renders live.
  */
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useWorkspace } from "@frameword/panels-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -102,6 +102,17 @@ export const notesApp = {
       return { ...s, cats: s.cats.filter((c) => c.id !== id), tasks: s.tasks.map((t) => (t.cat === id ? { ...t, cat: fallback } : t)) };
     }),
   setView: (view: "list" | "kanban") => notesApp.update((s) => ({ ...s, view })),
+  /** drag&drop: reassign category and insert before `beforeId` (or append) */
+  moveTask: (id: string, cat: string, beforeId?: string) =>
+    notesApp.update((s) => {
+      const task = s.tasks.find((t) => t.id === id);
+      if (!task) return s;
+      const rest = s.tasks.filter((t) => t.id !== id);
+      const moved = { ...task, cat };
+      const at = beforeId ? rest.findIndex((t) => t.id === beforeId) : -1;
+      const tasks = at === -1 ? [...rest, moved] : [...rest.slice(0, at), moved, ...rest.slice(at)];
+      return { ...s, tasks };
+    }),
   removeNote: (id: string) => notesApp.update((s) => ({ ...s, notes: s.notes.filter((n) => n.id !== id) })),
   removeTask: (id: string) => notesApp.update((s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== id) })),
 };
@@ -168,6 +179,9 @@ export function TasksRoot({ panelId }: { panelId: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
   const view = s.view ?? "list";
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overCol, setOverCol] = useState<string | null>(null);
+  const [overCard, setOverCard] = useState<string | null>(null);
   const openTask = (id: string) =>
     ws.openDetail(panelId, { panelType: "task", resourceKey: "tsk:" + id });
 
@@ -260,27 +274,32 @@ export function TasksRoot({ panelId }: { panelId: string }) {
         <div className="nt-kanban">
           {s.cats.map((c) => {
             const list = s.tasks.filter((t) => (t.cat ?? s.cats[0].id) === c.id).sort((a, b) => Number(a.done) - Number(b.done));
-            const idx = s.cats.findIndex((x) => x.id === c.id);
             return (
-              <div className="nt-col" key={c.id}>
+              <div key={c.id}
+                className={"nt-col" + (overCol === c.id ? " over" : "")}
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setOverCol(c.id); }}
+                onDragLeave={(e) => { if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) { setOverCol(null); setOverCard(null); } }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const id = e.dataTransfer.getData("text/task") || dragId;
+                  if (id) notesApp.moveTask(id, c.id, overCard ?? undefined);
+                  setDragId(null); setOverCol(null); setOverCard(null);
+                }}>
                 <div className="nt-colhead">{c.name} <span>{list.filter((t) => !t.done).length}</span></div>
                 {list.map((t) => (
-                  <div key={t.id} className={"nt-kcard" + (t.done ? " done" : "")} onClick={() => openTask(t.id)}
+                  <div key={t.id}
+                    className={"nt-kcard" + (t.done ? " done" : "") + (dragId === t.id ? " drag" : "") + (overCard === t.id ? " target" : "")}
+                    draggable
+                    onDragStart={(e) => { e.dataTransfer.setData("text/task", t.id); e.dataTransfer.effectAllowed = "move"; setDragId(t.id); }}
+                    onDragEnd={() => { setDragId(null); setOverCol(null); setOverCard(null); }}
+                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setOverCol(c.id); if (t.id !== dragId) setOverCard(t.id); }}
+                    onClick={() => openTask(t.id)}
                     role="button" tabIndex={0}>
                     <div className="nt-ktitle">{t.label}</div>
                     <div className="nt-kmeta">
                       <span style={{ width: 6, height: 6, borderRadius: 999, background: PRIO_DOT[t.prio], flex: "none" }} />
                       {t.due && <span>{fmtDue(t.due)}{t.dueTime ? " " + t.dueTime : ""}</span>}
                       {(t.subs?.length ?? 0) > 0 && <span>{t.subs!.filter((x) => x.done).length}/{t.subs!.length}</span>}
-                      <span style={{ flex: 1 }} />
-                      {idx > 0 && (
-                        <button className="nt-kmove" title="Move left"
-                          onClick={(e) => { e.stopPropagation(); notesApp.patchTask(t.id, { cat: s.cats[idx - 1].id }); }}>‹</button>
-                      )}
-                      {idx < s.cats.length - 1 && (
-                        <button className="nt-kmove" title="Move right"
-                          onClick={(e) => { e.stopPropagation(); notesApp.patchTask(t.id, { cat: s.cats[idx + 1].id }); }}>›</button>
-                      )}
                     </div>
                   </div>
                 ))}

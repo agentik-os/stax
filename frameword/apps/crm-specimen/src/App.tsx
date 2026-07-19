@@ -38,7 +38,7 @@ const REGISTRY: PanelRegistry = {
   blocklive: { size: "XL" },
   profile: { size: "M" },
   notes: { size: "M" },
-  tasks: { size: "M" },
+  tasks: { size: "XL" },
   note: { size: "M" },
   task: { size: "S" },
 };
