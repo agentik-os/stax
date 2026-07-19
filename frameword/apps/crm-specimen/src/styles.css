@@ -525,6 +525,16 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .fly-seg { display: flex; gap: 3px; padding: 2px 7px 4px; }
 .fly-seg button { flex: 1; padding: 3px 0; border: 1px solid var(--border); border-radius: 7px; font-family: var(--font-mono); font-size: 10px; color: var(--muted-foreground); }
 .fly-seg button.on { background: var(--accent-soft); border-color: color-mix(in oklab, var(--accent) 40%, var(--border)); color: var(--accent); }
+/* right-click context menu + adjustable edge label */
+.pop-bg.ctx { z-index: 55; }
+.cv-ctx { position: fixed; z-index: 60; min-width: 168px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 3px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; animation: fadeIn 100ms var(--ease); }
+.cv-elabel { position: absolute; pointer-events: all; cursor: grab; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); background: color-mix(in oklab, var(--background) 92%, transparent); border-radius: 6px; padding: 2px 7px; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.cv-elabel.empty { opacity: 0; padding: 2px 6px; }
+.react-flow__edge:hover .cv-elabel.empty, .cv-elabel.empty.sel { opacity: 0.85; }
+.cv-elabel.sel { color: var(--accent); }
+.cv-elabel:active { cursor: grabbing; }
+.cv-elabel .inline-edit { min-width: 90px; text-transform: none; letter-spacing: normal; }
+
 /* step node */
 .cv-step { display: flex; align-items: center; gap: 9px; background: var(--card); border: 1px solid var(--border); border-radius: 9999px; padding: 6px 16px 6px 7px; box-shadow: var(--shadow-xs); }
 .cv-step.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }

@@ -10,6 +10,9 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import {
   ReactFlow,
   Background,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
   BackgroundVariant,
   MiniMap,
   Handle,
@@ -25,6 +28,7 @@ import {
   type Edge as RFEdge,
   type NodeChange,
   type EdgeChange,
+  type EdgeProps,
   type Connection,
   type FinalConnectionState,
   type NodeProps,
@@ -48,6 +52,7 @@ export interface CvEdge {
   sourceHandle?: string; targetHandle?: string;
   dash?: boolean; animated?: boolean; arrow?: boolean;
   shape?: "smoothstep" | "default" | "straight" | "step";
+  mx?: number; my?: number;
 }
 interface BoardUi { snap: boolean; grid: number; locked: boolean; showNotes?: boolean }
 interface BoardState { nodes: CvNode[]; edges: CvEdge[]; seq: number; ui: BoardUi }
@@ -249,6 +254,62 @@ function LabelNode({ data, selected }: NodeProps) {
 }
 const NODE_TYPES = { card: CardNode, note: NoteNode, shape: ShapeNode, label: LabelNode, step: StepNode };
 
+/* ── adjustable edge — drag the middle segment, double-click the label ── */
+function AdjustableEdge(props: EdgeProps) {
+  const { id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, selected, style, markerEnd } = props;
+  const d = (props.data ?? {}) as { label?: string; mx?: number; my?: number; step?: boolean };
+  const rf = useReactFlow();
+  const [editing, setEditing] = useState<string | null>(null);
+  const cX = (sourceX + targetX) / 2 + (d.mx ?? 0);
+  const cY = (sourceY + targetY) / 2 + (d.my ?? 0);
+  const [path, labelX, labelY] = getSmoothStepPath({
+    sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition,
+    borderRadius: d.step ? 0 : 5, centerX: cX, centerY: cY,
+  });
+  const startDrag = (e: React.PointerEvent) => {
+    if (editing !== null) return;
+    e.stopPropagation(); e.preventDefault();
+    board.checkpoint();
+    const start = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+    const base = { mx: d.mx ?? 0, my: d.my ?? 0 };
+    const move = (ev: PointerEvent) => {
+      const p = rf.screenToFlowPosition({ x: ev.clientX, y: ev.clientY });
+      board.update((st) => ({
+        ...st,
+        edges: st.edges.map((x) => (x.id === id ? { ...x, mx: base.mx + p.x - start.x, my: base.my + p.y - start.y } : x)),
+      }), false);
+    };
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+  const commitLabel = () => {
+    board.update((st) => ({ ...st, edges: st.edges.map((x) => (x.id === id ? { ...x, label: (editing ?? "").trim() || undefined } : x)) }));
+    setEditing(null);
+  };
+  return (
+    <>
+      <BaseEdge path={path} style={style} markerEnd={markerEnd} interactionWidth={24} />
+      <EdgeLabelRenderer>
+        <div className={"cv-elabel" + (selected ? " sel" : "") + (d.label ? "" : " empty")}
+          style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
+          onPointerDown={startDrag}
+          onDoubleClick={(e) => { e.stopPropagation(); setEditing(d.label ?? ""); }}
+          title="Drag to move the link · double-click to name it">
+          {editing !== null ? (
+            <input className="inline-edit" autoFocus value={editing}
+              onPointerDown={(e) => e.stopPropagation()}
+              onChange={(e) => setEditing(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") commitLabel(); if (e.key === "Escape") setEditing(null); }}
+              onBlur={commitLabel} />
+          ) : d.label ? d.label : "⋮"}
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+}
+const EDGE_TYPES = { adjustable: AdjustableEdge };
+
 /* ── alignment guides ────────────────────────────────────────────────── */
 interface Guides { v: number[]; h: number[] }
 const NODE_FALLBACK = { w: 190, h: 60 };
@@ -282,6 +343,7 @@ function BoardInner({ panelId }: { panelId: string }) {
   const [guides, setGuides] = useState<Guides>({ v: [], h: [] });
   const [edgeSel, setEdgeSel] = useState<ReadonlySet<string>>(new Set());
   const [menu, setMenu] = useState<null | "add" | "grid" | "more" | "boards">(null);
+  const [ctx, setCtx] = useState<null | { x: number; y: number; kind: "node" | "edge" | "pane"; id?: string; fx: number; fy: number }>(null);
   const [ren, setRen] = useState<{ id: string; v: string } | null>(null);
   const bf = useBoardsFile();
 
@@ -299,10 +361,13 @@ function BoardInner({ panelId }: { panelId: string }) {
   }, [s.nodes]);
 
   const rfEdges: RFEdge[] = s.edges.map((e) => ({
-    id: e.id, source: e.source, target: e.target, label: e.label,
+    id: e.id, source: e.source, target: e.target,
     sourceHandle: e.sourceHandle, targetHandle: e.targetHandle,
     selected: edgeSel.has(e.id), interactionWidth: 24,
-    type: e.shape ?? "smoothstep", animated: !!e.animated,
+    type: (e.shape === "default" || e.shape === "straight") ? e.shape : "adjustable",
+    label: (e.shape === "default" || e.shape === "straight") ? e.label : undefined,
+    data: { label: e.label, mx: e.mx, my: e.my, step: e.shape === "step" },
+    animated: !!e.animated,
     markerEnd: e.arrow === false ? undefined : { type: MarkerType.ArrowClosed, width: 14, height: 14, color: "color-mix(in oklab, var(--accent) 55%, var(--border))" },
     style: {
       stroke: "color-mix(in oklab, var(--accent) 55%, var(--border))", strokeWidth: 1.5,
@@ -537,9 +602,12 @@ function BoardInner({ panelId }: { panelId: string }) {
   return (
     <div className="cv-host" ref={hostRef}>
       <ReactFlow
-        nodes={rfNodes} edges={rfEdges} nodeTypes={NODE_TYPES}
+        nodes={rfNodes} edges={rfEdges} nodeTypes={NODE_TYPES} edgeTypes={EDGE_TYPES}
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect}
         onNodeClick={(_, n) => inspect(n.id)}
+        onNodeContextMenu={(e, n) => { e.preventDefault(); const p = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }); setCtx({ x: e.clientX, y: e.clientY, kind: "node", id: n.id, fx: p.x, fy: p.y }); }}
+        onEdgeContextMenu={(e, ed) => { e.preventDefault(); const p = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }); setCtx({ x: e.clientX, y: e.clientY, kind: "edge", id: ed.id, fx: p.x, fy: p.y }); }}
+        onPaneContextMenu={(e) => { e.preventDefault(); const me = e as MouseEvent; const p = rf.screenToFlowPosition({ x: me.clientX, y: me.clientY }); setCtx({ x: me.clientX, y: me.clientY, kind: "pane", fx: p.x, fy: p.y }); }}
         onNodeDoubleClick={(_, n) => inspect(n.id)}
         onEdgeClick={(_, e) => inspectEdge(e.id)}
         onNodeDragStart={() => board.checkpoint()}
@@ -571,6 +639,45 @@ function BoardInner({ panelId }: { panelId: string }) {
       </ReactFlow>
 
       {menu && <div className="pop-bg" onMouseDown={() => { setMenu(null); setRen(null); }} />}
+      {ctx && <div className="pop-bg ctx" onMouseDown={() => setCtx(null)} onContextMenu={(e) => { e.preventDefault(); setCtx(null); }} />}
+      {ctx && (
+        <div className="cv-ctx" style={{ left: ctx.x, top: ctx.y }}>
+          {ctx.kind === "node" && (() => {
+            const n = board.node(ctx.id!);
+            if (!n) return null;
+            const act = (fn: () => void) => () => { fn(); setCtx(null); };
+            return (<>
+              <button className="fly-main" onClick={act(() => inspect(ctx.id!))}>Rename / inspect</button>
+              <button className="fly-main" onClick={act(() => board.update((st) => ({ ...st, seq: st.seq + 1, nodes: [...st.nodes, { ...n, id: "n" + (st.seq + 1), x: n.x + 24, y: n.y + 24 }] })))}>Duplicate</button>
+              {n.kind === "card" && (
+                <button className="fly-main" onClick={act(() => board.update((st) => ({ ...st, nodes: st.nodes.map((x) => (x.id === n.id ? { ...x, subs: [...(x.subs ?? []), { id: "s" + Date.now().toString(36), label: "New sub-card" }] } : x)) })))}>Add sub-card</button>
+              )}
+              <button className="fly-main" onClick={act(() => board.update((st) => ({ ...st, nodes: st.nodes.map((x) => (x.id === n.id ? { ...x, pinned: !x.pinned } : x)) })))}>{n.pinned ? "Unlock position" : "Lock position"}</button>
+              <button className="fly-main" onClick={act(() => board.update((st) => { const rest = st.nodes.filter((x) => x.id !== n.id); return { ...st, nodes: [...rest, n] }; }))}>Bring to front</button>
+              <button className="fly-main" onClick={act(() => board.update((st) => { const rest = st.nodes.filter((x) => x.id !== n.id); return { ...st, nodes: [n, ...rest] }; }))}>Send to back</button>
+              <button className="fly-main danger" onClick={act(() => board.update((st) => ({ ...st, nodes: st.nodes.filter((x) => x.id !== n.id), edges: st.edges.filter((e2) => e2.source !== n.id && e2.target !== n.id) })))}>Delete</button>
+            </>);
+          })()}
+          {ctx.kind === "edge" && (() => {
+            const act = (fn: () => void) => () => { fn(); setCtx(null); };
+            return (<>
+              <button className="fly-main" onClick={act(() => inspectEdge(ctx.id!))}>Edit link</button>
+              <button className="fly-main" onClick={act(() => board.update((st) => ({ ...st, edges: st.edges.map((x) => (x.id === ctx.id ? { ...x, mx: 0, my: 0 } : x)) })))}>Re-center link</button>
+              <button className="fly-main danger" onClick={act(() => board.update((st) => ({ ...st, edges: st.edges.filter((x) => x.id !== ctx.id) })))}>Delete link</button>
+            </>);
+          })()}
+          {ctx.kind === "pane" && (() => {
+            const act = (fn: () => void) => () => { fn(); setCtx(null); };
+            return (<>
+              {([["card", "Card here"], ["note", "Sticky note here"], ["shape", "Shape here"], ["step", "Step here"], ["label", "Label here"]] as const).map(([k, lab]) => (
+                <button key={k} className="fly-main" onClick={act(() => addAt(k as CvNode["kind"], Math.round(ctx.fx - 90), Math.round(ctx.fy - 30)))}>{lab}</button>
+              ))}
+              <button className="fly-main" onClick={act(autoLayout)}>Auto layout</button>
+              <button className="fly-main" onClick={act(() => rf.fitView({ padding: 0.2, duration: 300, maxZoom: 1 }))}>Fit view</button>
+            </>);
+          })()}
+        </div>
+      )}
       <div className="cv-boardbar">
         <button className="cv-boardbtn" onClick={() => { setMenu((m) => (m === "boards" ? null : "boards")); setRen(null); }}>
           <span className="sig">§</span> {bf.boards[bf.active]?.name ?? "Board"} <span className="caret">⌄</span>
