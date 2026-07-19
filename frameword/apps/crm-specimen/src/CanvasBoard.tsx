@@ -574,7 +574,7 @@ function BoardInner({ panelId }: { panelId: string }) {
             {bf.order.map((id) => (
               <div key={id} className={"fly-row" + (id === bf.active ? " on" : "")}>
                 {ren?.id === id ? (
-                  <input className="d-input" autoFocus value={ren.v}
+                  <input className="inline-edit" autoFocus value={ren.v}
                     onChange={(e) => setRen({ id, v: e.target.value })}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") { board.renameBoard(id, ren.v.trim() || "Untitled"); setRen(null); }

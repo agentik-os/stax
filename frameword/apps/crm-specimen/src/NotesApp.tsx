@@ -36,14 +36,16 @@ const SEED: NotesState = {
     },
   ],
   cats: [
-    { id: "inbox", name: "Inbox" },
-    { id: "launch", name: "Launch" },
+    { id: "todo", name: "To do" },
+    { id: "doing", name: "Doing" },
+    { id: "review", name: "Review" },
+    { id: "done", name: "Done" },
   ],
   tasks: [
-    { id: "t-ship", label: "Ship the notes module", done: false, prio: "high", cat: "launch", due: "2026-07-22", dueTime: "18:00", subs: [{ id: "s1", label: "Wire the store", done: true }, { id: "s2", label: "Kanban view" }], ts: now - 3 * H },
-    { id: "t-drill", label: "Review drill-row spacing on mobile", done: false, prio: "med", cat: "inbox", ts: now - 5 * H },
-    { id: "t-retro", label: "Book the launch retro", done: false, prio: "med", cat: "launch", due: "2026-07-28", ts: now - 8 * H },
-    { id: "t-arch", label: "Archive the old prototype boards", done: true, prio: "low", cat: "inbox", ts: now - 40 * H },
+    { id: "t-ship", label: "Ship the notes module", done: false, prio: "high", cat: "doing", due: "2026-07-22", dueTime: "18:00", subs: [{ id: "s1", label: "Wire the store", done: true }, { id: "s2", label: "Kanban view" }], ts: now - 3 * H },
+    { id: "t-drill", label: "Review drill-row spacing on mobile", done: false, prio: "med", cat: "todo", ts: now - 5 * H },
+    { id: "t-retro", label: "Book the launch retro", done: false, prio: "med", cat: "review", due: "2026-07-28", ts: now - 8 * H },
+    { id: "t-arch", label: "Archive the old prototype boards", done: true, prio: "low", cat: "done", ts: now - 40 * H },
   ],
 };
 
@@ -51,10 +53,19 @@ function load(): NotesState {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "null");
     if (Array.isArray(raw?.notes) && Array.isArray(raw?.tasks)) {
-      const cats: Category[] = Array.isArray(raw.cats) && raw.cats.length ? raw.cats : [{ id: "inbox", name: "Inbox" }];
+      let cats: Category[] = Array.isArray(raw.cats) && raw.cats.length ? raw.cats : SEED.cats;
+      let remap: Record<string, string> | null = null;
+      if (cats.every((c: Category) => c.id === "inbox" || c.id === "launch")) {
+        cats = SEED.cats;
+        remap = { inbox: "todo", launch: "doing" };
+      }
       return {
         ...raw, cats,
-        tasks: raw.tasks.map((t: Task) => ({ cat: cats[0].id, ...t })),
+        tasks: raw.tasks.map((t: Task) => {
+          let cat = t.cat ?? cats[0].id;
+          if (remap) cat = t.done ? "done" : remap[cat] ?? "todo";
+          return { ...t, cat };
+        }),
       } as NotesState;
     }
   } catch { /* seed */ }
@@ -181,6 +192,19 @@ export function TasksRoot({ panelId }: { panelId: string }) {
   const s = useNotesApp();
   const view = s.view ?? "list";
   const [dragId, setDragId] = useState<string | null>(null);
+  const [renCat, setRenCat] = useState<{ id: string; v: string } | null>(null);
+  const CatName = ({ c, className }: { c: Category; className: string }) =>
+    renCat?.id === c.id ? (
+      <input className="inline-edit" autoFocus value={renCat.v}
+        onChange={(e) => setRenCat({ id: c.id, v: e.target.value })}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { notesApp.renameCategory(c.id, renCat.v.trim() || c.name); setRenCat(null); }
+          if (e.key === "Escape") setRenCat(null);
+        }}
+        onBlur={() => { notesApp.renameCategory(c.id, renCat.v.trim() || c.name); setRenCat(null); }} />
+    ) : (
+      <span className={className} onDoubleClick={() => setRenCat({ id: c.id, v: c.name })}>{c.name}</span>
+    );
   const [overCol, setOverCol] = useState<string | null>(null);
   const [overCard, setOverCard] = useState<string | null>(null);
   const openTask = (id: string) =>
@@ -263,12 +287,11 @@ export function TasksRoot({ panelId }: { panelId: string }) {
         return (
           <div className="card" key={c.id}>
             <div className="lab" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ flex: 1 }}>{c.name} · {open}/{list.length}</span>
+              <span style={{ flex: 1, display: "inline-flex", gap: 6, alignItems: "center", minWidth: 0 }}>
+                <CatName c={c} className="" /> · {open}/{list.length}
+              </span>
               <button className="cv-conn-edit" title="Rename category" style={{ width: 22, height: 22 }}
-                onClick={() => {
-                  const name = window.prompt("Category name", c.name);
-                  if (name?.trim()) notesApp.renameCategory(c.id, name.trim());
-                }}>
+                onClick={() => setRenCat({ id: c.id, v: c.name })}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
               </button>
               {s.cats.length > 1 && (
@@ -307,14 +330,11 @@ export function TasksRoot({ panelId }: { panelId: string }) {
                   setDragId(null); setOverCol(null); setOverCard(null);
                 }}>
                 <div className="nt-colhead">
-                  <span className="nm">{c.name}</span>
+                  <CatName c={c} className="nm" />
                   <span className="cnt">{open}</span>
                   <span style={{ flex: 1 }} />
                   <button className="nt-colbtn" title="Rename column"
-                    onClick={() => {
-                      const name = window.prompt("Column name", c.name);
-                      if (name?.trim()) notesApp.renameCategory(c.id, name.trim());
-                    }}>
+                    onClick={() => setRenCat({ id: c.id, v: c.name })}>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
                   </button>
                   {s.cats.length > 1 && (
