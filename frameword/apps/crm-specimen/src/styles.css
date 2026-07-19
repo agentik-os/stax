@@ -464,10 +464,10 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .cv-label { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 11px) * 0.91); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-foreground); padding: 4px 6px; border-radius: 5px; }
 .cv-label.sel { background: var(--accent-soft); color: var(--accent); }
 .cv-toolbar { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 6px; box-shadow: var(--shadow-md); z-index: 10; }
-.cv-toolbar button { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; color: var(--muted-foreground); }
-.cv-toolbar button:hover { background: var(--secondary); color: var(--foreground); }
-.cv-toolbar button.on { background: var(--accent-soft); color: var(--accent); }
-.cv-toolbar button.cv-num { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; }
+.cv-toolbar > button { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; color: var(--muted-foreground); }
+.cv-toolbar > button:hover { background: var(--secondary); color: var(--foreground); }
+.cv-toolbar > button.on { background: var(--accent-soft); color: var(--accent); }
+.cv-toolbar > button.cv-num { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; }
 .cv-guide { position: absolute; pointer-events: none; z-index: 5; background: color-mix(in oklab, var(--accent) 55%, transparent); }
 .cv-guide.v { width: 1px; height: 10000px; }
 .cv-guide.h { width: 10000px; height: 1px; }
