@@ -145,6 +145,80 @@ export const notesApp = {
 };
 export const useNotesApp = () => useSyncExternalStore(notesApp.subscribe, notesApp.get);
 
+/* ── shadcn-style pickers — popover calendar + time list, no native UI ── */
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+function DatePicker({ value, onChange }: { value?: string; onChange: (v?: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState(() => (value ?? new Date().toISOString().slice(0, 10)).slice(0, 7));
+  const [vy, vm] = view.split("-").map(Number);
+  const first = new Date(vy, vm - 1, 1);
+  const offset = (first.getDay() + 6) % 7; // Monday first
+  const days = new Date(vy, vm, 0).getDate();
+  const today = new Date().toISOString().slice(0, 10);
+  const nav = (d: number) => {
+    const dt = new Date(vy, vm - 1 + d, 1);
+    setView(dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0"));
+  };
+  return (
+    <span className="dp-wrap">
+      <button className={"d-btn sm " + (value ? "" : "outline")} onClick={() => setOpen((v) => !v)}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ marginRight: 6 }}><rect x="3" y="4" width="18" height="17" rx="3" /><path d="M8 2v4M16 2v4M3 9h18" /></svg>
+        {value ? fmtDue(value) : "Date"}
+      </button>
+      {open && (
+        <div className="dp-pop">
+          <div className="dp-head">
+            <button onClick={() => nav(-1)}>‹</button>
+            <span>{MONTHS[vm - 1]} {vy}</span>
+            <button onClick={() => nav(1)}>›</button>
+          </div>
+          <div className="dp-grid">
+            {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => <span key={d} className="dp-wd">{d}</span>)}
+            {Array.from({ length: offset }, (_, i) => <span key={"e" + i} />)}
+            {Array.from({ length: days }, (_, i) => {
+              const iso = view + "-" + String(i + 1).padStart(2, "0");
+              return (
+                <button key={iso}
+                  className={"dp-day" + (iso === value ? " on" : "") + (iso === today ? " today" : "")}
+                  onClick={() => { onChange(iso); setOpen(false); }}>
+                  {i + 1}
+                </button>
+              );
+            })}
+          </div>
+          {value && <button className="dp-clear" onClick={() => { onChange(undefined); setOpen(false); }}>Clear date</button>}
+        </div>
+      )}
+    </span>
+  );
+}
+function TimePicker({ value, onChange }: { value?: string; onChange: (v?: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const slots: string[] = [];
+  for (let h = 0; h < 24; h++) for (const m of ["00", "30"]) slots.push(String(h).padStart(2, "0") + ":" + m);
+  return (
+    <span className="dp-wrap">
+      <button className={"d-btn sm " + (value ? "" : "outline")} onClick={() => setOpen((v) => !v)}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ marginRight: 6 }}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+        {value ?? "Time"}
+      </button>
+      {open && (
+        <div className="dp-pop tp">
+          <div className="tp-list">
+            {slots.map((t) => (
+              <button key={t} className={"tp-slot" + (t === value ? " on" : "")}
+                onClick={() => { onChange(t); setOpen(false); }}>
+                {t}
+              </button>
+            ))}
+          </div>
+          {value && <button className="dp-clear" onClick={() => { onChange(undefined); setOpen(false); }}>Clear time</button>}
+        </div>
+      )}
+    </span>
+  );
+}
+
 /* ── small formatters ────────────────────────────────────────────────── */
 function ago(ts: number): string {
   const m = Math.floor((Date.now() - ts) / 60000);
@@ -521,7 +595,7 @@ export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: str
         <div className="pop-sub" style={{ marginTop: 8 }}>Label</div>
         <input className="d-input" autoFocus style={{ width: "100%", marginBottom: 8 }} value={t.label}
           onChange={(e) => patch({ label: e.target.value })} />
-        <div className="pop-sub">Status</div>
+        <div className="pop-sub">Completed</div>
         <div style={{ marginTop: 4, marginBottom: 8 }}>
           <button className={"d-btn sm " + (t.done ? "" : "outline")} aria-pressed={t.done}
             onClick={() => patch({ done: !t.done })}>
@@ -534,18 +608,20 @@ export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: str
           <P p="med" label="Med" />
           <P p="high" label="High" />
         </div>
-        <div className="pop-sub">Category</div>
-        <select className="d-input" style={{ marginTop: 4, marginBottom: 8, width: "100%" }}
-          value={t.cat ?? s.cats[0]?.id}
-          onChange={(e) => patch({ cat: e.target.value })}>
-          {s.cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        <div className="pop-sub">Status</div>
+        <div style={{ display: "flex", gap: 6, marginTop: 4, marginBottom: 8, flexWrap: "wrap" }}>
+          {s.cats.map((c) => (
+            <button key={c.id} className={"d-btn sm " + ((t.cat ?? s.cats[0]?.id) === c.id ? "" : "outline")}
+              aria-pressed={(t.cat ?? s.cats[0]?.id) === c.id}
+              onClick={() => patch({ cat: c.id })}>
+              {c.name}
+            </button>
+          ))}
+        </div>
         <div className="pop-sub">Due — date & time</div>
-        <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
-          <input type="date" className="d-input" style={{ flex: 1.4, minWidth: 0 }} value={t.due ?? ""}
-            onChange={(e) => patch({ due: e.target.value || undefined })} />
-          <input type="time" className="d-input" style={{ flex: 1, minWidth: 0 }} value={t.dueTime ?? ""}
-            onChange={(e) => patch({ dueTime: e.target.value || undefined })} />
+        <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+          <DatePicker value={t.due} onChange={(v) => patch({ due: v })} />
+          <TimePicker value={t.dueTime} onChange={(v) => patch({ dueTime: v })} />
         </div>
       </div>
       <div className="card">
