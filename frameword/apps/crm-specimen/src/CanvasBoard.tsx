@@ -861,9 +861,6 @@ export function RichNotes({ html, onChange, placeholder }: { html: string; onCha
             </div>
           )}
         </span>
-        <span style={{ flex: 1 }} />
-        <B label="↶" title="Undo" run={() => editor.chain().focus().undo().run()} />
-        <B label="↷" title="Redo" run={() => editor.chain().focus().redo().run()} />
       </div>
       <EditorContent editor={editor} className="tiptap" />
     </div>
