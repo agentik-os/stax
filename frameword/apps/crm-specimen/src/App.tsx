@@ -216,7 +216,7 @@ function Shell() {
     } else {
       r.setProperty("--accent", prefs.accent);
       r.setProperty("--accent-soft", `color-mix(in oklab, ${prefs.accent} 14%, var(--card))`);
-      r.setProperty("--accent-hover", `color-mix(in oklab, ${prefs.accent} 85%, black)`);
+      r.setProperty("--accent-hover", `color-mix(in oklch, ${prefs.accent} 85%, black)`);
       r.setProperty("--ring", `color-mix(in oklab, ${prefs.accent} 40%, transparent)`);
       // text ON the accent: dark ink for light accents, white otherwise
       const hex = /^#([0-9a-f]{6})$/i.exec(prefs.accent)?.[1];

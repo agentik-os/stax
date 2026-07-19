@@ -136,6 +136,7 @@
   --accent:               oklch(0.72 0.15 25);
   --accent-foreground:    oklch(0.985 0 0);
   --accent-soft:          oklch(0.30 0.06 25);
+  --accent-hover:         oklch(0.63 0.17 25);
   --border:               oklch(0.275 0 0);
   --input:                oklch(0.325 0 0);
   --ring:                 oklch(0.72 0.15 25 / 0.5);

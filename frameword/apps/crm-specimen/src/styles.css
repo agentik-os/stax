@@ -7,7 +7,7 @@
   --accent-2: color-mix(in oklab, var(--accent) 72%, var(--background));
   --accent-3: color-mix(in oklab, var(--accent) 45%, var(--background));
   --accent-4: color-mix(in oklab, var(--accent) 22%, var(--background));
-  --accent-deep: color-mix(in oklab, var(--accent) 82%, black);
+  --accent-deep: color-mix(in oklch, var(--accent) 85%, black);
 }
 
 
@@ -177,8 +177,8 @@ img.avatar { border: 1px solid var(--border); }
 
 /* foot — the single action zone */
 .panel-foot { flex: none; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; padding: 11px 14px; position: relative; }
-.foot-cta { border: 1px solid var(--primary); background: var(--primary); color: var(--primary-foreground); border-radius: 7px; padding: 9px 14px 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1; flex: none; }
-.foot-cta:hover { opacity: 0.85; }
+.foot-cta { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-foreground); border-radius: 7px; padding: 9px 14px 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1; flex: none; }
+.foot-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .foot-cta.ghost { border: 1px solid var(--border); background: transparent; color: var(--ink-2); }
 .foot-cta.accent { border: 1px solid transparent; background: var(--accent-soft); color: var(--accent); }
 .foot-note { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }
@@ -591,7 +591,6 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .drawer-input textarea:focus { outline: none; border-color: var(--ring); }
 .chat-send { width: 36px; height: 36px; flex: none; border-radius: 10px; background: var(--accent); color: var(--accent-foreground); display: grid; place-items: center; }
 .chat-send:hover { background: var(--accent-deep); }
-.foot-cta:hover { background: var(--accent-deep); opacity: 1; }
 /* canvas card eyebrow sigil */
 .cv-eyebrow .sig { color: var(--accent); }
 
