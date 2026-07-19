@@ -165,6 +165,7 @@ function DatePicker({ value, onChange }: { value?: string; onChange: (v?: string
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ marginRight: 6 }}><rect x="3" y="4" width="18" height="17" rx="3" /><path d="M8 2v4M16 2v4M3 9h18" /></svg>
         {value ? fmtDue(value) : "Date"}
       </button>
+      {open && <div className="pop-bg" onMouseDown={() => setOpen(false)} />}
       {open && (
         <div className="dp-pop">
           <div className="dp-head">
@@ -202,6 +203,7 @@ function TimePicker({ value, onChange }: { value?: string; onChange: (v?: string
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ marginRight: 6 }}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
         {value ?? "Time"}
       </button>
+      {open && <div className="pop-bg" onMouseDown={() => setOpen(false)} />}
       {open && (
         <div className="dp-pop tp">
           <div className="tp-list">

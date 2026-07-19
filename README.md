@@ -1,5 +1,7 @@
 # Stax — panels-inside-panels UX framework
 
+**Live demo → [stax-agentik-oss-projects.vercel.app](https://stax-agentik-oss-projects.vercel.app/)** — the full specimen, deployed.
+
 **One mechanic: click anything with depth and a panel opens to the right. The parent stays.**
 No pages, no modals, no tabs — a serializable stack of panels (Miller columns, evolved), with
 pinned references that survive navigation, URL-synced state, and a registry that sizes every panel.

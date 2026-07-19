@@ -658,6 +658,10 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .tiptap ul[data-type="taskList"] li > div > p { margin: 0; }
 .tiptap ul[data-type="taskList"] li > label { cursor: pointer; }
 
+/* click-away backdrop for popovers/menus (below .dp-pop 30 / .tt-menu 30 / .cv-fly 20) */
+.pop-bg { position: fixed; inset: 0; z-index: 15; }
+.dp-pop, .tt-menu { z-index: 30; }
+
 /* shadcn-style date & time pickers */
 .dp-wrap { position: relative; display: inline-flex; }
 .dp-pop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px; box-shadow: var(--shadow-md); width: 232px; animation: fadeIn 120ms var(--ease); }

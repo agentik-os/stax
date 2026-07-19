@@ -570,6 +570,7 @@ function BoardInner({ panelId }: { panelId: string }) {
         </ViewportPortal>
       </ReactFlow>
 
+      {menu && <div className="pop-bg" onMouseDown={() => { setMenu(null); setRen(null); }} />}
       <div className="cv-boardbar">
         <button className="cv-boardbtn" onClick={() => { setMenu((m) => (m === "boards" ? null : "boards")); setRen(null); }}>
           <span className="sig">§</span> {bf.boards[bf.active]?.name ?? "Board"} <span className="caret">⌄</span>
@@ -811,6 +812,7 @@ export function RichNotes({ html, onChange, placeholder }: { html: string; onCha
   );
   return (
     <div className="tt-wrap cv-notes">
+      {ttMenu && <div className="pop-bg" onMouseDown={() => setTtMenu(null)} />}
       <div className="tt-toolbar">
         <span className="tt-dd">
           <button className={"tt-trigger" + (blockLabel !== "Text" ? " on" : "")} title="Paragraph style"
