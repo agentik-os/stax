@@ -17,7 +17,8 @@ a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 a:hover { color: var(--accent); }
 ::selection { background: var(--accent-soft); }
 button { outline: none; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+input:focus-visible, textarea:focus-visible { outline: none; }
 [data-theme="dark"] { --ink-2: oklch(0.82 0 0); --ink-4: oklch(0.58 0 0);
   --success-soft: color-mix(in oklab, oklch(0.62 0.13 152) 18%, var(--card));
   --amber-soft: color-mix(in oklab, oklch(0.78 0.11 60) 18%, var(--card)); }
@@ -361,7 +362,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .d-btn.lg { padding: 11px 18px; font-size: 13.5px; }
 .d-btn.icon { width: 34px; height: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 .d-input { border: 1px solid var(--input); background: var(--card); border-radius: 7px; padding: 8px 11px; font-size: 12.5px; font-family: var(--font-sans); color: var(--foreground); outline: none; min-width: 0; }
-.d-input:focus { border-color: var(--ring); }
+.d-input:focus { border-color: color-mix(in oklab, var(--accent) 55%, var(--border)); }
 .d-badge { font-size: 10.5px; font-weight: 500; border-radius: 9999px; padding: 3px 9px 2px; line-height: 1.4; background: var(--primary); color: var(--primary-foreground); }
 .d-badge.soft { background: var(--accent-soft); color: var(--accent); }
 .d-badge.outline { background: transparent; border: 1px solid var(--border); color: var(--ink-2); }
