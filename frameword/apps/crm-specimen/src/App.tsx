@@ -829,6 +829,8 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
           <span className="foot-note">Canvas — click a node to inspect · drag a handle to connect</span>
         ) : p.target.panelType === "canvasnode" || p.target.panelType === "canvasedge" ? (
           <span className="foot-note">Live — edits sync to the board instantly</span>
+        ) : p.target.panelType === "tasks" ? (
+          <button className="foot-cta" onClick={() => notesApp.addCategory()}>+ New category</button>
         ) : p.target.panelType === "block" ? (
           <button className="foot-cta" onClick={() => ws.openDetail(id, { panelType: "blocklive", resourceKey: p.target.resourceKey })}>
             Open live demo — full width

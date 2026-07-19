@@ -299,6 +299,7 @@ function BoardInner({ panelId }: { panelId: string }) {
   /* magnetic alignment — a dragged node snaps to other nodes' edges/centers */
   const snapToGuides = (changes: NodeChange[]) => {
     const T = 6;
+    if (board.get().ui.snap) return changes; // grid already aligns; the two snaps fight and the drag jitters
     for (const c of changes) {
       if (c.type !== "position" || !("position" in c) || !c.position || !(c as { dragging?: boolean }).dragging) continue;
       const all = rfNodesRef.current;
@@ -417,6 +418,34 @@ function BoardInner({ panelId }: { panelId: string }) {
       : { x: 160, y: 140 };
     const off = (board.get().seq % 5) * 24;
     addAt(kind, Math.round(c.x - 90 + off), Math.round(c.y - 30 + off));
+  };
+
+  const autoLayout = () => {
+    board.update((st) => {
+      const depth = new Map<string, number>();
+      const indeg = new Map<string, number>();
+      st.nodes.forEach((n) => { depth.set(n.id, 0); indeg.set(n.id, 0); });
+      st.edges.forEach((e) => indeg.set(e.target, (indeg.get(e.target) ?? 0) + 1));
+      // longest-path layering (bounded relaxation — the graph may have cycles)
+      for (let i = 0; i < st.nodes.length; i++) {
+        let changed = false;
+        for (const e of st.edges) {
+          const d = (depth.get(e.source) ?? 0) + 1;
+          if (d > (depth.get(e.target) ?? 0) && d <= st.nodes.length) { depth.set(e.target, d); changed = true; }
+        }
+        if (!changed) break;
+      }
+      const perCol = new Map<number, number>();
+      const nodes = st.nodes.map((n) => {
+        if (n.kind === "label") return n; // section labels stay where the user put them
+        const d = depth.get(n.id) ?? 0;
+        const row = perCol.get(d) ?? 0;
+        perCol.set(d, row + 1);
+        return { ...n, x: 60 + d * 260, y: 60 + row * 128 };
+      });
+      return { ...st, nodes };
+    });
+    window.setTimeout(() => rf.fitView({ padding: 0.2, duration: 300, maxZoom: 1 }), 60);
   };
 
   const download = () => {
@@ -569,6 +598,9 @@ function BoardInner({ panelId }: { panelId: string }) {
         <span className="cv-sep" />
         <button title="Fit view" onClick={() => rf.fitView({ padding: 0.2, duration: 300, maxZoom: 1 })}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
+        </button>
+        <button title="Auto layout — tidy the graph" onClick={autoLayout}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="6" height="6" rx="1.5" /><rect x="15" y="4" width="6" height="6" rx="1.5" /><rect x="9" y="14" width="6" height="6" rx="1.5" /><path d="M6 10v2a2 2 0 0 0 2 2h1M18 10v2a2 2 0 0 1-2 2h-1" /></svg>
         </button>
         <button title="Undo — ⌘Z" disabled={!board.canUndo()} onClick={() => board.undo()}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 0 12h-3" /></svg>

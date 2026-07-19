@@ -519,7 +519,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .cv-steplabel { font-size: calc(var(--fz-body, 13px) * 0.96); font-weight: 500; color: var(--foreground); white-space: nowrap; }
 /* the rich notes editor in the inspector */
 .cv-notes { margin-top: 8px; }
-.cv-notes .tt-wrap, .nt-doc { border: none; background: transparent; border-radius: 0; overflow: visible; }
+.cv-notes.tt-wrap, .tt-wrap.cv-notes, .nt-doc { border: none; background: transparent; border-radius: 0; overflow: visible; }
 .cv-notes .tt-toolbar, .nt-doc .tt-toolbar { border: 1px solid var(--border); border-bottom: 1px solid var(--border); border-radius: 10px; background: var(--secondary); margin-bottom: 6px; }
 .cv-notes .tiptap, .nt-doc .tiptap { border: none; padding: 8px 2px; }
 .cv-notes .tiptap { min-height: 200px; max-height: 380px; overflow-y: auto; }
@@ -580,3 +580,22 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .foot-cta:hover { background: var(--accent-deep); opacity: 1; }
 /* canvas card eyebrow sigil */
 .cv-eyebrow .sig { color: var(--accent); }
+
+/* tasks — view segment, kanban board */
+.nt-viewseg { display: inline-flex; gap: 3px; border: 1px solid var(--border); border-radius: 9px; padding: 3px; margin-bottom: 14px; align-self: flex-start; }
+.nt-viewseg button { padding: 4px 14px; border-radius: 6px; font-size: calc(var(--fz-body, 13.5px) - 1.5px); font-weight: 500; color: var(--muted-foreground); }
+.nt-viewseg button.on { background: var(--secondary); color: var(--foreground); }
+.nt-kanban { display: flex; gap: 10px; align-items: flex-start; overflow-x: auto; padding-bottom: 6px; }
+.nt-col { flex: 1 0 168px; min-width: 168px; background: var(--secondary); border-radius: 12px; padding: 8px; }
+.nt-colhead { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); padding: 2px 4px 8px; display: flex; justify-content: space-between; }
+.nt-colhead span { font-variant-numeric: tabular-nums; }
+.nt-kcard { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; margin-bottom: 6px; cursor: pointer; box-shadow: var(--shadow-2xs); }
+.nt-kcard:hover { border-color: var(--ink-4); }
+.nt-kcard.done { opacity: 0.55; }
+.nt-kcard.done .nt-ktitle { text-decoration: line-through; color: var(--muted-foreground); }
+.nt-ktitle { font-size: calc(var(--fz-body, 13.5px) * 0.93); font-weight: 500; color: var(--foreground); line-height: 1.35; margin-bottom: 6px; }
+.nt-kmeta { display: flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.nt-kmove { width: 18px; height: 18px; border-radius: 5px; color: var(--muted-foreground); display: grid; place-items: center; font-size: 12px; }
+.nt-kmove:hover { background: var(--secondary); color: var(--foreground); }
+.nt-kadd { width: 100%; text-align: left; padding: 6px 8px; border-radius: 7px; font-size: calc(var(--fz-body, 13.5px) - 2px); color: var(--muted-foreground); }
+.nt-kadd:hover { background: var(--card); color: var(--foreground); }

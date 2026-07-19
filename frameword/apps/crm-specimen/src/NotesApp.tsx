@@ -14,8 +14,10 @@ import Placeholder from "@tiptap/extension-placeholder";
 /* ── shared store ────────────────────────────────────────────────────── */
 export type Prio = "low" | "med" | "high";
 export interface Note { id: string; title: string; body: string; ts: number; pinned?: boolean }
-export interface Task { id: string; label: string; done: boolean; prio: Prio; due?: string; notes?: string; ts: number }
-interface NotesState { notes: Note[]; tasks: Task[] }
+export interface TaskSub { id: string; label: string; done?: boolean }
+export interface Task { id: string; label: string; done: boolean; prio: Prio; cat?: string; subs?: TaskSub[]; due?: string; dueTime?: string; notes?: string; ts: number }
+export interface Category { id: string; name: string }
+interface NotesState { notes: Note[]; tasks: Task[]; cats: Category[]; view?: "list" | "kanban" }
 
 const KEY = "frameword-notesapp";
 const now = Date.now();
@@ -32,18 +34,28 @@ const SEED: NotesState = {
       body: "<p>Agreed: drilling stays the only navigation. No modals, no tabs.</p><blockquote><p>Every click answers the same question — what opens next?</p></blockquote><p>Follow-up: the canvas inspector should reuse the drill rows.</p>",
     },
   ],
+  cats: [
+    { id: "inbox", name: "Inbox" },
+    { id: "launch", name: "Launch" },
+  ],
   tasks: [
-    { id: "t-ship", label: "Ship the notes module", done: false, prio: "high", due: "2026-07-22", ts: now - 3 * H },
-    { id: "t-drill", label: "Review drill-row spacing on mobile", done: false, prio: "med", ts: now - 5 * H },
-    { id: "t-retro", label: "Book the launch retro", done: false, prio: "med", due: "2026-07-28", ts: now - 8 * H },
-    { id: "t-arch", label: "Archive the old prototype boards", done: true, prio: "low", ts: now - 40 * H },
+    { id: "t-ship", label: "Ship the notes module", done: false, prio: "high", cat: "launch", due: "2026-07-22", dueTime: "18:00", subs: [{ id: "s1", label: "Wire the store", done: true }, { id: "s2", label: "Kanban view" }], ts: now - 3 * H },
+    { id: "t-drill", label: "Review drill-row spacing on mobile", done: false, prio: "med", cat: "inbox", ts: now - 5 * H },
+    { id: "t-retro", label: "Book the launch retro", done: false, prio: "med", cat: "launch", due: "2026-07-28", ts: now - 8 * H },
+    { id: "t-arch", label: "Archive the old prototype boards", done: true, prio: "low", cat: "inbox", ts: now - 40 * H },
   ],
 };
 
 function load(): NotesState {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "null");
-    if (Array.isArray(raw?.notes) && Array.isArray(raw?.tasks)) return raw as NotesState;
+    if (Array.isArray(raw?.notes) && Array.isArray(raw?.tasks)) {
+      const cats: Category[] = Array.isArray(raw.cats) && raw.cats.length ? raw.cats : [{ id: "inbox", name: "Inbox" }];
+      return {
+        ...raw, cats,
+        tasks: raw.tasks.map((t: Task) => ({ cat: cats[0].id, ...t })),
+      } as NotesState;
+    }
   } catch { /* seed */ }
   return SEED;
 }
@@ -71,11 +83,25 @@ export const notesApp = {
     notesApp.update((s) => ({ ...s, notes: [{ id, title: "Untitled note", body: "", ts: Date.now() }, ...s.notes] }));
     return id;
   },
-  addTask: (label: string): string => {
+  addTask: (label: string, cat?: string): string => {
     const id = uid("t");
-    notesApp.update((s) => ({ ...s, tasks: [...s.tasks, { id, label, done: false, prio: "med" as Prio, ts: Date.now() }] }));
+    notesApp.update((s) => ({ ...s, tasks: [...s.tasks, { id, label, done: false, prio: "med" as Prio, cat: cat ?? s.cats[0]?.id ?? "inbox", ts: Date.now() }] }));
     return id;
   },
+  addCategory: (name?: string): string => {
+    const id = uid("c");
+    notesApp.update((s) => ({ ...s, cats: [...s.cats, { id, name: name ?? "Category " + (s.cats.length + 1) }] }));
+    return id;
+  },
+  renameCategory: (id: string, name: string) =>
+    notesApp.update((s) => ({ ...s, cats: s.cats.map((c) => (c.id === id ? { ...c, name } : c)) })),
+  removeCategory: (id: string) =>
+    notesApp.update((s) => {
+      if (s.cats.length <= 1) return s;
+      const fallback = s.cats.find((c) => c.id !== id)!.id;
+      return { ...s, cats: s.cats.filter((c) => c.id !== id), tasks: s.tasks.map((t) => (t.cat === id ? { ...t, cat: fallback } : t)) };
+    }),
+  setView: (view: "list" | "kanban") => notesApp.update((s) => ({ ...s, view })),
   removeNote: (id: string) => notesApp.update((s) => ({ ...s, notes: s.notes.filter((n) => n.id !== id) })),
   removeTask: (id: string) => notesApp.update((s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== id) })),
 };
@@ -141,59 +167,130 @@ export function NotesRoot({ panelId }: { panelId: string }) {
 export function TasksRoot({ panelId }: { panelId: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
-
-  const tasks = [...s.tasks].sort((a, b) => Number(a.done) - Number(b.done));
-  const open = s.tasks.filter((t) => !t.done).length;
+  const view = s.view ?? "list";
   const openTask = (id: string) =>
     ws.openDetail(panelId, { panelType: "task", resourceKey: "tsk:" + id });
 
-  return (
-    <div className="card">
-      <div className="lab">Tasks · {open}/{s.tasks.length}</div>
-      <form style={{ display: "flex", gap: 6, marginTop: 8 }}
-        onSubmit={(e) => {
-          e.preventDefault();
-          const inp = (e.target as HTMLFormElement).elements.namedItem("qtask") as HTMLInputElement;
-          const v = inp.value.trim();
-          if (!v) return;
-          notesApp.addTask(v);
-          inp.value = "";
+  const TaskRow = ({ t }: { t: Task }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+      <button
+        title={t.done ? "Mark as open" : "Mark as done"} aria-pressed={t.done}
+        onClick={() => notesApp.patchTask(t.id, { done: !t.done })}
+        style={{
+          width: 18, height: 18, flex: "none", borderRadius: 5,
+          border: "1px solid " + (t.done ? "var(--accent)" : "var(--border)"),
+          background: t.done ? "var(--accent)" : "transparent",
+          color: t.done ? "var(--background)" : "transparent",
+          fontSize: "calc(var(--fz-mono, 10px) + 1px)", lineHeight: 1, cursor: "pointer",
         }}>
-        <input name="qtask" className="d-input" style={{ flex: 1 }} placeholder="Add a task…" />
-        <button className="d-btn outline sm" type="submit">Add</button>
-      </form>
-      <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
-        {tasks.map((t) => (
-          <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            <button
-              title={t.done ? "Mark as open" : "Mark as done"} aria-pressed={t.done}
-              onClick={() => notesApp.patchTask(t.id, { done: !t.done })}
-              style={{
-                width: 18, height: 18, flex: "none", borderRadius: 5,
-                border: "1px solid " + (t.done ? "var(--accent)" : "var(--border)"),
-                background: t.done ? "var(--accent)" : "transparent",
-                color: t.done ? "var(--background)" : "transparent",
-                fontSize: "calc(var(--fz-mono, 10px) + 1px)", lineHeight: 1, cursor: "pointer",
-              }}>
-              ✓
-            </button>
-            <button onClick={() => openTask(t.id)}
-              style={{
-                flex: 1, minWidth: 0, textAlign: "left", background: "transparent", border: "none",
-                padding: "3px 0", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                fontSize: "var(--fz-body, 13.5px)",
-                color: t.done ? "var(--muted-foreground)" : "var(--foreground)",
-                textDecoration: t.done ? "line-through" : "none", textUnderlineOffset: 2,
-              }}>
-              {t.label}
-            </button>
-            <span title={"Priority — " + t.prio}
-              style={{ width: 7, height: 7, flex: "none", borderRadius: 999, background: PRIO_DOT[t.prio] }} />
-            {t.due && <span className="tag" style={{ flex: "none" }}>{fmtDue(t.due)}</span>}
-          </div>
-        ))}
-      </div>
+        ✓
+      </button>
+      <button onClick={() => openTask(t.id)}
+        style={{
+          flex: 1, minWidth: 0, textAlign: "left", background: "transparent", border: "none",
+          padding: "3px 0", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          fontSize: "var(--fz-body, 13.5px)",
+          color: t.done ? "var(--muted-foreground)" : "var(--foreground)",
+          textDecoration: t.done ? "line-through" : "none", textUnderlineOffset: 2,
+        }}>
+        {t.label}
+      </button>
+      {(t.subs?.length ?? 0) > 0 && (
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "calc(var(--fz-mono, 10px) * 0.9)", color: "var(--muted-foreground)", flex: "none", fontVariantNumeric: "tabular-nums" }}>
+          {t.subs!.filter((x) => x.done).length}/{t.subs!.length}
+        </span>
+      )}
+      <span title={"Priority — " + t.prio}
+        style={{ width: 7, height: 7, flex: "none", borderRadius: 999, background: PRIO_DOT[t.prio] }} />
+      {t.due && <span className="tag" style={{ flex: "none" }}>{fmtDue(t.due)}{t.dueTime ? " · " + t.dueTime : ""}</span>}
     </div>
+  );
+
+  const QuickAdd = ({ cat }: { cat?: string }) => (
+    <form style={{ display: "flex", gap: 6 }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const inp = (e.target as HTMLFormElement).elements.namedItem("qtask") as HTMLInputElement;
+        const v = inp.value.trim();
+        if (!v) return;
+        notesApp.addTask(v, cat);
+        inp.value = "";
+      }}>
+      <input name="qtask" className="d-input" style={{ flex: 1, minWidth: 0 }} placeholder="Add a task…" />
+      <button className="d-btn outline sm" type="submit">Add</button>
+    </form>
+  );
+
+  return (
+    <>
+      <div className="nt-viewseg" role="group" aria-label="Tasks view">
+        <button className={view === "list" ? "on" : ""} onClick={() => notesApp.setView("list")}>List</button>
+        <button className={view === "kanban" ? "on" : ""} onClick={() => notesApp.setView("kanban")}>Kanban</button>
+      </div>
+
+      {view === "list" && s.cats.map((c) => {
+        const list = s.tasks.filter((t) => (t.cat ?? s.cats[0].id) === c.id).sort((a, b) => Number(a.done) - Number(b.done));
+        const open = list.filter((t) => !t.done).length;
+        return (
+          <div className="card" key={c.id}>
+            <div className="lab" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ flex: 1 }}>{c.name} · {open}/{list.length}</span>
+              <button className="cv-conn-edit" title="Rename category" style={{ width: 22, height: 22 }}
+                onClick={() => {
+                  const name = window.prompt("Category name", c.name);
+                  if (name?.trim()) notesApp.renameCategory(c.id, name.trim());
+                }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
+              </button>
+              {s.cats.length > 1 && (
+                <button className="cv-conn-edit" title="Delete category (tasks move to the first one)" style={{ width: 22, height: 22 }}
+                  onClick={() => notesApp.removeCategory(c.id)}>✕</button>
+              )}
+            </div>
+            <div style={{ margin: "10px 0", display: "flex", flexDirection: "column", gap: 4 }}>
+              {list.map((t) => <TaskRow key={t.id} t={t} />)}
+              {list.length === 0 && <p style={{ margin: 0 }}>Nothing here.</p>}
+            </div>
+            <QuickAdd cat={c.id} />
+          </div>
+        );
+      })}
+
+      {view === "kanban" && (
+        <div className="nt-kanban">
+          {s.cats.map((c) => {
+            const list = s.tasks.filter((t) => (t.cat ?? s.cats[0].id) === c.id).sort((a, b) => Number(a.done) - Number(b.done));
+            const idx = s.cats.findIndex((x) => x.id === c.id);
+            return (
+              <div className="nt-col" key={c.id}>
+                <div className="nt-colhead">{c.name} <span>{list.filter((t) => !t.done).length}</span></div>
+                {list.map((t) => (
+                  <div key={t.id} className={"nt-kcard" + (t.done ? " done" : "")} onClick={() => openTask(t.id)}
+                    role="button" tabIndex={0}>
+                    <div className="nt-ktitle">{t.label}</div>
+                    <div className="nt-kmeta">
+                      <span style={{ width: 6, height: 6, borderRadius: 999, background: PRIO_DOT[t.prio], flex: "none" }} />
+                      {t.due && <span>{fmtDue(t.due)}{t.dueTime ? " " + t.dueTime : ""}</span>}
+                      {(t.subs?.length ?? 0) > 0 && <span>{t.subs!.filter((x) => x.done).length}/{t.subs!.length}</span>}
+                      <span style={{ flex: 1 }} />
+                      {idx > 0 && (
+                        <button className="nt-kmove" title="Move left"
+                          onClick={(e) => { e.stopPropagation(); notesApp.patchTask(t.id, { cat: s.cats[idx - 1].id }); }}>‹</button>
+                      )}
+                      {idx < s.cats.length - 1 && (
+                        <button className="nt-kmove" title="Move right"
+                          onClick={(e) => { e.stopPropagation(); notesApp.patchTask(t.id, { cat: s.cats[idx + 1].id }); }}>›</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <button className="nt-kadd" onClick={() => openTask(notesApp.addTask("New task", c.id))}>+ Add</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -295,9 +392,48 @@ export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: str
           <P p="med" label="Med" />
           <P p="high" label="High" />
         </div>
-        <div className="pop-sub">Due</div>
-        <input type="date" className="d-input" style={{ marginTop: 4 }} value={t.due ?? ""}
-          onChange={(e) => patch({ due: e.target.value || undefined })} />
+        <div className="pop-sub">Category</div>
+        <select className="d-input" style={{ marginTop: 4, marginBottom: 8, width: "100%" }}
+          value={t.cat ?? s.cats[0]?.id}
+          onChange={(e) => patch({ cat: e.target.value })}>
+          {s.cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        <div className="pop-sub">Due — date & time</div>
+        <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+          <input type="date" className="d-input" style={{ flex: 1.4, minWidth: 0 }} value={t.due ?? ""}
+            onChange={(e) => patch({ due: e.target.value || undefined })} />
+          <input type="time" className="d-input" style={{ flex: 1, minWidth: 0 }} value={t.dueTime ?? ""}
+            onChange={(e) => patch({ dueTime: e.target.value || undefined })} />
+        </div>
+      </div>
+      <div className="card">
+        <div className="lab">Subtasks · {(t.subs ?? []).filter((x) => x.done).length}/{t.subs?.length ?? 0}</div>
+        <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
+          {(t.subs ?? []).map((f) => (
+            <div key={f.id} className="cv-subedit">
+              <button className={"cv-subcheck" + (f.done ? " on" : "")} title={f.done ? "Mark as open" : "Mark as done"}
+                onClick={() => patch({ subs: (t.subs ?? []).map((x) => (x.id === f.id ? { ...x, done: !x.done } : x)) })}>
+                {f.done ? "✓" : ""}
+              </button>
+              <input className="d-input" style={{ flex: 1, minWidth: 0 }} value={f.label}
+                onChange={(e) => patch({ subs: (t.subs ?? []).map((x) => (x.id === f.id ? { ...x, label: e.target.value } : x)) })} />
+              <button className="cv-conn-edit" title="Remove"
+                onClick={() => patch({ subs: (t.subs ?? []).filter((x) => x.id !== f.id) })}>✕</button>
+            </div>
+          ))}
+        </div>
+        <form style={{ display: "flex", gap: 6, marginTop: 8 }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            const inp = (e.target as HTMLFormElement).elements.namedItem("nsub") as HTMLInputElement;
+            const v = inp.value.trim();
+            if (!v) return;
+            patch({ subs: [...(t.subs ?? []), { id: "s" + Date.now().toString(36), label: v }] });
+            inp.value = "";
+          }}>
+          <input name="nsub" className="d-input" style={{ flex: 1 }} placeholder="Add a subtask…" />
+          <button className="d-btn outline sm" type="submit">Add</button>
+        </form>
       </div>
       <div className="card">
         <div className="lab">Notes</div>
