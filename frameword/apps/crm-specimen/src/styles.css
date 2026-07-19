@@ -568,6 +568,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .drill:hover .arr { color: var(--accent); }
 /* the sidebar is its own recessed surface */
 .sidebar { background: var(--sidebar); box-shadow: 1px 0 0 oklch(0.2 0.01 80 / 0.03), 7px 0 22px -10px oklch(0.2 0.01 80 / 0.10); }
+[data-theme="dark"] .sidebar { box-shadow: 1px 0 0 oklch(0 0 0 / 0.3), 7px 0 22px -10px oklch(0 0 0 / 0.45); }
 /* topbar: translucent paper over the scrolling stage */
 .topbar { background: color-mix(in oklab, var(--card) 86%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 /* agent — bubble grammar, markdown, typing, presence, composer */
