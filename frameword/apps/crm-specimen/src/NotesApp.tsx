@@ -274,6 +274,7 @@ export function TasksRoot({ panelId }: { panelId: string }) {
         <div className="nt-kanban">
           {s.cats.map((c) => {
             const list = s.tasks.filter((t) => (t.cat ?? s.cats[0].id) === c.id).sort((a, b) => Number(a.done) - Number(b.done));
+            const open = list.filter((t) => !t.done).length;
             return (
               <div key={c.id}
                 className={"nt-col" + (overCol === c.id ? " over" : "")}
@@ -285,28 +286,47 @@ export function TasksRoot({ panelId }: { panelId: string }) {
                   if (id) notesApp.moveTask(id, c.id, overCard ?? undefined);
                   setDragId(null); setOverCol(null); setOverCard(null);
                 }}>
-                <div className="nt-colhead">{c.name} <span>{list.filter((t) => !t.done).length}</span></div>
-                {list.map((t) => (
-                  <div key={t.id}
-                    className={"nt-kcard" + (t.done ? " done" : "") + (dragId === t.id ? " drag" : "") + (overCard === t.id ? " target" : "")}
-                    draggable
-                    onDragStart={(e) => { e.dataTransfer.setData("text/task", t.id); e.dataTransfer.effectAllowed = "move"; setDragId(t.id); }}
-                    onDragEnd={() => { setDragId(null); setOverCol(null); setOverCard(null); }}
-                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setOverCol(c.id); if (t.id !== dragId) setOverCard(t.id); }}
-                    onClick={() => openTask(t.id)}
-                    role="button" tabIndex={0}>
-                    <div className="nt-ktitle">{t.label}</div>
-                    <div className="nt-kmeta">
-                      <span style={{ width: 6, height: 6, borderRadius: 999, background: PRIO_DOT[t.prio], flex: "none" }} />
-                      {t.due && <span>{fmtDue(t.due)}{t.dueTime ? " " + t.dueTime : ""}</span>}
-                      {(t.subs?.length ?? 0) > 0 && <span>{t.subs!.filter((x) => x.done).length}/{t.subs!.length}</span>}
+                <div className="nt-colhead">
+                  <span className="nm">{c.name}</span>
+                  <span className="cnt">{open}</span>
+                  <span style={{ flex: 1 }} />
+                  <button className="nt-colbtn" title="Rename column"
+                    onClick={() => {
+                      const name = window.prompt("Column name", c.name);
+                      if (name?.trim()) notesApp.renameCategory(c.id, name.trim());
+                    }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
+                  </button>
+                  {s.cats.length > 1 && (
+                    <button className="nt-colbtn" title="Delete column (tasks move left)"
+                      onClick={() => notesApp.removeCategory(c.id)}>✕</button>
+                  )}
+                </div>
+                <div className="nt-cards">
+                  {list.map((t) => (
+                    <div key={t.id}
+                      className={"nt-kcard" + (t.done ? " done" : "") + (dragId === t.id ? " drag" : "") + (overCard === t.id ? " target" : "")}
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData("text/task", t.id); e.dataTransfer.effectAllowed = "move"; setDragId(t.id); }}
+                      onDragEnd={() => { setDragId(null); setOverCol(null); setOverCard(null); }}
+                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setOverCol(c.id); if (t.id !== dragId) setOverCard(t.id); }}
+                      onClick={() => openTask(t.id)}
+                      role="button" tabIndex={0}>
+                      <div className="nt-ktitle">{t.label}</div>
+                      <div className="nt-kmeta">
+                        <span style={{ width: 6, height: 6, borderRadius: 999, background: PRIO_DOT[t.prio], flex: "none" }} />
+                        {t.due && <span>{fmtDue(t.due)}{t.dueTime ? " " + t.dueTime : ""}</span>}
+                        {(t.subs?.length ?? 0) > 0 && <span>{t.subs!.filter((x) => x.done).length}/{t.subs!.length}</span>}
+                      </div>
                     </div>
-                  </div>
-                ))}
-                <button className="nt-kadd" onClick={() => openTask(notesApp.addTask("New task", c.id))}>+ Add</button>
+                  ))}
+                  {list.length === 0 && overCol !== c.id && <div className="nt-empty">Drop tasks here</div>}
+                </div>
+                <button className="nt-kadd" onClick={() => openTask(notesApp.addTask("New task", c.id))}>+ Add task</button>
               </div>
             );
           })}
+          <button className="nt-newcol" title="New column" onClick={() => notesApp.addCategory()}>+</button>
         </div>
       )}
     </>

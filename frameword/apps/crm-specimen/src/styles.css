@@ -582,24 +582,31 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .cv-eyebrow .sig { color: var(--accent); }
 
 /* tasks — view segment, kanban board */
-.nt-viewseg { display: inline-flex; gap: 3px; border: 1px solid var(--border); border-radius: 9px; padding: 3px; margin-bottom: 14px; align-self: flex-start; }
+.nt-viewseg { display: inline-flex; gap: 3px; border: 1px solid var(--border); border-radius: 9px; padding: 3px; margin-bottom: 14px; align-self: flex-start; flex: none; }
 .nt-viewseg button { padding: 4px 14px; border-radius: 6px; font-size: calc(var(--fz-body, 13.5px) - 1.5px); font-weight: 500; color: var(--muted-foreground); }
 .nt-viewseg button.on { background: var(--secondary); color: var(--foreground); }
-.nt-kanban { display: flex; gap: 10px; align-items: flex-start; overflow-x: auto; padding-bottom: 6px; }
-.nt-col { flex: 1 0 200px; min-width: 200px; background: var(--secondary); border-radius: 12px; padding: 8px; min-height: 140px; border: 1.5px dashed transparent; transition: border-color 120ms var(--ease), background 120ms var(--ease); }
-.nt-col.over { border-color: color-mix(in oklab, var(--accent) 45%, transparent); background: color-mix(in oklab, var(--accent) 5%, var(--secondary)); }
-.nt-colhead { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); padding: 2px 4px 8px; display: flex; justify-content: space-between; }
-.nt-colhead span { font-variant-numeric: tabular-nums; }
-.nt-kcard { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; margin-bottom: 6px; cursor: pointer; box-shadow: var(--shadow-2xs); }
+/* the board fills the panel: full-height columns, real tracks */
+.panel-body:has(.nt-kanban) { display: flex; flex-direction: column; }
+.nt-kanban { flex: 1 1 auto; min-height: 0; display: flex; gap: 12px; align-items: stretch; overflow-x: auto; padding-bottom: 2px; }
+.nt-col { flex: 1 0 216px; min-width: 216px; max-width: 300px; display: flex; flex-direction: column; min-height: 0; background: var(--secondary); border: 1px solid var(--border); border-radius: 12px; transition: border-color 120ms var(--ease), background 120ms var(--ease); }
+.nt-col.over { border-color: color-mix(in oklab, var(--accent) 50%, transparent); background: color-mix(in oklab, var(--accent) 5%, var(--secondary)); }
+.nt-colhead { flex: none; display: flex; align-items: center; gap: 7px; padding: 10px 12px 9px; border-bottom: 1px solid var(--border); }
+.nt-colhead .nm { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nt-colhead .cnt { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); font-variant-numeric: tabular-nums; background: var(--card); border: 1px solid var(--border); border-radius: 9999px; padding: 1px 7px; color: var(--muted-foreground); }
+.nt-colbtn { width: 20px; height: 20px; flex: none; border-radius: 5px; color: var(--muted-foreground); display: grid; place-items: center; font-size: 9px; opacity: 0; transition: opacity 120ms; }
+.nt-col:hover .nt-colbtn { opacity: 1; }
+.nt-colbtn:hover { background: var(--card); color: var(--foreground); }
+.nt-cards { flex: 1 1 auto; min-height: 70px; overflow-y: auto; padding: 9px; display: flex; flex-direction: column; gap: 7px; scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--foreground) 22%, transparent) transparent; }
+.nt-kcard { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px; cursor: grab; box-shadow: var(--shadow-2xs); flex: none; }
 .nt-kcard:hover { border-color: var(--ink-4); }
-.nt-kcard { cursor: grab; }
 .nt-kcard.drag { opacity: 0.35; cursor: grabbing; }
 .nt-kcard.target { box-shadow: 0 -2px 0 0 var(--accent); border-top-left-radius: 3px; border-top-right-radius: 3px; }
 .nt-kcard.done { opacity: 0.55; }
 .nt-kcard.done .nt-ktitle { text-decoration: line-through; color: var(--muted-foreground); }
 .nt-ktitle { font-size: calc(var(--fz-body, 13.5px) * 0.93); font-weight: 500; color: var(--foreground); line-height: 1.35; margin-bottom: 6px; }
 .nt-kmeta { display: flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
-.nt-kmove { width: 18px; height: 18px; border-radius: 5px; color: var(--muted-foreground); display: grid; place-items: center; font-size: 12px; }
-.nt-kmove:hover { background: var(--secondary); color: var(--foreground); }
-.nt-kadd { width: 100%; text-align: left; padding: 6px 8px; border-radius: 7px; font-size: calc(var(--fz-body, 13.5px) - 2px); color: var(--muted-foreground); }
-.nt-kadd:hover { background: var(--card); color: var(--foreground); }
+.nt-empty { flex: 1; display: grid; place-items: center; border: 1.5px dashed var(--border); border-radius: 8px; color: var(--ink-4); font-size: calc(var(--fz-body, 13.5px) - 2px); min-height: 64px; }
+.nt-kadd { flex: none; margin: 0 9px 9px; padding: 7px 9px; text-align: left; border-radius: 7px; font-size: calc(var(--fz-body, 13.5px) - 2px); color: var(--muted-foreground); border: 1px dashed transparent; }
+.nt-kadd:hover { background: var(--card); color: var(--foreground); border-color: var(--border); }
+.nt-newcol { flex: 0 0 40px; border: 1.5px dashed var(--border); border-radius: 12px; color: var(--muted-foreground); font-size: 17px; display: grid; place-items: center; align-self: stretch; }
+.nt-newcol:hover { border-color: var(--ink-4); color: var(--foreground); background: var(--secondary); }
