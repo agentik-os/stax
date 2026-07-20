@@ -8,7 +8,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { useWorkspace } from "@frameword/panels-react";
 import { RichNotes } from "./CanvasBoard";
-import { DatePicker } from "./NotesApp";
+import { DatePicker, popPos } from "./NotesApp";
 
 /* ── model ───────────────────────────────────────────────────────────── */
 export type FieldType = "text" | "number" | "select" | "multiselect" | "date" | "check" | "url" | "email" | "phone";
@@ -330,6 +330,7 @@ export function DataHome({ panelId }: { panelId: string }) {
 /* ── cell editors ────────────────────────────────────────────────────── */
 function Cell({ colId, row, field, wrap }: { colId: string; row: Row; field: Field; wrap?: boolean }) {
   const [fly, setFly] = useState(false);
+  const [pos, setPos] = useState<React.CSSProperties>({});
   const v = row.v[field.id];
   const set = (nv: CellValue) => dataApp.setCell(colId, row.id, field.id, nv);
   switch (field.type) {
@@ -341,12 +342,12 @@ function Cell({ colId, row, field, wrap }: { colId: string; row: Row; field: Fie
     case "select":
       return (
         <span className="dp-wrap" style={{ width: "100%" }}>
-          <button className={"dt-pill" + (v ? "" : " empty")} onClick={() => setFly((x) => !x)}>
+          <button className={"dt-pill" + (v ? "" : " empty")} onClick={(e) => { setPos(popPos(e, 220, 150)); setFly((x) => !x); }}>
             {String(v ?? "—")}
           </button>
           {fly && <div className="pop-bg" onMouseDown={() => setFly(false)} />}
           {fly && (
-            <div className="dp-pop dt-selfly">
+            <div className="dp-pop dt-selfly" style={pos}>
               {(field.options ?? []).map((o) => (
                 <button key={o} className={"tp-slot" + (v === o ? " on" : "")}
                   onClick={() => { set(o); setFly(false); }}>{o}</button>
@@ -360,12 +361,12 @@ function Cell({ colId, row, field, wrap }: { colId: string; row: Row; field: Fie
       const sel = Array.isArray(v) ? v : [];
       return (
         <span className="dp-wrap" style={{ width: "100%" }}>
-          <button className={"dt-tags" + (sel.length ? "" : " empty")} onClick={() => setFly((x) => !x)}>
+          <button className={"dt-tags" + (sel.length ? "" : " empty")} onClick={(e) => { setPos(popPos(e, 240, 150)); setFly((x) => !x); }}>
             {sel.length === 0 ? "—" : sel.map((t) => <span key={t} className="dt-tag">{t}</span>)}
           </button>
           {fly && <div className="pop-bg" onMouseDown={() => setFly(false)} />}
           {fly && (
-            <div className="dp-pop dt-selfly">
+            <div className="dp-pop dt-selfly" style={pos}>
               {(field.options ?? []).map((o) => {
                 const on = sel.includes(o);
                 return (
@@ -413,7 +414,12 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
   const c = s.collections.find((x) => x.id === colKey.slice(4));
   const [q, setQ] = useState("");
   const [menu, setMenu] = useState<null | string>(null);
+  const [pos, setPos] = useState<React.CSSProperties>({});
   const [renView, setRenView] = useState<{ id: string; v: string } | null>(null);
+  const openMenu = (id: string, e: { currentTarget: EventTarget & Element }, h = 240, w = 180) => {
+    setPos(popPos(e, h, w));
+    setMenu(menu === id ? null : id);
+  };
   if (!c) return <div className="leaf-note">This table was deleted.</div>;
   const view = c.views.find((v) => v.id === c.activeView) ?? c.views[0];
   const fields = c.fields.filter((f) => !view.hidden.includes(f.id));
@@ -430,13 +436,13 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
   const HeaderCell = ({ f }: { f: Field }) => (
     <th style={{ minWidth: WIDTHS[f.width ?? "m"] }}>
       <span className="dp-wrap" style={{ display: "block" }}>
-        <button className="dt-th" onClick={() => setMenu(menu === "h:" + f.id ? null : "h:" + f.id)}>
+        <button className="dt-th" onClick={(e) => openMenu("h:" + f.id, e, 330, 170)}>
           {f.name}
           {view.sort?.fieldId === f.id && <span className="dir">{view.sort.dir === "asc" ? "↑" : "↓"}</span>}
           <span className="caret">⌄</span>
         </button>
         {menu === "h:" + f.id && (
-          <div className="dp-pop dt-selfly">
+          <div className="dp-pop dt-selfly" style={pos}>
             <input className="inline-edit" defaultValue={f.name} autoFocus title="Rename field"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -494,9 +500,9 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
         </button>
         <span className="dp-wrap">
-          <button className="dt-open" title="Row actions" onClick={() => setMenu(menu === "r:" + r.id ? null : "r:" + r.id)}>⋯</button>
+          <button className="dt-open" title="Row actions" onClick={(e) => openMenu("r:" + r.id, e, 130, 160)}>⋯</button>
           {menu === "r:" + r.id && (
-            <div className="dp-pop dt-selfly" style={{ left: 0 }}>
+            <div className="dp-pop dt-selfly" style={pos}>
               <button className="tp-slot" onClick={() => { dataApp.duplicateRow(c.id, r.id); setMenu(null); }}>Duplicate row</button>
               <button className="tp-slot" onClick={() => { openRow(r.id); setMenu(null); }}>Open page</button>
               <button className="tp-slot danger" onClick={() => { dataApp.removeRow(c.id, r.id); setMenu(null); }}>Delete row</button>
@@ -558,14 +564,14 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
         )}
         {view.hidden.length > 0 && (
           <span className="dp-wrap">
-            <button className="d-btn outline sm" onClick={() => setMenu(menu === "hidden" ? null : "hidden")}>
+            <button className="d-btn outline sm" onClick={(e) => openMenu("hidden", e, 200, 180)}>
               {view.hidden.length} hidden
             </button>
             {menu === "hidden" && (
-              <div className="dp-pop dt-selfly" style={{ right: 0, left: "auto" }}>
+              <div className="dp-pop dt-selfly" style={pos}>
                 {view.hidden.map((hid) => (
                   <button key={hid} className="tp-slot"
-                    onClick={() => dataApp.patchView(c.id, { hidden: view.hidden.filter((x) => x !== hid) })}>
+                    onClick={() => { if (view.hidden.length === 1) setMenu(null); dataApp.patchView(c.id, { hidden: view.hidden.filter((x) => x !== hid) }); }}>
                     Show {c.fields.find((f) => f.id === hid)?.name ?? "?"}
                   </button>
                 ))}
@@ -575,11 +581,11 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
         )}
         <span className="dp-wrap">
           <button className={"d-btn sm " + (view.filters.length ? "" : "outline")}
-            onClick={() => setMenu(menu === "filter" ? null : "filter")}>
+            onClick={(e) => openMenu("filter", e, 320, 250)}>
             Filter{view.filters.length ? " · " + view.filters.length : ""}
           </button>
           {menu === "filter" && (
-            <div className="dp-pop dt-filterfly" style={{ right: 0, left: "auto" }}>
+            <div className="dp-pop dt-filterfly" style={pos}>
               {view.filters.map((f, i) => {
                 const field = c.fields.find((x) => x.id === f.fieldId);
                 return (
@@ -610,9 +616,9 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
           )}
         </span>
         <span className="dp-wrap">
-          <button className="d-btn outline sm" onClick={() => setMenu(menu === "field" ? null : "field")}>+ Field</button>
+          <button className="d-btn outline sm" onClick={(e) => openMenu("field", e, 330, 170)}>+ Field</button>
           {menu === "field" && (
-            <div className="dp-pop dt-selfly" style={{ right: 0, left: "auto" }}>
+            <div className="dp-pop dt-selfly" style={pos}>
               {(["text", "number", "select", "multiselect", "date", "check", "url", "email", "phone"] as FieldType[]).map((t) => (
                 <button key={t} className="tp-slot" onClick={() => { dataApp.addField(c.id, t); setMenu(null); }}>
                   {t === "check" ? "checkbox" : t === "multiselect" ? "multi-select" : t}
@@ -622,9 +628,9 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
           )}
         </span>
         <span className="dp-wrap">
-          <button className="d-btn outline sm" title="View options" onClick={() => setMenu(menu === "opts" ? null : "opts")}>⋯</button>
+          <button className="d-btn outline sm" title="View options" onClick={(e) => openMenu("opts", e, 260, 170)}>⋯</button>
           {menu === "opts" && (
-            <div className="dp-pop dt-selfly" style={{ right: 0, left: "auto", width: 170 }}>
+            <div className="dp-pop dt-selfly" style={{ ...pos, width: 170 }}>
               <button className="tp-slot" onClick={() => dataApp.patchView(c.id, { wrap: !view.wrap })}>{view.wrap ? "✓ " : ""}Wrap text lines</button>
               <div className="pop-sub" style={{ margin: "6px 8px 2px" }}>Group by</div>
               <button className={"tp-slot" + (!view.groupBy ? " on" : "")} onClick={() => { dataApp.patchView(c.id, { groupBy: undefined }); setMenu(null); }}>None</button>
@@ -674,7 +680,7 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
                   <td key={f.id}>
                     <span className="dp-wrap" style={{ display: "block" }}>
                       <button className={"dt-calc" + (op ? " on" : "")}
-                        onClick={() => setMenu(menu === "c:" + f.id ? null : "c:" + f.id)}>
+                        onClick={(e) => openMenu("c:" + f.id, e, 260, 150)}>
                         {op ? `${opts.find((o) => o.id === op)?.label ?? op} ${calcValue(rows, f, op)}` : "Calc ⌄"}
                       </button>
                       {menu === "c:" + f.id && (

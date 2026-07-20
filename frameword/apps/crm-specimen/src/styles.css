@@ -80,7 +80,7 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 .sidebar.closed { width: 0; padding-left: 0; padding-right: 0; border-right: none; opacity: 0; }
 .sb-head { display: flex; align-items: center; gap: 10px; padding: 6px 8px; margin-bottom: 8px; border-radius: 10px; width: 100%; text-align: left; }
 .sb-head:hover { background: var(--secondary); }
-.org-menu { position: absolute; top: calc(100% - 6px); left: 0; width: 268px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); padding: 6px; z-index: 46; animation: riseIn 160ms var(--ease); }
+.org-menu { position: absolute; top: calc(100% - 6px); left: 0; width: 220px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); padding: 6px; z-index: 46; animation: riseIn 160ms var(--ease); }
 .org-item { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 8px; cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--ink-2); width: 100%; }
 .org-item:hover, .org-item.on { background: var(--secondary); color: var(--foreground); }
 .org-ico { width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: var(--card); color: var(--muted-foreground); }
@@ -581,7 +581,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .sidebar { background: var(--sidebar); box-shadow: 1px 0 0 oklch(0.2 0.01 80 / 0.03), 7px 0 22px -10px oklch(0.2 0.01 80 / 0.10); }
 [data-theme="dark"] .sidebar { box-shadow: 1px 0 0 oklch(0 0 0 / 0.3), 7px 0 22px -10px oklch(0 0 0 / 0.45); }
 /* topbar: translucent paper over the scrolling stage */
-.topbar { background: color-mix(in oklab, var(--card) 86%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+/* no backdrop-filter here: it would make .topbar the containing block for fixed backdrops (dead click-away) */
 /* agent — bubble grammar, markdown, typing, presence, composer */
 .msg.me { background: var(--foreground); color: var(--background); border-bottom-right-radius: 5px; }
 .msg.bot { border-bottom-left-radius: 5px; }
@@ -773,7 +773,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .dt-group td { background: var(--secondary); border-bottom: 1px solid var(--border); padding: 6px 12px !important; }
 .dt-gname { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
 .dt-gcount { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); color: var(--muted-foreground); margin-left: 8px; font-variant-numeric: tabular-nums; }
-.dt tfoot td { border-top: 1px solid var(--border); background: var(--secondary); padding: 0; position: sticky; bottom: 0; }
+.dt tfoot td { border-top: 1px solid var(--border); background: var(--secondary); padding: 0; position: sticky; bottom: 0; z-index: 7; }
 .dt-calc { width: 100%; text-align: right; padding: 6px 10px; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); letter-spacing: 0.04em; color: var(--ink-4); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .dt-calc:hover { color: var(--foreground); }
 .dt-calc.on { color: var(--ink-2); }
@@ -807,7 +807,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .nf-foot button:hover { background: var(--accent-soft); }
 .nf-foot span { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 
-/* language chooser in the account menu */
-.lang-menu { position: absolute; left: calc(100% + 6px); bottom: -6px; width: 170px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); padding: 5px; z-index: 47; animation: fadeIn 120ms var(--ease); }
-.lang-menu .menu-item.on { background: var(--secondary); }
+/* language chooser — inline accordion inside the account menu */
+.menu-item.lang-item { padding-left: 26px; }
+.menu-item.lang-item.on { background: var(--secondary); }
 .menu-item .fi { flex: none; width: 18px; box-shadow: 0 0 0 1px var(--border); }

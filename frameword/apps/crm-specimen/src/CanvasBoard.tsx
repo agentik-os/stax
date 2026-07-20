@@ -344,6 +344,15 @@ function BoardInner({ panelId }: { panelId: string }) {
   const [edgeSel, setEdgeSel] = useState<ReadonlySet<string>>(new Set());
   const [menu, setMenu] = useState<null | "add" | "grid" | "more" | "boards">(null);
   const [ctx, setCtx] = useState<null | { x: number; y: number; kind: "node" | "edge" | "pane"; id?: string; fx: number; fy: number }>(null);
+  /* body zoom scales fixed-position coordinates — divide client coords and clamp to the viewport */
+  const ctxAt = (cx: number, cy: number) => {
+    const zs = (document.body.style as CSSStyleDeclaration & { zoom: string }).zoom;
+    const z = zs ? parseFloat(zs) / 100 : 1;
+    return {
+      x: Math.min(cx / z, window.innerWidth / z - 200),
+      y: Math.min(cy / z, window.innerHeight / z - 280),
+    };
+  };
   const [ren, setRen] = useState<{ id: string; v: string } | null>(null);
   const bf = useBoardsFile();
 
@@ -605,9 +614,9 @@ function BoardInner({ panelId }: { panelId: string }) {
         nodes={rfNodes} edges={rfEdges} nodeTypes={NODE_TYPES} edgeTypes={EDGE_TYPES}
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect}
         onNodeClick={(_, n) => inspect(n.id)}
-        onNodeContextMenu={(e, n) => { e.preventDefault(); const p = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }); setCtx({ x: e.clientX, y: e.clientY, kind: "node", id: n.id, fx: p.x, fy: p.y }); }}
-        onEdgeContextMenu={(e, ed) => { e.preventDefault(); const p = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }); setCtx({ x: e.clientX, y: e.clientY, kind: "edge", id: ed.id, fx: p.x, fy: p.y }); }}
-        onPaneContextMenu={(e) => { e.preventDefault(); const me = e as MouseEvent; const p = rf.screenToFlowPosition({ x: me.clientX, y: me.clientY }); setCtx({ x: me.clientX, y: me.clientY, kind: "pane", fx: p.x, fy: p.y }); }}
+        onNodeContextMenu={(e, n) => { e.preventDefault(); const p = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }); setCtx({ ...ctxAt(e.clientX, e.clientY), kind: "node", id: n.id, fx: p.x, fy: p.y }); }}
+        onEdgeContextMenu={(e, ed) => { e.preventDefault(); const p = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }); setCtx({ ...ctxAt(e.clientX, e.clientY), kind: "edge", id: ed.id, fx: p.x, fy: p.y }); }}
+        onPaneContextMenu={(e) => { e.preventDefault(); const me = e as MouseEvent; const p = rf.screenToFlowPosition({ x: me.clientX, y: me.clientY }); setCtx({ ...ctxAt(me.clientX, me.clientY), kind: "pane", fx: p.x, fy: p.y }); }}
         onNodeDoubleClick={(_, n) => inspect(n.id)}
         onEdgeClick={(_, e) => inspectEdge(e.id)}
         onNodeDragStart={() => board.checkpoint()}

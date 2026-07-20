@@ -145,10 +145,29 @@ export const notesApp = {
 };
 export const useNotesApp = () => useSyncExternalStore(notesApp.subscribe, notesApp.get);
 
+/* ── fixed-position popovers — escape scroll clipping and stacking traps ── */
+const zoomFactor = () => {
+  const z = (document.body.style as CSSStyleDeclaration & { zoom: string }).zoom;
+  return z ? parseFloat(z) / 100 : 1;
+};
+/** Anchor a popover to the clicked trigger with viewport clamping + flip-up. */
+export const popPos = (e: { currentTarget: EventTarget & Element }, popH = 240, popW = 180): React.CSSProperties => {
+  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  const z = zoomFactor();
+  const iw = window.innerWidth / z;
+  const ih = window.innerHeight / z;
+  const up = r.bottom / z + popH + 8 > ih && r.top / z - popH - 8 > 0;
+  const left = Math.max(8, Math.min(r.left / z, iw - popW - 8));
+  return up
+    ? { position: "fixed", left, bottom: ih - r.top / z + 6, top: "auto", right: "auto", zIndex: 40 }
+    : { position: "fixed", left, top: r.bottom / z + 6, bottom: "auto", right: "auto", zIndex: 40 };
+};
+
 /* ── shadcn-style pickers — popover calendar + time list, no native UI ── */
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 export function DatePicker({ value, onChange }: { value?: string; onChange: (v?: string) => void }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<React.CSSProperties>({});
   const [view, setView] = useState(() => (value ?? new Date().toISOString().slice(0, 10)).slice(0, 7));
   const [vy, vm] = view.split("-").map(Number);
   const first = new Date(vy, vm - 1, 1);
@@ -161,13 +180,13 @@ export function DatePicker({ value, onChange }: { value?: string; onChange: (v?:
   };
   return (
     <span className="dp-wrap">
-      <button className={"d-btn sm " + (value ? "" : "outline")} onClick={() => setOpen((v) => !v)}>
+      <button className={"d-btn sm " + (value ? "" : "outline")} onClick={(e) => { setPos(popPos(e, 330, 232)); setOpen((v) => !v); }}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ marginRight: 6 }}><rect x="3" y="4" width="18" height="17" rx="3" /><path d="M8 2v4M16 2v4M3 9h18" /></svg>
         {value ? fmtDue(value) : "Date"}
       </button>
       {open && <div className="pop-bg" onMouseDown={() => setOpen(false)} />}
       {open && (
-        <div className="dp-pop">
+        <div className="dp-pop" style={pos}>
           <div className="dp-head">
             <button onClick={() => nav(-1)}>‹</button>
             <span>{MONTHS[vm - 1]} {vy}</span>
@@ -195,17 +214,18 @@ export function DatePicker({ value, onChange }: { value?: string; onChange: (v?:
 }
 function TimePicker({ value, onChange }: { value?: string; onChange: (v?: string) => void }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<React.CSSProperties>({});
   const slots: string[] = [];
   for (let h = 0; h < 24; h++) for (const m of ["00", "30"]) slots.push(String(h).padStart(2, "0") + ":" + m);
   return (
     <span className="dp-wrap">
-      <button className={"d-btn sm " + (value ? "" : "outline")} onClick={() => setOpen((v) => !v)}>
+      <button className={"d-btn sm " + (value ? "" : "outline")} onClick={(e) => { setPos(popPos(e, 280, 128)); setOpen((v) => !v); }}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ marginRight: 6 }}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
         {value ?? "Time"}
       </button>
       {open && <div className="pop-bg" onMouseDown={() => setOpen(false)} />}
       {open && (
-        <div className="dp-pop tp">
+        <div className="dp-pop tp" style={pos}>
           <div className="tp-list">
             {slots.map((t) => (
               <button key={t} className={"tp-slot" + (t === value ? " on" : "")}

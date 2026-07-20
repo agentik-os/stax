@@ -314,9 +314,11 @@ function Shell() {
         return;
       }
       if (e.key !== "Escape") return;
+      if (document.querySelector(".nf-menu")) return; // the notification bell closes itself
       if (palette) return setPalette(false);
       if (drawer) return setDrawer(false);
       if (navOpen || themeMenu || acctMenu || orgMenu) {
+        setLangMenu(false);
         setNavOpen(null);
         setThemeMenu(false);
         setAcctMenu(false);
@@ -507,7 +509,7 @@ function Shell() {
               </div>
             </div>
             <div style={{ position: "relative" }}>
-              <button className="account" onClick={() => setAcctMenu((v) => !v)}>
+              <button className="account" onClick={() => { setAcctMenu((v) => !v); setLangMenu(false); }}>
                 <AvatarBubble />
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span className="nm" style={{ display: "block" }}>{prof.name}</span>
@@ -519,25 +521,19 @@ function Shell() {
                 <>
                   <div className="menu-bg" onClick={() => { setAcctMenu(false); setLangMenu(false); }} />
                   <div className="acct-menu">
-                    <div className="dp-wrap" style={{ display: "block" }}>
-                      <button className="menu-item" onClick={() => setLangMenu((v) => !v)}>
-                        <span className={"fi fi-" + (LANGS.find((l) => l.id === prefs.lang)?.flag ?? "gb")} style={{ borderRadius: 3, fontSize: 13 }} />
-                        <span style={{ flex: 1 }}>Language</span>
-                        <span style={{ color: "var(--muted-foreground)", fontSize: 10 }}>⌄</span>
+                    <button className="menu-item" onClick={() => setLangMenu((v) => !v)} aria-expanded={langMenu}>
+                      <span className={"fi fi-" + (LANGS.find((l) => l.id === prefs.lang)?.flag ?? "gb")} style={{ borderRadius: 3, fontSize: 13 }} />
+                      <span style={{ flex: 1 }}>Language</span>
+                      <span style={{ color: "var(--muted-foreground)", fontSize: 10, transform: langMenu ? "rotate(180deg)" : "none" }}>⌄</span>
+                    </button>
+                    {langMenu && LANGS.map((l) => (
+                      <button key={l.id} className={"menu-item lang-item" + (prefs.lang === l.id ? " on" : "")}
+                        onClick={() => { setPrefs({ lang: l.id }); setLangMenu(false); say("Language — " + l.label); }}>
+                        <span className={"fi fi-" + l.flag} style={{ borderRadius: 3, fontSize: 13 }} />
+                        <span style={{ flex: 1 }}>{l.label}</span>
+                        {prefs.lang === l.id && <span style={{ color: "var(--accent)", fontSize: 11 }}>✓</span>}
                       </button>
-                      {langMenu && (
-                        <div className="lang-menu">
-                          {LANGS.map((l) => (
-                            <button key={l.id} className={"menu-item" + (prefs.lang === l.id ? " on" : "")}
-                              onClick={() => { setPrefs({ lang: l.id }); setLangMenu(false); say("Language — " + l.label); }}>
-                              <span className={"fi fi-" + l.flag} style={{ borderRadius: 3, fontSize: 13 }} />
-                              <span style={{ flex: 1 }}>{l.label}</span>
-                              {prefs.lang === l.id && <span style={{ color: "var(--accent)", fontSize: 11 }}>✓</span>}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    ))}
                     <button className="menu-item" onClick={() => { setAcctMenu(false); ws.openSpace("profile", targetOf("sys:profile")); }}>Profile</button>
                     <button className="menu-item" onClick={() => { setAcctMenu(false); ws.openSpace("settings", targetOf("sys:settings")); }}>Settings</button>
                     <button className="menu-item" onClick={() => { setAcctMenu(false); say("Docs — see PROMPT-KIT.md"); }}>Documentation</button>
@@ -709,7 +705,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   );
 
   return (
-    <section className={"panel" + (isRef ? " ref" : "") + (p.retention === "retained" && p.role !== "root" ? " pinned" : "") + (id === ws.state.focusedPanelId ? " focused" : "")} aria-label={n.title}
+    <section className={"panel" + (isRef ? " ref" : "") + (p.retention === "retained" && p.role !== "root" ? " pinned" : "") + (id === ws.state.focusedPanelId ? " focused" : "")} aria-label={n.title || titleOfKey(p.target.resourceKey)}
       onMouseDown={() => { if (!isRef && ws.state.focusedPanelId !== id) ws.focusPanel(id); }}
       style={compact ? undefined : isCanvas ? { width, flex: "1 1 auto", minWidth: 520 } : { width }}>
       <div className="panel-bar">
@@ -1215,7 +1211,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
         </div>
         <div className="palette-list">
           {hits.map((i, idx) => (
-            <button key={i.tag + i.label} className={"palette-row" + (idx === sel ? " sel" : "")}
+            <button key={i.tag + i.label + idx} className={"palette-row" + (idx === sel ? " sel" : "")}
               onMouseEnter={() => setSel(idx)} onClick={() => run(i)}>
               <span className="tag2">{i.tag}</span>
               <span className="lb">{i.label}</span>
