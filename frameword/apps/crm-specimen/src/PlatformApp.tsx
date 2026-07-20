@@ -205,7 +205,7 @@ function Seg({ items, value, onPick }: { items: string[]; value: string; onPick:
   );
 }
 function Grammar({ text }: { text: string }) {
-  return <div className="anat-row" style={{ marginTop: 14 }}><span className="k">IN THE GRAMMAR</span><span className="t">{text}</span></div>;
+  return <div className="anat-row note" style={{ marginTop: 14 }}><span className="k">IN THE GRAMMAR</span><span className="t">{text}</span></div>;
 }
 function EmptyState({ glyph, title, text, cta, onCta }: { glyph: React.ReactNode; title: string; text: string; cta?: string; onCta?: () => void }) {
   return (

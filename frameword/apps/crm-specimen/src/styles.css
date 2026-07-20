@@ -326,8 +326,12 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 
 /* anatomy rows (BAR / BODY / FOOT / PILLS) */
 .anat-row { display: flex; gap: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; align-items: baseline; margin-bottom: 8px; }
-.anat-row .k { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); letter-spacing: 0.1em; color: var(--accent); flex: none; width: 44px; }
+.anat-row .k { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); letter-spacing: 0.1em; color: var(--accent); flex: none; width: 72px; white-space: nowrap; }
 .anat-row .t { font-size: calc(var(--fz-body, 13.5px) * 0.93); color: var(--ink-2); }
+/* long labels (IN THE GRAMMAR…) never wrap beside the text — they stack: label line, text under */
+.anat-row.note { display: block; }
+.anat-row.note .k { display: block; width: auto; margin-bottom: 5px; }
+.anat-row.note .t { display: block; }
 
 /* ops pills */
 .op-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
@@ -815,6 +819,9 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 /* theme toggle — bare icon at the crumbbar's right end, like the home glyph */
 .crumb-theme { flex: none; width: 24px; height: 24px; margin-right: -8px; border: none; background: transparent; border-radius: 6px; color: var(--muted-foreground); display: grid; place-items: center; align-self: center; }
 .crumb-theme:hover { color: var(--foreground); background: var(--secondary); }
+
+/* transient notices live IN the crumbbar (right, beside the theme icon) — never a floating pill over the UI */
+.crumb-toast { flex: none; align-self: center; margin-right: 6px; padding: 3px 10px 2.5px; border-radius: 6px; background: var(--secondary); color: var(--foreground); font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.0); letter-spacing: 0.05em; line-height: 1.4; white-space: nowrap; animation: fadeIn 140ms var(--ease); }
 
 /* ═══ Platform dashboard — console & studio surfaces (pf-*) ═══════════ */
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }

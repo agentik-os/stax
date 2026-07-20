@@ -607,6 +607,7 @@ function Shell() {
           </>
         )}
         <span style={{ flex: 1 }} />
+        {toast && <span className="crumb-toast">{toast}</span>}
         <button className="crumb-theme" title="Theme" onClick={() => setThemeMenu((v) => !v)}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none" /></svg>
         </button>
@@ -614,7 +615,7 @@ function Shell() {
 
       {drawer && <AgentDrawer onClose={() => setDrawer(false)} />}
       {palette && <Palette onClose={() => setPalette(false)} deepLink={deepLink} say={say} setTheme={setTheme} />}
-      {toast && <div className="toast">{toast}</div>}
+      {toast && !prefs.crumb && <div className="toast">{toast}</div>}
     </div>
     </PrefsCtx.Provider>
   );
@@ -728,7 +729,8 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   const pfDyn = /^pf[kmpi]:/.test(p.target.resourceKey);
   const n = DOMAIN[p.target.resourceKey] ?? (pfDyn ? {
     panelType: p.target.panelType,
-    title: titleOfKey(p.target.resourceKey),
+    // pfkey/pfproject render their own inline-edit name, pfmember its id card — no double title
+    title: p.target.panelType === "pfincident" ? titleOfKey(p.target.resourceKey) : "",
     eyebrow: { pfkey: "console · key", pfmember: "console · member", pfproject: "console · project", pfincident: "console · incident" }[p.target.panelType],
   } : {
     panelType: p.target.panelType,
@@ -847,7 +849,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
                   <p style={{ fontSize: "calc(var(--fz-body, 13.5px) - 1.5px)", color: "var(--muted-foreground)" }}>Seven intent commands, (state, args) → state. That's the entire API — no other way to change what's on screen.</p>
                 </div>
               ) : b.kind === "row" ? (
-                <div key={i} className="anat-row"><span className="k">{b.label}</span><span className="t">{b.text}</span></div>
+                <div key={i} className={"anat-row" + ((b.label?.length ?? 0) > 10 ? " note" : "")}><span className="k">{b.label}</span><span className="t">{b.text}</span></div>
               ) : b.kind === "code" ? (
                 <pre key={i} className="codeblock">{b.code}</pre>
               ) : (
