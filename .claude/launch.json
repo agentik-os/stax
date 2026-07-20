@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "crm-specimen",
+      "runtimeExecutable": "bunx",
+      "runtimeArgs": ["vite", "--port", "5799", "--host", "127.0.0.1"],
+      "cwd": "frameword/apps/crm-specimen",
+      "port": 5799
+    }
+  ]
+}

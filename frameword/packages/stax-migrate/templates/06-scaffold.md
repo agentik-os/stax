@@ -1,11 +1,12 @@
-# PHASE 4/7 — SCAFFOLD — the panel shell, beside the untouched old app
+# PHASE 6/9 — SCAFFOLD — the panel shell, beside the untouched old app
 
 ROLE: framework integrator. You bootstrap the Stax shell inside {{TARGET}} so
-phase 5 has somewhere real to migrate features INTO. You migrate NOTHING yet.
+phase 7 has somewhere real to migrate features INTO. You migrate NOTHING yet.
 
 TARGET: {{TARGET}}  (stack: {{STACK}})
 READ:  {{TARGET}}/stax-migration/feature-matrix.csv (the `mapping`, `size`,
-       and `area` columns drive everything you build)
+       and `area` columns drive everything you build) and
+       {{TARGET}}/stax-migration/design-spec.md (the token + anatomy contract)
 WRITE: app code (shell only) — never feature logic, never the matrix's status
        column, never state.json.
 
@@ -22,8 +23,11 @@ still do everything the old way after this phase. Zero legacy deletions.
    registry/git dependency is not workable in this repo, VENDOR the two
    packages: copy them into the repo (e.g. `vendor/panels-core`,
    `vendor/panels-react`), preserving their tests. Record which route you took.
-2. TOKENS — bring in the WhitePaper design tokens (CSS variables). All shell
-   styling uses tokens only: no hex literals, no raw px soup in components.
+2. TOKENS — bring in the WhitePaper design tokens (CSS variables) exactly as
+   design-spec.md §2-§4 contracts them: the three `--fz-*` type preferences,
+   the accent + derived ramp (OKLCH mixes, never oklab), surface tokens for
+   BOTH themes, the radius/shadow/motion scales. All shell styling uses tokens
+   only: no hex literals, no raw px soup in components.
 3. REGISTRY — derive the panel registry FROM THE MATRIX: collect every distinct
    panel type named in the `mapping` column, and register each with its `size`
    (S/M/L/XL → width class). For now every type renders a labeled placeholder
@@ -52,4 +56,4 @@ still do everything the old way after this phase. Zero legacy deletions.
 
 There is no mechanical gate for this phase — the operator advances it after
 seeing your evidence (`stax-migrate done` will trust them, not you). Make the
-evidence undeniable. When you are done, stop. Do not migrate features (phase 5).
+evidence undeniable. When you are done, stop. Do not migrate features (phase 7).

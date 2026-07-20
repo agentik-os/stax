@@ -1,11 +1,13 @@
-# PHASE 7/7 — ACCEPTANCE — laws audit, redirects, purge, report
+# PHASE 9/9 — ACCEPTANCE — laws audit, six states, redirects, purge, report
 
-ROLE: closing auditor and demolition crew. The matrix is 100% migrated and the
-coverage gate is green — now prove the NEW app obeys the grammar's laws, route
-the old world into it, delete the dead legacy views, and write the report.
+ROLE: closing auditor and demolition crew. BOTH matrices are 100% migrated and
+the coverage gate is green — now prove the NEW app obeys the grammar's laws
+and the pixel contract, route the old world into it, delete the dead legacy
+views, and write the report.
 
 TARGET: {{TARGET}}  (stack: {{STACK}})
-READ:  feature-matrix.csv, decision-log.md, both apps
+READ:  feature-matrix.csv, element-matrix.csv, design-spec.md, decision-log.md,
+       both apps
 WRITE: app code (redirects + deletions), {{TARGET}}/stax-migration/REPORT.md.
        Never state.json.
 
@@ -42,7 +44,18 @@ screenshot). Prose without evidence = automatic FAIL. Adapt grep patterns to
 Any FAIL: fix it, then re-run that law's check until green. All seven green
 before you continue.
 
-## 3. Route redirects — every old URL lives on
+## 3. Six-states audit — 10 random migrated elements
+
+Pick 10 random `migrated` rows from element-matrix.csv (spread across kinds:
+buttons, inputs, tables, badges…). For each, verify ALL SIX states from
+design-spec.md §7 in the running app: default · hover · focus/active · empty ·
+loading/skeleton · error. Empty states must be sentences with a next action,
+not blank space. Evidence per element: how you triggered each state + what
+rendered. A missing or broken state REOPENS the row (flip it to `mapped`,
+log it) — which re-arms the gate and sends the pipeline back to phase 7.
+Do not continue until 10/10 pass.
+
+## 4. Route redirects — every old URL lives on
 
 For EVERY legacy route in the matrix (`ui_kind=route` rows): add a redirect
 from the old URL to the panel-app URL that deep-links the equivalent workspace
@@ -50,20 +63,23 @@ from the old URL to the panel-app URL that deep-links the equivalent workspace
 panels. Evidence: the redirect table (old → new) and 5 spot-checks driven in
 the browser.
 
-## 4. Purge dead legacy views
+## 5. Purge dead legacy views
 
-Only NOW delete the legacy view components, routes, and modal/tab machinery
-that the matrix shows fully migrated and redirected. Keep the data layer —
-it is shared. After deletion: full build + test run + re-run one golden path.
-The app must be smaller and still green. Show the diff stat.
+Only NOW delete the legacy view components, routes, styles, and modal/tab
+machinery that the matrices show fully migrated and redirected. Keep the data
+layer — it is shared. After deletion: full build + test run + re-run one
+golden path. The app must be smaller and still green. Show the diff stat.
 
-## 5. REPORT.md — {{TARGET}}/stax-migration/REPORT.md
+## 6. REPORT.md — {{TARGET}}/stax-migration/REPORT.md
 
 Write the closing report: before/after (routes, modals, tabs → Spaces, panels,
-drills — counts from the matrix), matrix stats (rows, per-area, per-ui_kind),
-every decision-log entry summarized, laws-audit table, redirect table, purge
-diff stat, and the golden-path evidence. This document is what "no feature was
-lost" looks like when it is true — make it auditable, not promotional.
+drills — counts from the feature matrix; hex literals, px font-sizes, native
+controls, icon census → tokens, `--fz-*`, stroke set — counts from the element
+matrix), stats for BOTH matrices (rows, per-area, per-kind), every decision-log
+entry summarized, laws-audit table, six-states audit results, redirect table,
+purge diff stat, and the golden-path evidence. This document is what "no
+feature — and no pixel — was lost" looks like when it is true — make it
+auditable, not promotional.
 
 Then stop. The operator runs `stax-migrate done {{TARGET}}` — REPORT.md is its
 exit gate — and the migration is complete.

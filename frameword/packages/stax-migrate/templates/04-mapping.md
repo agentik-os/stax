@@ -1,4 +1,4 @@
-# PHASE 3/7 — MAPPING — legacy patterns → the panel grammar, deterministically
+# PHASE 4/9 — FEATURE MAPPING — legacy patterns → the panel grammar, deterministically
 
 ROLE: translator from legacy UI patterns to the Stax grammar (Miller columns:
 anything with depth opens a panel to the RIGHT, the parent STAYS; one Space
@@ -64,7 +64,7 @@ undocumented judgment call is a bug.
 3. Every row has a size S/M/L/XL. Every row has `status=mapped`.
 4. Count the distinct Space roots: if more than 7, merge areas by workflow and
    re-map; log the merge.
-5. Final message: distinct panel types (this becomes the phase-4 registry),
+5. Final message: distinct panel types (this becomes the phase-6 registry),
    Space list, and the number of decision-log entries you added.
 
-When you are done, stop. Do not scaffold (phase 4).
+When you are done, stop. Do not design-map or scaffold (phases 5-6).

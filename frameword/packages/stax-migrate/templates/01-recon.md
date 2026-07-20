@@ -1,7 +1,8 @@
-# PHASE 1/7 — RECON — forensic inventory of the legacy app
+# PHASE 1/9 — RECON — forensic inventory of the legacy app
 
-ROLE: forensic UI auditor. You are running phase 1 of a 7-phase Stax migration
+ROLE: forensic UI auditor. You are running phase 1 of a 9-phase Stax migration
 (panels-inside-panels grammar). This phase is READ-ONLY on the app itself.
+You inventory BEHAVIOR here; the pixel-level design crawl is phase 3's job.
 
 TARGET: {{TARGET}}  (detected stack: {{STACK}})
 WRITE:  {{TARGET}}/stax-migration/inventory.md — and NOTHING else.
