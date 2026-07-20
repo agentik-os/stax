@@ -24,15 +24,54 @@ pinned references that survive navigation, URL-synced state, and a registry that
 | `PANEL-LOGIC.md` · `CONCEPT-BRIEF.md` · `PROMPT-KIT.md` | The concept, the laws, and paste-ready prompts to adapt ANY app to the panel grammar |
 | `demo/panel-logic-demo.html` | Standalone pedagogical demo — open in a browser, zero build |
 
-## Run it
+## Install & run
 
 ```sh
-cd frameword
-bun install
-bun test                 # the laws
-cd apps/crm-specimen
-bunx vite                # → http://127.0.0.1:5173
+git clone https://github.com/agentik-os/stax
+cd stax/frameword
+bun install                       # workspaces: panels-core, panels-react, crm-specimen, stax-migrate
+bun test                          # the 25 engine-law tests
+bun run dev                       # the specimen → http://127.0.0.1:5799
 ```
+
+Production build of the specimen:
+
+```sh
+cd apps/crm-specimen
+bunx vite build                   # → dist/ (static, deploy anywhere)
+```
+
+## Use the framework in your own app
+
+The engine is two packages — a pure reducer and thin React bindings:
+
+```tsx
+import { WorkspaceProvider, useWorkspace } from "@frameword/panels-react";
+
+// 1 · the registry maps every panelType to a width class (S 380 · M 480 · L 640 · XL 800)
+const REGISTRY = { space: { size: "L" }, account: { size: "M" }, contact: { size: "M" } };
+
+// 2 · wrap the app — URL sync + localStorage persistence are built in
+<WorkspaceProvider registry={REGISTRY} urlSync storageKey="my-app">
+  <Shell />
+</WorkspaceProvider>;
+
+// 3 · drive it with intents — the entire UI derives from WorkspaceState
+function Row({ panelId, account }) {
+  const ws = useWorkspace();
+  return (
+    <button onClick={() =>
+      ws.openDetail(panelId, { panelType: "account", resourceKey: "acc:" + account.id })}>
+      {account.name}                {/* opens the next panel to the right — the parent stays */}
+    </button>
+  );
+}
+```
+
+Seven intents cover everything: `openSpace · openDetail · pinPanel/unpinPanel · closePanel ·
+navigateTo · openPath`. Style with the WhitePaper tokens (`tokens.css`) and the exact
+interior spacings from [DESIGN-SPEC.md](DESIGN-SPEC.md); the specimen app is the living
+reference for every pattern (tables, canvas, notes, pickers, popovers).
 
 ## Adopt Stax in ANY legacy project — structure AND design
 

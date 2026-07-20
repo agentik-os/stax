@@ -811,3 +811,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .menu-item.lang-item { padding-left: 26px; }
 .menu-item.lang-item.on { background: var(--secondary); }
 .menu-item .fi { flex: none; width: 18px; box-shadow: 0 0 0 1px var(--border); }
+
+/* theme toggle — bare icon at the crumbbar's right end, like the home glyph */
+.crumb-theme { flex: none; width: 24px; height: 24px; border: none; background: transparent; border-radius: 6px; color: var(--muted-foreground); font-size: 13px; line-height: 1; display: grid; place-items: center; }
+.crumb-theme:hover { color: var(--foreground); background: var(--secondary); }

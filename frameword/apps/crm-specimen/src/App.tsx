@@ -396,11 +396,10 @@ function Shell() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M12 17v4" /><path d="M8 21h8" /><path d="M7.5 12l3-3.5 2.5 2 3.5-4" /></svg>
         </button>
         <NotifBell />
-        <button className="tb-btn" title="Theme" onClick={() => setThemeMenu((v) => !v)}>◐</button>
         {themeMenu && (
           <>
             <div className="menu-bg" onClick={() => setThemeMenu(false)} />
-            <div className="menu" style={{ top: 52, right: 54 }}>
+            <div className="menu" style={{ bottom: 44, right: 10, top: "auto" }}>
               {[
                 { m: "light", glyph: "○", label: "Light" },
                 { m: "dark", glyph: "●", label: "Dark" },
@@ -521,10 +520,13 @@ function Shell() {
                 <>
                   <div className="menu-bg" onClick={() => { setAcctMenu(false); setLangMenu(false); }} />
                   <div className="acct-menu">
+                    <button className="menu-item" onClick={() => { setAcctMenu(false); ws.openSpace("profile", targetOf("sys:profile")); }}>Profile</button>
+                    <button className="menu-item" onClick={() => { setAcctMenu(false); ws.openSpace("settings", targetOf("sys:settings")); }}>Settings</button>
+                    <button className="menu-item" onClick={() => { setAcctMenu(false); say("Docs — see PROMPT-KIT.md"); }}>Documentation</button>
+                    <div className="menu-sep" />
                     <button className="menu-item" onClick={() => setLangMenu((v) => !v)} aria-expanded={langMenu}>
                       <span className={"fi fi-" + (LANGS.find((l) => l.id === prefs.lang)?.flag ?? "gb")} style={{ borderRadius: 3, fontSize: 13 }} />
                       <span style={{ flex: 1 }}>Language</span>
-                      <span style={{ color: "var(--muted-foreground)", fontSize: 10, transform: langMenu ? "rotate(180deg)" : "none" }}>⌄</span>
                     </button>
                     {langMenu && LANGS.map((l) => (
                       <button key={l.id} className={"menu-item lang-item" + (prefs.lang === l.id ? " on" : "")}
@@ -534,9 +536,6 @@ function Shell() {
                         {prefs.lang === l.id && <span style={{ color: "var(--accent)", fontSize: 11 }}>✓</span>}
                       </button>
                     ))}
-                    <button className="menu-item" onClick={() => { setAcctMenu(false); ws.openSpace("profile", targetOf("sys:profile")); }}>Profile</button>
-                    <button className="menu-item" onClick={() => { setAcctMenu(false); ws.openSpace("settings", targetOf("sys:settings")); }}>Settings</button>
-                    <button className="menu-item" onClick={() => { setAcctMenu(false); say("Docs — see PROMPT-KIT.md"); }}>Documentation</button>
                     <div className="menu-sep" />
                     <button className="menu-item" style={{ color: "var(--accent)" }}
                       onClick={() => { setAcctMenu(false); say("Signed out (demo)"); }}>Sign out</button>
@@ -572,6 +571,8 @@ function Shell() {
             </span>
           </>
         )}
+        <span style={{ flex: 1 }} />
+        <button className="crumb-theme" title="Theme" onClick={() => setThemeMenu((v) => !v)}>◐</button>
       </div>}
 
       {drawer && <AgentDrawer onClose={() => setDrawer(false)} />}
