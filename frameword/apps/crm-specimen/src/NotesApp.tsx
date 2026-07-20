@@ -147,7 +147,7 @@ export const useNotesApp = () => useSyncExternalStore(notesApp.subscribe, notesA
 
 /* ── shadcn-style pickers — popover calendar + time list, no native UI ── */
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-function DatePicker({ value, onChange }: { value?: string; onChange: (v?: string) => void }) {
+export function DatePicker({ value, onChange }: { value?: string; onChange: (v?: string) => void }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState(() => (value ?? new Date().toISOString().slice(0, 10)).slice(0, 7));
   const [vy, vm] = view.split("-").map(Number);

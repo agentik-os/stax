@@ -546,6 +546,10 @@ DOMAIN["sec:canvas"] = {
 };
 
 /* system panels — reachable from the account menu & the palette, in no dashboard */
+DOMAIN["sec:data"] = {
+  panelType: "datahome", title: "Data", eyebrow: "Personal",
+  subtitle: "Tables and pages — Airtable-class grids where every row opens as a document.",
+};
 DOMAIN["sec:notes"] = {
   panelType: "notes", title: "Notes", eyebrow: "Personal",
   subtitle: "Your notes — each one opens as the next panel, written in rich text.",

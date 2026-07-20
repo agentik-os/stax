@@ -15,6 +15,7 @@ import { CanvasBoard, NodeInspector, EdgeInspector, board, boardFromPrompt } fro
 import { BlockLive } from "./BlockLive";
 import { ProfileBody, AvatarBubble, useProfile } from "./Profile";
 import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, FolderPanel, notesApp, useNotesApp } from "./NotesApp";
+import { DataHome, DataTable, DataRow, dataApp, useDataApp } from "./DataApp";
 
 /* ── registry : width belongs to the KIND, not the user ──────────────── */
 const REGISTRY: PanelRegistry = {
@@ -38,6 +39,9 @@ const REGISTRY: PanelRegistry = {
   blocklive: { size: "XL" },
   profile: { size: "M" },
   notes: { size: "M" },
+  datahome: { size: "M" },
+  datatable: { size: "XL" },
+  datarow: { size: "L" },
   notefolder: { size: "M" },
   tasks: { size: "XL" },
   note: { size: "M" },
@@ -123,6 +127,13 @@ const titleOfKey = (key: string): string =>
     : key.startsWith("cve:") ? (board.edge(key.slice(4))?.label || "Connection")
     : key.startsWith("nte:") ? (notesApp.note(key.slice(4))?.title || "Note")
     : key.startsWith("nfd:") ? (notesApp.folder(key.slice(4))?.name || "Folder")
+    : key.startsWith("dtc:") ? (dataApp.col(key.slice(4))?.name || "Table")
+    : key.startsWith("dtr:") ? (() => {
+        const [, cid, rid] = key.split(":");
+        const c = dataApp.col(cid); const r = c && dataApp.row(cid, rid);
+        const ft = c?.fields.find((f) => f.type === "text");
+        return String((ft && r?.v[ft.id]) || "Row");
+      })()
     : key.startsWith("tsk:") ? (notesApp.task(key.slice(4))?.label || "Task")
     : key);
 
@@ -358,6 +369,9 @@ function Shell() {
         <div style={{ flex: 1 }} />
         <button className="tb-goto" onClick={() => setPalette(true)}>
           GO TO<span className="kbd" style={{ minWidth: 0 }}>⌘K</span>
+        </button>
+        <button className="tb-btn" title="Data — tables & pages" onClick={() => ws.openSpace("data", targetOf("sec:data"))}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6" /><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></svg>
         </button>
         <button className="tb-btn" title="Notes" onClick={() => ws.openSpace("notes", targetOf("sec:notes"))}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3v5h5" /><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7z" /><path d="M9 13h6M9 17h4" /></svg>
@@ -637,16 +651,19 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   const p: PanelInstance | undefined = ws.state.panelsById[id];
   if (!p) return null;
   useNotesApp(); // foot actions (pin state, counts) re-render with the notes store
+  useDataApp(); // crumb/foot re-render with the data store
   const bn = p.target.panelType === "canvasnode" ? board.node(p.target.resourceKey.slice(4)) : null;
   const be = p.target.panelType === "canvasedge" ? board.edge(p.target.resourceKey.slice(4)) : null;
   const nt = p.target.panelType === "note" ? notesApp.note(p.target.resourceKey.slice(4)) : null;
   const tk = p.target.panelType === "task" ? notesApp.task(p.target.resourceKey.slice(4)) : null;
   const fd = p.target.panelType === "notefolder" ? notesApp.folder(p.target.resourceKey.slice(4)) : null;
+  const dc = p.target.panelType === "datatable" ? dataApp.col(p.target.resourceKey.slice(4)) : null;
+  const isDataRow = p.target.panelType === "datarow";
   const n = DOMAIN[p.target.resourceKey] ?? {
     panelType: p.target.panelType,
-    title: nt || tk ? "" : fd ? fd.name : be ? (be.label || "Connection") : bn?.label ?? "Node",
-    eyebrow: bn ? "canvas · " + bn.kind : be ? "canvas · link" : nt ? "note" : fd ? "folder" : tk ? "task" : undefined,
-    subtitle: bn?.sub,
+    title: nt || tk || isDataRow ? "" : dc ? dc.name : fd ? fd.name : be ? (be.label || "Connection") : bn?.label ?? "Node",
+    eyebrow: bn ? "canvas · " + bn.kind : be ? "canvas · link" : nt ? "note" : fd ? "folder" : tk ? "task" : dc ? "table" : isDataRow ? "page" : undefined,
+    subtitle: dc ? dc.rows.length + " rows · filters, sort and search live in the toolbar." : bn?.sub,
   };
   const isCanvas = p.target.panelType === "canvas";
   const isRef = p.placement === "reference";
@@ -727,6 +744,9 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
             {p.target.panelType === "tasks" && <TasksRoot panelId={id} />}
             {p.target.panelType === "note" && <NoteEditor noteKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "notefolder" && <FolderPanel folderKey={p.target.resourceKey} panelId={id} />}
+            {p.target.panelType === "datahome" && <DataHome panelId={id} />}
+            {p.target.panelType === "datatable" && <DataTable colKey={p.target.resourceKey} panelId={id} />}
+            {p.target.panelType === "datarow" && <DataRow rowKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "task" && <TaskDetail taskKey={p.target.resourceKey} panelId={id} />}
             {(n.blocks ?? []).map((b, i) =>
               b.kind === "diagram" ? (
@@ -886,6 +906,38 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
             <button className="d-btn destructive sm"
               onClick={() => { notesApp.removeFolder(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
               Delete folder
+            </button>
+          </div>
+        ) : p.target.panelType === "datahome" ? (
+          <div className="foot-actions">
+            <button className="foot-cta"
+              onClick={() => ws.openDetail(id, { panelType: "datatable", resourceKey: "dtc:" + dataApp.addCollection() })}>
+              + New table
+            </button>
+          </div>
+        ) : p.target.panelType === "datatable" ? (
+          <div className="foot-actions">
+            <button className="foot-cta"
+              onClick={() => {
+                const cid = p.target.resourceKey.slice(4);
+                ws.openDetail(id, { panelType: "datarow", resourceKey: "dtr:" + cid + ":" + dataApp.addRow(cid) });
+              }}>
+              + New row
+            </button>
+            <button className="d-btn destructive sm"
+              onClick={() => { dataApp.removeCollection(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
+              Delete table
+            </button>
+          </div>
+        ) : p.target.panelType === "datarow" ? (
+          <div className="foot-actions">
+            <button className="d-btn destructive sm"
+              onClick={() => {
+                const [, cid, rid] = p.target.resourceKey.split(":");
+                dataApp.removeRow(cid, rid);
+                ws.closePanel(id);
+              }}>
+              Delete row
             </button>
           </div>
         ) : p.target.panelType === "task" ? (
@@ -1098,6 +1150,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
     out.push({ tag: "action", label: "Open Canvas board", run: () => ws.openSpace("canvas", targetOf("sec:canvas")) });
     out.push({ tag: "action", label: "Open Agent — ⌘J", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", metaKey: true })) });
     out.push({ tag: "action", label: "Open Profile", run: () => ws.openSpace("profile", targetOf("sys:profile")) });
+    out.push({ tag: "action", label: "Open Data — tables & pages", run: () => ws.openSpace("data", targetOf("sec:data")) });
     out.push({ tag: "action", label: "Open Notes", run: () => ws.openSpace("notes", targetOf("sec:notes")) });
     out.push({ tag: "action", label: "Open Tasks", run: () => ws.openSpace("tasks", targetOf("sec:tasks")) });
     out.push({ tag: "action", label: "Theme — light", run: () => setTheme("light") });
