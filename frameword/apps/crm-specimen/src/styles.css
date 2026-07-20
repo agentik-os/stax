@@ -1036,8 +1036,11 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 
 /* ── dedicated space menu — the sidebar mirrors the OPEN Space ── */
 .sb-space-head { display: flex; align-items: center; gap: 2px; padding: 0 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
-.sb-backarrow { flex: none; width: 26px; height: 26px; border-radius: 7px; color: var(--muted-foreground); display: grid; place-items: center; }
+.sb-backarrow { flex: none; width: 26px; height: 26px; border-radius: 7px; color: var(--muted-foreground); display: grid; place-items: center; position: relative; }
 .sb-backarrow:hover { background: var(--secondary); color: var(--foreground); }
+/* instant tooltip — the native title is too slow to feel intentional */
+.sb-backarrow::after { content: attr(data-tip); position: absolute; left: calc(100% + 7px); top: 50%; transform: translateY(-50%); background: var(--foreground); color: var(--background); font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.05); letter-spacing: 0.04em; padding: 4px 9px; border-radius: 7px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 120ms var(--ease) 100ms; z-index: 30; }
+.sb-backarrow:hover::after, .sb-backarrow:focus-visible::after { opacity: 1; }
 .sb-space-head .sb-item.head { flex: 1; min-width: 0; font-weight: 600; color: var(--foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 6px; }
 .sb-collapse { flex: none; width: 28px; height: 28px; border-radius: 7px; color: var(--muted-foreground); display: grid; place-items: center; }
 .sb-collapse:hover { background: var(--secondary); color: var(--foreground); }

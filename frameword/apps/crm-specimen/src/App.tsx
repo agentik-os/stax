@@ -591,7 +591,7 @@ function Shell() {
              *    tree, deep-linkable, following the active thread. ── */
             <div className="sb-space">
               <div className="sb-space-head">
-                <button className="sb-backarrow" title={activeDash.label} aria-label={"Back — " + activeDash.label}
+                <button className="sb-backarrow" data-tip={activeDash.label} aria-label={"Back — " + activeDash.label}
                   onClick={() => setSbView("dash")}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                 </button>
