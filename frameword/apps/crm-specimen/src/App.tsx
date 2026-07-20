@@ -595,17 +595,14 @@ function Shell() {
                 {activeDash.label}
               </button>
               <div className="sb-space-head">
-                <button className="sb-space-main" title="Focus the main panel"
+                <button className="sb-item head" title="Focus the main panel"
                   onClick={() => {
                     setRootCollapsed(false);
                     if (ws.state.rootInstanceId) ws.focusPanel(ws.state.rootInstanceId);
                     document.querySelector(".stage")?.scrollTo({ left: 0, behavior: "smooth" });
                   }}>
-                  <span className="ic"><SpaceIcon id={sbSpace.spaceId} /></span>
-                  <span className="bd">
-                    <span className="tt">{sbSpace.label}</span>
-                    <span className="mt">{(DOMAIN[sbSpace.rootKey]?.children ?? []).length} items</span>
-                  </span>
+                  <SpaceIcon id={sbSpace.spaceId} />
+                  {sbSpace.label}
                 </button>
                 <button className={"sb-collapse" + (rootCollapsed ? " on" : "")} aria-pressed={rootCollapsed}
                   title={rootCollapsed ? "Show the main panel" : "Hide the main panel"}

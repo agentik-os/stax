@@ -1038,14 +1038,10 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .sb-back { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px 4px 6px; margin: 0 0 8px -2px; border-radius: 7px; font-size: calc(var(--fz-body, 13.5px) - 2px); font-weight: 500; color: var(--muted-foreground); }
 .sb-back:hover { background: var(--secondary); color: var(--foreground); }
 .sb-back svg { flex: none; }
-.sb-space-head { display: flex; align-items: center; gap: 6px; padding: 0 0 10px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
-.sb-space-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; text-align: left; }
-.sb-space-main:hover { background: var(--secondary); }
-.sb-space-main .ic { flex: none; width: 30px; height: 30px; border-radius: 8px; background: var(--secondary); display: grid; place-items: center; color: var(--ink-2); }
-.sb-space-main:hover .ic { color: var(--accent); }
-.sb-space-main .bd { flex: 1; min-width: 0; }
-.sb-space-main .tt { display: block; font-family: var(--font-serif); font-size: calc(var(--fz-title, 27px) * 0.6); font-weight: 600; color: var(--foreground); line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sb-space-main .mt { display: block; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); color: var(--muted-foreground); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.sb-space-head { display: flex; align-items: center; gap: 4px; padding: 0 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.sb-space-head .sb-item.head { flex: 1; min-width: 0; font-weight: 600; color: var(--foreground); overflow: hidden; text-overflow: ellipsis; }
+.sb-space-head .sb-item.head svg { color: var(--ink-2); }
+.sb-space-head .sb-item.head:hover svg { color: var(--accent); }
 .sb-collapse { flex: none; width: 28px; height: 28px; border-radius: 7px; color: var(--muted-foreground); display: grid; place-items: center; }
 .sb-collapse:hover { background: var(--secondary); color: var(--foreground); }
 .sb-collapse.on { color: var(--accent); background: var(--accent-soft); }
