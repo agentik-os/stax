@@ -1,7 +1,8 @@
 # stax-migrate
 
 **Take any legacy web app. Rebuild it on the Stax panels-inside-panels grammar —
-down to the pixel. Lose nothing — provably.**
+down to the pixel, down to the last table and server function. Lose nothing —
+provably — at the integration level YOU contracted.**
 
 A zero-dependency Node CLI (plain ESM, node ≥ 18) that drives a complete
 refonte to the [Stax](../../../README.md) grammar — no pages, no modals, no
@@ -11,8 +12,27 @@ coding agent you paste a prompt into.
 
 ## The guarantee, mechanically
 
-Most migrations lose features because coverage lives in someone's head — and
-lose the design because "restyled" is judged by eye. Here both live in files:
+Most migrations lose features because coverage lives in someone's head, lose
+the design because "restyled" is judged by eye — and end up "10% integrated"
+because nobody wrote down what *integrated* was supposed to mean. Here all
+three live in files:
+
+- **`contract.json` — the integration level is a contract, not a mood.**
+  `init` asks which level you are signing (`full` is the default and the
+  recommendation), every gate enforces exactly that level, and LOWERING the
+  level mid-migration requires `--force` and is written to the decision log.
+
+  | level | meaning | the gates accept |
+  |---|---|---|
+  | **`full`** | 100% integrated — everything migrated, old UI purged | `migrated` only |
+  | **`standard`** | everything terminal; legacy surfaces may be embedded | `migrated` · `wrapped`* · `deferred`* |
+  | **`starter`** | chosen core spaces at 100%, rest explicitly excluded | `migrated` · `out-of-scope`* |
+  | **`shell`** | the Stax shell wraps the app; every route panel-reachable | `migrated` · `wrapped`* |
+
+  \* every non-migrated status **must cite its reason** in the `evidence`
+  column — an uncited skip blocks the gate. An empty status blocks at every
+  level. That is the whole anti-10% mechanism: nothing is ever skipped
+  silently.
 
 - **`feature-matrix.csv` — behavior is law.** Phase 1 inventories every surface
   of the old app; phase 2 turns every capability — and every *sub*-capability
@@ -24,6 +44,16 @@ lose the design because "restyled" is judged by eye. Here both live in files:
   color literal, every font-size — each an `E-NNN[.N]` row. **The smallest icon
   is a gated row**: an icon used once must be mapped to its stroke equivalent
   (or dropped with a logged decision) before the gate ever turns green.
+- **`data-matrix.csv` — the database and the functions are law too.** Phase 2
+  reads the SCHEMA and the ROUTERS, not the UI: every table/collection/model
+  and every API route/tRPC procedure/resolver/server action/cron/webhook is a
+  `D-NNN` row carrying `ops` (c/r/u/d). Phase 4 binds each row to the panel
+  that READS it (`panel_binding`) and — for anything writable — the foot
+  action that WRITES it (`write_path`). Phase 7 marks a D row migrated only
+  after one real read AND one real write observed at runtime; phase 8
+  re-crawls the schema for drift and greps the new panels for lingering
+  legacy-endpoint calls. A migrated writable table with no write path refuses
+  the gate.
 - **`design-spec.md` — the conversion contract.** Shipped with the package and
   written into every workspace: exact panel anatomy (body 18/18/16, bar h56,
   foot 11/14, card 14/16 r12…), the type/numbers laws, the accent ramp, the
@@ -31,14 +61,18 @@ lose the design because "restyled" is judged by eye. Here both live in files:
   table, the six mandatory states. Phase 5 maps every E row onto it; phase 7
   implements against it; phase 8 greps the new app for violations.
 - **`stax-migrate done` is a hard gate.** It refuses to advance while any row
-  of **either** matrix is unmigrated, and prints the offending F- and E- ids.
-  No agent can talk its way past it; the check reads the CSVs, not the summary.
+  of **any** matrix blocks the contracted level, and prints the offending F-,
+  E- and D- ids with the exact breach. No agent can talk its way past it; the
+  check reads the CSVs, not the summary. `stax-migrate contract` is the
+  one-shot honesty check — contracted level vs live coverage, exit 1 on breach.
 
 ## Quickstart (no install needed)
 
 ```sh
 # from anywhere — point it at the legacy project
 node /path/to/frameword/packages/stax-migrate/index.mjs init /path/to/legacy-app
+# → asks the integration level (full / standard / starter / shell) and writes contract.json
+#   non-interactive? pass it: … init /path/to/legacy-app --level full
 
 cd /path/to/legacy-app
 node /path/to/.../index.mjs next        # current phase brief + how to run it
@@ -59,22 +93,25 @@ stax-migrate init /path/to/legacy-app
 | # | Phase | What the agent does | Exit gate (`done` checks) |
 |---|-------|---------------------|---------------------------|
 | 1 | **Recon** | Forensic feature inventory: every route, modal, tab, wizard step, shortcut, gate, empty state → `inventory.md` | inventory.md exists, non-trivial |
-| 2 | **Feature matrix** | Every capability + sub-capability = one `F-NNN[.N]` row, `status=inventoried` | feature matrix has > 0 rows |
+| 2 | **Feature + data matrices** | Every capability + sub-capability = one `F-NNN[.N]` row; every table + server function = one `D-NNN` row with its c/r/u/d ops | feature AND data matrices have > 0 rows |
 | 3 | **UI inventory** | Pixel crawl: every icon (named + counted), button/card/badge/input/select/table/chart/nav variant, spacing histogram, color + type census, present/missing states → `E-NNN[.N]` rows | **element matrix has > 0 rows** |
-| 4 | **Feature mapping** | Deterministic grammar rules fill `mapping`+`size` per F row; ambiguities logged | zero F rows with empty mapping |
+| 4 | **Feature + data mapping** | Deterministic grammar rules fill `mapping`+`size` per F row; every D row gets `panel_binding` (+ `write_path` if writable); scope skips declared HERE with reasons | zero unmapped F rows, zero unbound D rows (reasoned skips aside) |
 | 5 | **Design mapping** | Every E row gets `stax_target` (per design-spec §6), `tokens`, `spacing` (per §1) | **zero E rows with empty stax_target** |
 | 6 | **Scaffold** | Panel shell beside the untouched old app: engine, spec tokens, registry from the matrix, Spaces, URL sync | none — human judgment on the evidence |
-| 7 | **Migrate batches** | THE LOOP: ≤5 F rows **+ every E row they touch** → real panels at contract spacing, both matrices get `status=migrated` + `evidence`, commit. Repeat. | **every row of BOTH matrices `migrated`** — else refuses, prints F- and E- ids |
-| 8 | **Coverage gate** | Adversarial re-crawl of the OLD app (both protocols) + design audit of the NEW app (raw hex, px font-sizes, native selects/dates, modals/tabs, margin drift vs §1) — every finding = a new row, back to 7 | both matrices still 100% after the pass |
-| 9 | **Acceptance** | Golden-path sweep, laws audit, **six states verified on 10 random migrated elements**, redirects from every old URL, purge dead legacy views | `REPORT.md` written |
+| 7 | **Migrate batches** | THE LOOP: ≤5 F rows **+ every E and D row they touch** → real panels at contract spacing, real reads AND writes observed, all matrices get `status` + `evidence`, commit. Repeat. | **every row of ALL matrices terminal at the contracted level** — else refuses with ids and breaches |
+| 8 | **Coverage gate** | Adversarial re-crawl of the OLD app + design audit of the NEW app + **data re-crawl** (schema drift, exercised bindings, lingering legacy-endpoint calls) — every finding = a new row, back to 7 | all matrices still green after the pass |
+| 9 | **Acceptance** | Golden-path sweep, laws audit, **six states verified on 10 random migrated elements**, redirects from every old URL, purge dead legacy views | `REPORT.md` written, opening with the **Integration contract** attestation |
 
 ## Commands
 
 ```
-stax-migrate init   [dir]      create stax-migration/ (9 substituted phase briefs, design-spec.md,
-                               both empty matrices, decision log, state.json) + print the plan
-stax-migrate status [dir]      phase + both matrices: counts by status, two coverage bars,
-                               first 10 unmigrated ids of each
+stax-migrate init   [dir] [--level full|standard|starter|shell] [--no-data]
+                               create stax-migration/ (9 substituted phase briefs, design-spec.md,
+                               three empty matrices, contract.json, decision log, state.json)
+stax-migrate status [dir]      contract + phase + three matrices: counts, coverage bars, blocking ids
+stax-migrate contract [dir]    the honesty check: contracted level vs live coverage (exit 1 on breach)
+stax-migrate level  [name] [dir] [--force]
+                               show or change the level — lowering mid-migration needs --force, and is logged
 stax-migrate prompt [n] [dir]  print phase n's brief to stdout — pipe/paste into any agent
 stax-migrate next   [dir]      current phase brief + exactly how to run it
 stax-migrate done   [dir]      validate the phase's exit gate, advance or refuse with ids
@@ -91,13 +128,17 @@ Rails-ish / unknown).
 ```
 feature-matrix.csv  id,area,feature,subfeature,source,ui_kind,mapping,size,status,evidence
 element-matrix.csv  id,area,element,kind,count,source,stax_target,tokens,spacing,status,evidence
+data-matrix.csv     id,layer,name,kind,source,ops,panel_binding,write_path,status,evidence
 ```
 
 `kind` ∈ icon · button · card · badge · input · select · table · chart · nav ·
 modal · toast · spacing · color · type · state · other. `count` = occurrences
 found in the crawl. Both matrices walk inventoried → mapped → migrated, and
 sub-rows (`F-012.1`, `E-007.1`) are gated individually — a parent existing
-never auto-migrates its children.
+never auto-migrates its children. Data rows: `layer` ∈ db · function; `ops` is
+the c/r/u/d set the row supports; a writable row is only ever migrated with a
+named `write_path`. A project with genuinely no backend waives the data matrix
+at init with `--no-data` (recorded in the contract).
 
 ## Using agents
 
@@ -114,10 +155,12 @@ advancement is only ever `stax-migrate done`.
 ## FAQ
 
 **Partial adoption — can I migrate only one area?**
-Yes, socially, not mechanically: scope phases 1 and 3 to that area (edit the
-briefs in `stax-migration/` — they're yours after init) and the matrices will
-only ever contain that area's rows. The guarantee then covers exactly what you
-inventoried. What enters a matrix, however, can never be dropped.
+Yes — mechanically now: `stax-migrate init . --level starter` (or `standard` /
+`shell`). Everything still gets inventoried — that part is never optional —
+but the level defines which terminal statuses the gates accept, and every
+skipped row must carry its reason. `stax-migrate contract` will tell you, at
+any moment, exactly how integrated you really are. What enters a matrix can
+still never be silently dropped.
 
 **Monorepos?**
 Point `init` at the app package (`stax-migrate init apps/dashboard`), not the

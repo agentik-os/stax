@@ -6,9 +6,20 @@ active at a time; one action zone per panel — the foot; pinned references
 survive navigation). No taste, no invention — rules only.
 
 TARGET: {{TARGET}}  (stack: {{STACK}})
+CONTRACT: integration level {{LEVEL}} — {{LEVEL_DESC}}
 READ/WRITE: {{TARGET}}/stax-migration/feature-matrix.csv — fill `mapping` and
-`size` on EVERY row, set `status` to `mapped`. Also append ambiguity calls to
-{{TARGET}}/stax-migration/decision-log.md. Do NOT touch app code or state.json.
+`size` on EVERY row, set `status` to `mapped` — AND
+{{TARGET}}/stax-migration/data-matrix.csv — fill `panel_binding` (and
+`write_path` for writable rows) on EVERY data row. Also append ambiguity calls
+to {{TARGET}}/stax-migration/decision-log.md. Do NOT touch app code or state.json.
+
+## Scope calls happen HERE — explicitly, never by omission
+
+The contract level is {{LEVEL}}: gates accept [{{LEVEL_ACCEPT}}]. If this level
+allows skipping a row (deferred / out-of-scope / wrapped), the skip is DECLARED
+NOW: set that status on the row AND write the reason in `evidence`
+(e.g. `out-of-scope: admin-only surface, 3 users, revisit Q4`). A row left
+empty "because we won't do it" is a gate violation, not a scope call.
 
 ## Mapping vocabulary — write `kind/panel-type` (kebab-case), e.g. `drill/deal-detail`
 
@@ -54,17 +65,34 @@ per the rules — never "covered by parent".
 Every rule-4 (and any contested rule-1/2/3) call goes in the log. An
 undocumented judgment call is a bug.
 
+## Data binding — every D row names its panels
+
+For every data-matrix row (unless it carries a reasoned skip status):
+
+- `panel_binding` — the panel surface that READS it, in mapping vocabulary:
+  `space-root/deals`, `drill/deal-detail`, `data-panel/customers-table`. A
+  table read by three panels lists all three, comma-separated (quoted CSV).
+- `write_path` — for rows whose `ops` include create/update/delete: the foot
+  action or composer that WRITES it: `foot/new-deal`, `foot/save-settings`,
+  `composer/new-comment`. A writable model with no write path is either bound
+  now or explicitly deferred with a reason — never silently read-only.
+- A table no UI touches: decide its fate NOW — bind it to a new panel, or set
+  a reasoned skip status. The gate refuses unexplained orphans.
+
 ## Exit criteria — self-check before you stop
 
-1. ZERO rows with an empty `mapping` — run `node {{CLI}} status {{TARGET}}`,
-   then verify: `node {{CLI}} done {{TARGET}}` must NOT list empty-mapping rows.
-   (Do not worry if it refuses for other phases' reasons — only run it to read
-   the check output; the OPERATOR advances the phase, not you.)
-2. Every `mapping` value uses the vocabulary table above — no free-form prose.
-3. Every row has a size S/M/L/XL. Every row has `status=mapped`.
+1. ZERO F rows with an empty `mapping` and ZERO D rows with an empty
+   `panel_binding` — except rows carrying a reasoned skip status. Run
+   `node {{CLI}} done {{TARGET}}` and read the check output.
+   (The OPERATOR advances the phase, not you.)
+2. Every `mapping`/`panel_binding` value uses the vocabulary table above — no
+   free-form prose.
+3. Every mapped F row has a size S/M/L/XL and `status=mapped`. Every writable
+   bound D row has a `write_path`.
 4. Count the distinct Space roots: if more than 7, merge areas by workflow and
    re-map; log the merge.
 5. Final message: distinct panel types (this becomes the phase-6 registry),
-   Space list, and the number of decision-log entries you added.
+   Space list, the count of declared skips WITH their reasons, and the number
+   of decision-log entries you added.
 
 When you are done, stop. Do not design-map or scaffold (phases 5-6).

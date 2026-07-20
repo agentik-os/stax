@@ -16,7 +16,7 @@ pinned references that survive navigation, URL-synced state, and a registry that
 
 | Path | What it is |
 |---|---|
-| `frameword/packages/panels-core` | The pure TypeScript engine — reducer, intent commands, laws (25 tests) |
+| `frameword/packages/panels-core` | The pure TypeScript engine — reducer, intent commands, laws (33 tests) |
 | `frameword/packages/panels-react` | React bindings — provider, registry, URL sync, persistence |
 | `frameword/apps/crm-specimen` | The full specimen app — WhitePaper design system, 65-component gallery ×3 structural versions, 43 dashboard blocks with full-width live demos, Figma/Miro-class canvas (multi-board, 4-way handles, movable links, right-click menus, AI board builder), notes + tasks (kanban, subtasks), **Data: Airtable-class tables where every row opens as a Notion-class page**, agent drawer, master-prompt kit |
 | `frameword/packages/stax-migrate` | **The migration engine** — a zero-dependency CLI that drives a complete refonte of ANY legacy app to the panel grammar via Claude Code or Codex, with a mechanical no-feature-left-behind guarantee |
@@ -77,7 +77,17 @@ reference for every pattern (tables, canvas, notes, pickers, popovers).
 
 `stax-migrate` is a program, not a prompt. It rebuilds a legacy app on the panel grammar
 **and** retransforms its entire UI at pixel granularity, via **Claude Code or Codex**, in
-gated phases. Two matrices are the law:
+gated phases — at an **integration level you contract up front**, so a migration can
+never end up "10% integrated and quietly done":
+
+| level | you get | the gates accept |
+|---|---|---|
+| **`full`** *(default)* | 100% integrated — everything migrated, old UI purged | migrated only |
+| **`standard`** | every row terminal; legacy surfaces may stay embedded | migrated · wrapped/deferred **with cited reasons** |
+| **`starter`** | your chosen core spaces at 100% | migrated · out-of-scope **with cited reasons** |
+| **`shell`** | the Stax shell wraps the app, every route panel-reachable | migrated · wrapped **with cited reasons** |
+
+Three matrices are the law:
 
 - **Feature matrix** — every feature and sub-feature gets an id (F-012, F-012.1…).
 - **Element matrix** — every visual atom gets one too (E-041 = an icon, a card style,
@@ -85,29 +95,37 @@ gated phases. Two matrices are the law:
   on the [DESIGN-SPEC.md](DESIGN-SPEC.md) contract: exact interior margins, tokens
   instead of hex, stroke icons, segmented buttons instead of status dropdowns, popover
   pickers instead of native inputs, all six states.
+- **Data matrix** — **the database and the functions are law too.** Every
+  table/collection and every API route/procedure/resolver/cron/webhook is a D-row read
+  from the schema and routers, bound to the panel that reads it and the foot action that
+  writes it — a writable table with no write path refuses the gate, and phase 8 greps
+  the new panels for lingering legacy-endpoint calls.
 
-The gate is mechanical: the pipeline **refuses to complete while a single row of either
-matrix is unmigrated** — forgetting a feature, or a 12px icon, is structurally impossible.
+The gate is mechanical: the pipeline **refuses to complete while a single row of any
+matrix blocks the contracted level**, and every skipped row must carry its reason —
+forgetting a feature, a 12px icon, or a table is structurally impossible.
+`stax-migrate contract` answers "how integrated is it really?" at any moment (exit 1 on breach).
 
 ```sh
 git clone https://github.com/agentik-os/stax && cd your-legacy-app
-node ../stax/frameword/packages/stax-migrate/index.mjs init .
+node ../stax/frameword/packages/stax-migrate/index.mjs init . --level full   # or standard | starter | shell
 
 # then, phase by phase (the human stays in the loop between phases):
 node ../stax/frameword/packages/stax-migrate/index.mjs run . --agent claude   # or codex
-node ../stax/frameword/packages/stax-migrate/index.mjs status .               # both coverage bars
+node ../stax/frameword/packages/stax-migrate/index.mjs status .               # three coverage bars
+node ../stax/frameword/packages/stax-migrate/index.mjs contract .             # the honesty check
 ```
 
 | Phase | What the agent does | Exit gate |
 |---|---|---|
 | 1 Recon | Forensic inventory: every route, modal, tab, wizard, form, table, filter, shortcut, permission, state | `inventory.md` exists |
-| 2 Feature matrix | Inventory → `feature-matrix.csv`, sub-features included | > 0 rows |
+| 2 Feature + data matrices | Inventory → `feature-matrix.csv` (sub-features included) + `data-matrix.csv` (every table & server function) | > 0 rows in both |
 | 3 UI inventory | Every icon, button variant, card, badge, input, select, table, chart, color, font, spacing value, shadow → `element-matrix.csv` | > 0 element rows |
-| 4 Feature mapping | Deterministic grammar rules (page→Space, modal→panel, tabs→sibling drills…) | zero empty mappings |
+| 4 Feature + data mapping | Deterministic grammar rules (page→Space, modal→panel, tabs→sibling drills…) + every D row bound to its reading panel and writing foot action | zero empty mappings/bindings |
 | 5 Design mapping | Every element row → its Stax target + tokens + exact spacing (spec §6 conversion table) | zero empty targets |
 | 6 Scaffold | Panel shell + registry + Spaces + WhitePaper tokens; old app untouched | shell boots |
-| 7 Migrate | Batches ≤5 features + every element they touch → real panels with spec-true interiors | **100% of BOTH matrices — or it refuses** |
-| 8 Coverage gate | Adversarial re-crawl of the old app + design audit of the new one (hex leaks, px font-sizes, native inputs, margin drift) | zero gaps in a full pass |
+| 7 Migrate | Batches ≤5 features + every element AND data row they touch → real panels, real reads and writes observed | **every matrix terminal at the contracted level — or it refuses** |
+| 8 Coverage gate | Adversarial re-crawl of the old app + design audit of the new one + data re-crawl (schema drift, exercised bindings, legacy-endpoint leaks) | zero gaps in a full pass |
 | 9 Acceptance | Golden-path sweep, laws audit, six-states check, old-URL redirects, report | `REPORT.md` |
 
 The same intelligence is browsable inside the app: **Prompt pack → M1-M6**.

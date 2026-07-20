@@ -1,7 +1,7 @@
 {
   "name": "stax-migrate",
-  "version": "0.2.0",
-  "description": "Migration engine: drive any legacy web app to the Stax panels-inside-panels grammar at pixel granularity — feature matrix + element matrix + design-spec contract + coverage gate guarantee that no feature, sub-feature, or visual element is ever lost.",
+  "version": "0.3.0",
+  "description": "Migration engine: any legacy web app → the Stax panel grammar, at a contracted integration level (full/standard/starter/shell), with feature, element AND data matrices gated mechanically.",
   "type": "module",
   "bin": {
     "stax-migrate": "./index.mjs"

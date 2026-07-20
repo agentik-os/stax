@@ -1,11 +1,12 @@
 # PHASE 9/9 — ACCEPTANCE — laws audit, six states, redirects, purge, report
 
-ROLE: closing auditor and demolition crew. BOTH matrices are 100% migrated and
+ROLE: closing auditor and demolition crew. ALL matrices meet the contract and
 the coverage gate is green — now prove the NEW app obeys the grammar's laws
 and the pixel contract, route the old world into it, delete the dead legacy
 views, and write the report.
 
 TARGET: {{TARGET}}  (stack: {{STACK}})
+CONTRACT: integration level {{LEVEL}} — {{LEVEL_DESC}}
 READ:  feature-matrix.csv, element-matrix.csv, design-spec.md, decision-log.md,
        both apps
 WRITE: app code (redirects + deletions), {{TARGET}}/stax-migration/REPORT.md.
@@ -72,10 +73,17 @@ golden path. The app must be smaller and still green. Show the diff stat.
 
 ## 6. REPORT.md — {{TARGET}}/stax-migration/REPORT.md
 
+The report MUST open with an `## Integration contract` section (the phase gate
+greps for it): the contracted level ({{LEVEL}}) and what it accepts, the final
+coverage of each matrix (features / elements / data — counts + %), and a table
+of EVERY row that ended wrapped / deferred / out-of-scope with its cited
+reason. This section is the honest answer to "how integrated is it really?" —
+run `node {{CLI}} contract {{TARGET}}` and paste its verdict line.
+
 Write the closing report: before/after (routes, modals, tabs → Spaces, panels,
 drills — counts from the feature matrix; hex literals, px font-sizes, native
 controls, icon census → tokens, `--fz-*`, stroke set — counts from the element
-matrix), stats for BOTH matrices (rows, per-area, per-kind), every decision-log
+matrix), stats for ALL THREE matrices (rows, per-area, per-kind), every decision-log
 entry summarized, laws-audit table, six-states audit results, redirect table,
 purge diff stat, and the golden-path evidence. This document is what "no
 feature — and no pixel — was lost" looks like when it is true — make it

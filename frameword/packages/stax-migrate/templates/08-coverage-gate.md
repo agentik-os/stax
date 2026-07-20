@@ -1,4 +1,4 @@
-# PHASE 8/9 — COVERAGE GATE — adversarial audit of BOTH matrices + design sweep
+# PHASE 8/9 — COVERAGE GATE — adversarial audit of ALL THREE matrices + design sweep
 
 ROLE: adversarial auditor. Your job is to PROVE THE MATRICES WRONG. You are
 not here to confirm the migration; you are here to break its coverage claim —
@@ -6,6 +6,8 @@ functionally AND at pixel granularity. A pass you did not try to falsify is
 worthless.
 
 TARGET: {{TARGET}}  (stack: {{STACK}})
+CONTRACT: integration level {{LEVEL}} — gates accept [{{LEVEL_ACCEPT}}]; every
+non-migrated terminal status must carry its reason in `evidence`.
 READ:  the OLD app (source + running UI), the NEW panel app (running),
        stax-migration/design-spec.md
 WRITE: feature-matrix.csv + element-matrix.csv (NEW rows and flipped liars
@@ -17,7 +19,7 @@ Walk the legacy UI from scratch — the phase-1 FEATURE protocol (routes,
 modals, wizard steps, shortcuts, gates, states…) AND the phase-3 DESIGN
 protocol (icons, buttons, cards, badges, inputs, selects, tables, charts,
 spacing, colors, type, states). Do NOT read the matrices first — fresh eyes.
-Then diff against BOTH matrices. Every capability without an F row and every
+Then diff against the matrices. Every capability without an F row and every
 element without an E row is a GAP: add it (next free `F-NNN`/`E-NNN`,
 `status=inventoried`, cited source, mapping/stax_target filled per the
 phase 4/5 rules, ambiguities logged). A gap row automatically re-arms the
@@ -50,7 +52,20 @@ row's computed styles/rendering against its `stax_target`/`tokens`/`spacing`.
 A row that lies gets flipped back to `mapped` with a decision-log entry —
 lying rows are the worst failure this pipeline has.
 
-## Audit 4 — console sweep
+## Audit 4 — data-layer re-crawl (the anti-10% audit)
+
+Re-read the schema and routers EXACTLY as phase 1 did, and diff against
+data-matrix.csv:
+- a model/function added since phase 2 (schema drift) gets a NEW D row — and
+  reopens phase 7 to bind it.
+- for 10 random D rows claiming `migrated`: open the cited binding, exercise
+  one read in the running app; for writable rows exercise the `write_path`
+  action and show the store/db change. A claimed binding that does not
+  demonstrably move data reverts to `mapped`.
+- grep the NEW panel code for calls to legacy endpoints that the matrix says
+  were replaced — every hit is a finding.
+
+## Audit 5 — console sweep
 
 Open EVERY Space. Zero app-bundle console errors is the bar. List each error
 found in the gate log; each one is a blocker.
@@ -59,7 +74,8 @@ found in the gate log; each one is a blocker.
 
 Green ONLY when, in a single full pass: zero gaps (audit 1), zero design
 findings (audit 2), 20/20 verified (audit 3), zero console errors (audit 4),
-and `node {{CLI}} done {{TARGET}}` reports both matrices 100% migrated. If
+and `node {{CLI}} done {{TARGET}}` reports zero blocking rows in any matrix
+at the contracted level ({{LEVEL}}). If
 ANYTHING was found: leave the new/flipped rows in place, tell the operator to
 loop phase 7 (`stax-migrate run {{TARGET}} --agent … --phase 7`), then re-run
 THIS ENTIRE phase from scratch — a partial re-check is not a pass.

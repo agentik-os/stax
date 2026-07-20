@@ -160,7 +160,7 @@ export const DOMAIN: Record<string, DomainNode> = {
     blocks: [
       { kind: "card", label: "2025 — LifeOS, the prototype", text: "A personal dashboard. The panels-inside-panels mechanic emerges and refuses to leave." },
       { kind: "card", label: "2026 — Panel System, the extraction", text: "The mechanic becomes laws, an engine and a stylesheet inside the Agentik design system." },
-      { kind: "card", label: "Now — Stax, the clean-room rewrite", text: "Public: a pure reducer (@frameword/panels-core, 25 laws tests), React bindings, this specimen app, and stax-migrate — an engine that rebuilds legacy apps on the grammar. Nothing here is theory; the mechanic shipped twice before it had a name." },
+      { kind: "card", label: "Now — Stax, the clean-room rewrite", text: "Public: a pure reducer (@frameword/panels-core, 33 laws tests), React bindings, this specimen app, and stax-migrate — an engine that rebuilds legacy apps on the grammar. Nothing here is theory; the mechanic shipped twice before it had a name." },
     ],
   },
 
@@ -214,7 +214,7 @@ export const DOMAIN: Record<string, DomainNode> = {
   /* ═══ FRAMEWORK · The laws ═══ */
   "sec:laws": {
     panelType: "section", title: "Seven laws, one engine.", eyebrow: "The laws · 03",
-    subtitle: "Encoded in the reducer and checked by validate() — violations are engine errors, not review comments. 25 tests keep them true.",
+    subtitle: "Encoded in the reducer and checked by validate() — violations are engine errors, not review comments. 33 tests keep them true.",
     children: ["law:1", "law:2", "law:3", "law:4", "law:5", "law:6", "law:7"],
   },
   "law:1": {
@@ -356,11 +356,11 @@ export const DOMAIN: Record<string, DomainNode> = {
     panelType: "section", title: "Architecture", eyebrow: "Architecture · 05",
     subtitle: "Two packages for the algebra, one specimen for the pixels, one engine for migrations.",
     blocks: [
-      { kind: "card", label: "1 — @frameword/panels-core", text: "packages/panels-core — the pure reducer. Zero React, zero DOM, zero dependencies. WorkspaceState + the intent commands, the branch policy, validate() (the engine invariants), and the URL codec (encodeLocation / decodeLocation / reconcileLocation). 25 laws tests green in test/laws.test.ts." },
+      { kind: "card", label: "1 — @frameword/panels-core", text: "packages/panels-core — the pure reducer. Zero React, zero DOM, zero dependencies. WorkspaceState + the intent commands, the branch policy, validate() (the engine invariants), and the URL codec (encodeLocation / decodeLocation / reconcileLocation). 33 laws tests green in test/laws.test.ts." },
       { kind: "card", label: "2 — @frameword/panels-react", text: "packages/panels-react — bindings only, zero styling. WorkspaceProvider (urlSync + storageKey), useWorkspace(), the PanelRegistry mapping panelType → size (PANEL_WIDTHS: S 380 · M 480 · L 640 · XL 800), panelWidth() with a device-local override, useIsCompact(640) for the mobile PushHost." },
       { kind: "card", label: "3 — apps/crm-specimen", text: "This app — the rendering layer and the design language. App.tsx (shell, registry, ⌘K palette, agent drawer, settings), domain.ts (every panel's content — the file you are reading), CanvasBoard.tsx, DataApp.tsx, NotesApp.tsx, Notifications.tsx, and styles.css + tokens.css carrying the WhitePaper values from DESIGN-SPEC.md." },
-      { kind: "card", label: "4 — stax-migrate", text: "packages/stax-migrate — a zero-dependency Node CLI that rebuilds ANY legacy app on this grammar in 9 gated phases via Claude Code or Codex. Two CSV matrices are the law — every feature (F-NNN) and every visual element (E-NNN) — and the done gate refuses to advance below 100% of both." },
-      { kind: "code", code: "cd frameword && bun install && bun test    # 25 laws\ncd apps/crm-specimen && bunx vite          # run this app\nnode packages/stax-migrate/index.mjs \\\n  init /path/to/legacy-app                 # start a migration" },
+      { kind: "card", label: "4 — stax-migrate", text: "packages/stax-migrate — a zero-dependency Node CLI that rebuilds ANY legacy app on this grammar in 9 gated phases via Claude Code or Codex, at a CONTRACTED integration level (full / standard / starter / shell — chosen at init, enforced by every gate, lowered only with --force + a logged decision). Three CSV matrices are the law: every feature (F-NNN), every visual element (E-NNN), and every table & server function (D-NNN, bound to the panel that reads it and the foot action that writes it). An uncited skip blocks; stax-migrate contract prints how integrated you REALLY are." },
+      { kind: "code", code: "cd frameword && bun install && bun test    # 33 laws\ncd apps/crm-specimen && bunx vite          # run this app\nnode packages/stax-migrate/index.mjs \\\n  init /path/to/legacy-app                 # start a migration" },
     ],
     children: ["arch:registry", "arch:convex"],
   },
@@ -390,7 +390,7 @@ export const DOMAIN: Record<string, DomainNode> = {
     panelType: "section", title: "Prompt pack", eyebrow: "Prompt pack · 06",
     subtitle: "P0-P3 teach and build. M1-M6 are the MASTER KIT: paste-ready prompts that let any coding agent decompose an existing app, map it to the panel grammar, migrate it, build new on it, wire an agent, and audit against the laws.",
     children: ["pr:p0", "pr:p1", "pr:p2", "pr:p3", "pr:m-decompose", "pr:m-map", "pr:m-migrate", "pr:m-build", "pr:m-agent", "pr:m-laws"],
-    blocks: [{ kind: "card", label: "How to use", text: "Paste one prompt into any coding agent as-is. For a full migration, prefer the stax-migrate CLI (Architecture · 05) — it drives the same protocols as 9 gated phases with mechanical exit gates. Always demand citations — file:line, screenshots, or test output — for every material claim." }],
+    blocks: [{ kind: "card", label: "How to use", text: "Paste one prompt into any coding agent as-is. For a full migration, prefer the stax-migrate CLI (Architecture · 05) — it drives the same protocols as 9 gated phases with mechanical, level-aware exit gates (integration contract: full / standard / starter / shell). Always demand citations — file:line, screenshots, or test output — for every material claim." }],
   },
   "pr:p0": {
     panelType: "prompt", title: "P0 — Concept explainer", subtitle: "Brand-agnostic. Teaches the paradigm in five lines.", meta: "concept",
@@ -428,7 +428,7 @@ export const DOMAIN: Record<string, DomainNode> = {
   "pr:m-migrate": {
     panelType: "prompt", title: "M3 — Migration plan (refonte)", subtitle: "Seven gated phases from inventory to law-clean workspace, each with verifiable acceptance criteria.", meta: "refonte · phased",
     blocks: [
-      { kind: "card", label: "WHEN", text: "Use when you commit to actually rebuilding an existing dashboard on the panel grammar. It turns M1+M2 outputs into an executable, gated plan — hand each phase to a coding agent and refuse to advance until that phase's acceptance evidence is green. Also use it to audit a half-done migration: grade the current state against the phase gates. (The stax-migrate CLI is the productized version: 9 phases, dual matrices, mechanical gates.)" },
+      { kind: "card", label: "WHEN", text: "Use when you commit to actually rebuilding an existing dashboard on the panel grammar. It turns M1+M2 outputs into an executable, gated plan — hand each phase to a coding agent and refuse to advance until that phase's acceptance evidence is green. Also use it to audit a half-done migration: grade the current state against the phase gates. (The stax-migrate CLI is the productized version: 9 phases, three matrices — features, elements, data — and a contracted integration level enforced by every gate.)" },
       { kind: "code", label: "MASTER PROMPT — paste into any coding agent", code: "ROLE: Migration planner for a refonte of this app onto Stax (panels-inside-panels; no modals/tabs/pages; serializable WorkspaceState { panelsById, contextLeafId, referenceRailOrder }; registry maps panelType -> size S/M/L/XL). Produce `migration-plan.md` with EXACTLY these 7 phases. For each: scope, concrete tasks, ACCEPTANCE CRITERIA, and the evidence the implementing model must show. A phase without shown evidence is NOT passed.\nPHASE 1 — INVENTORY: run the M1 forensic audit -> feature-matrix.md. Accept only if every route AND every modal is cited file:line and grep counts reconcile.\nPHASE 2 — MAPPING: apply the M2 rules -> mapping.md + registry draft. Accept only if zero TBD rows and every modal maps to a panel with a size.\nPHASE 3 — REGISTRY: implement the panel registry (panelType -> component, size, title resolver). Accept: it compiles, and a demo/story per panelType renders — show build output + one screenshot grid.\nPHASE 4 — SPACES: implement WorkspaceState + space switching (one space active). Accept: state serializes to JSON and restores an identical workspace — show the round-trip test RUNNING and passing.\nPHASE 5 — DRILLS: wire every drill in mapping.md; parent stays mounted; closing a panel closes its descendants. Accept: the 5 deepest chains clicked through with screenshots or an e2e run log.\nPHASE 6 — REFERENCES: pin -> detached reference on the rail, surviving navigation AND space switches. Accept: pin an item, switch space twice, dump referenceRailOrder — unchanged, reference still live.\nPHASE 7 — POLISH & PURGE: widths from registry only, design tokens only, delete every leftover modal/tab/detail-route. Accept: `grep -riE \"modal|<Dialog|<Tabs\" src` returns zero app-level hits (show output) and the M6 laws report is all-PASS.\nSTANDING DEMANDS ON THE IMPLEMENTING MODEL: cite file:line for every claim; ship RUNNING code (build log, test output, or screenshot — never intent); no phase starts before the previous phase's evidence is shown green. Restate these demands inside each phase's brief." }
     ],
   },
@@ -499,7 +499,7 @@ export const DOMAIN: Record<string, DomainNode> = {
     panelType: "doc", title: "Build this CRM yourself", subtitle: "From feature matrix to law-clean panels.",
     blocks: [
       { kind: "card", label: "The prompt path", text: "M1 decomposes your legacy CRM into a cited feature matrix. M2 maps every row to this grammar deterministically — modal → panel, tabs → sibling drills, wizard → chained drills. M3 phases the rebuild behind evidence gates; M6 audits the result against the laws." },
-      { kind: "card", label: "Or run the engine", text: "stax-migrate (packages/stax-migrate) drives the same protocols as 9 gated phases with TWO CSV matrices — every feature and every visual element — and refuses to finish below 100% of both." },
+      { kind: "card", label: "Or run the engine", text: "stax-migrate (packages/stax-migrate) drives the same protocols as 9 gated phases with THREE CSV matrices — features, elements, and the data layer (every table and server function, bound to reading panels and writing foot actions) — at a contracted integration level (full / standard / starter / shell) it refuses to finish below." },
     ],
     footActions: [{ label: "Open the Prompt pack", kind: "primary", space: "prompts" }],
   },

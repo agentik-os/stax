@@ -2,13 +2,18 @@
 /**
  * stax-migrate — migration engine: any legacy web app → the Stax
  * panels-inside-panels grammar, with a mechanical guarantee that
- * NO FEATURE, SUB-FEATURE, OR PIXEL-LEVEL ELEMENT IS EVER LOST.
+ * NO FEATURE, ELEMENT, TABLE, OR SERVER FUNCTION IS EVER SILENTLY LOST.
  *
- * The guarantee is not vibes: two CSVs are the source of truth —
- * feature-matrix.csv (behavior, F-NNN rows) and element-matrix.csv
- * (every icon/button/card/badge/margin, E-NNN rows, converted against
- * design-spec.md) — every phase reads/writes them, and the coverage
- * gate refuses completion while a single row of either is unmigrated.
+ * The guarantee is not vibes — it is an INTEGRATION CONTRACT:
+ *  · a LEVEL chosen at init (full | standard | starter | shell) recorded in
+ *    contract.json — the gates enforce THAT level, so "10% integrated and
+ *    quietly done" is impossible: every row must reach a terminal status the
+ *    level accepts, and every non-migrated terminal status needs a cited reason.
+ *  · THREE CSVs are the source of truth — feature-matrix.csv (behavior,
+ *    F-NNN), element-matrix.csv (every icon/button/margin, E-NNN, vs
+ *    design-spec.md), and data-matrix.csv (every table/collection AND every
+ *    server function/endpoint, D-NNN, each bound to the panel that reads it
+ *    and the foot action that writes it).
  *
  * Zero dependencies. Plain ESM. node >= 18.
  */
@@ -17,6 +22,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import readline from "node:readline/promises";
 
 const CLI_PATH = fileURLToPath(import.meta.url);
 const PKG_DIR = path.dirname(CLI_PATH);
@@ -24,7 +30,38 @@ const TPL_DIR = path.join(PKG_DIR, "templates");
 const WS = "stax-migration";
 const CSV_HEADER = ["id", "area", "feature", "subfeature", "source", "ui_kind", "mapping", "size", "status", "evidence"];
 const ELEM_HEADER = ["id", "area", "element", "kind", "count", "source", "stax_target", "tokens", "spacing", "status", "evidence"];
+const DATA_HEADER = ["id", "layer", "name", "kind", "source", "ops", "panel_binding", "write_path", "status", "evidence"];
 const LAST_PHASE = 9;
+
+/* ── integration levels — the contract the gates enforce ──────────────────
+ * Terminal statuses: migrated · wrapped (legacy embedded inside a panel) ·
+ * deferred (postponed, reason cited) · out-of-scope (starter only, reason
+ * cited). An empty / todo status ALWAYS blocks, at every level — and any
+ * terminal status other than "migrated" blocks unless `evidence` carries
+ * the reason. Nothing is ever skipped silently. */
+const LEVELS = {
+  full: {
+    label: "FULL — 100% integrated",
+    accept: ["migrated"],
+    desc: "every feature, element, table and function migrated into the grammar; the old UI is purged. Nothing may be wrapped or deferred — drops are row deletions logged in decision-log.md.",
+  },
+  standard: {
+    label: "STANDARD — everything terminal",
+    accept: ["migrated", "wrapped", "deferred"],
+    desc: "every row terminal: migrated, wrapped (legacy surface embedded in a panel), or deferred — wrapped/deferred REQUIRE the reason in the evidence column.",
+  },
+  starter: {
+    label: "STARTER — core spaces at 100%",
+    accept: ["migrated", "out-of-scope"],
+    desc: "the chosen core areas fully migrated; every other row explicitly out-of-scope with its reason. In-scope means 100%.",
+  },
+  shell: {
+    label: "SHELL — panels around the app",
+    accept: ["migrated", "wrapped"],
+    desc: "the Stax shell hosts the existing app; every legacy route/surface wrapped as a panel (reason = the mount point). Conversion is optional, coverage is not.",
+  },
+};
+const LEVEL_KEYS = Object.keys(LEVELS);
 
 const PHASES = [
   { n: 1, file: "01-recon.md",          name: "Recon",           does: "forensic feature inventory",            out: "inventory.md" },
@@ -33,7 +70,7 @@ const PHASES = [
   { n: 4, file: "04-mapping.md",        name: "Feature mapping", does: "features → grammar, deterministic",     out: "mapping + size on F rows" },
   { n: 5, file: "05-design-mapping.md", name: "Design mapping",  does: "elements → design-spec targets",        out: "stax_target/tokens/spacing" },
   { n: 6, file: "06-scaffold.md",       name: "Scaffold",        does: "panel shell beside the old app",        out: "registry, spaces, URL sync" },
-  { n: 7, file: "07-migrate-batch.md",  name: "Migrate batches", does: "<=5 F rows + their E rows, run code",   out: "both matrices migrated" },
+  { n: 7, file: "07-migrate-batch.md",  name: "Migrate batches", does: "<=5 F rows + their E/D rows, run code",  out: "all matrices terminal" },
   { n: 8, file: "08-coverage-gate.md",  name: "Coverage gate",   does: "re-crawl old app + design audit sweep", out: "zero gaps, both at 100%" },
   { n: 9, file: "09-acceptance.md",     name: "Acceptance",      does: "laws, six states, redirects, purge",    out: "REPORT.md" },
 ];
@@ -136,6 +173,26 @@ function readCSVRows(p) {
 }
 const readFeatures = (target) => readCSVRows(wsPath(target, "feature-matrix.csv"));
 const readElements = (target) => readCSVRows(wsPath(target, "element-matrix.csv"));
+const readData = (target) => readCSVRows(wsPath(target, "data-matrix.csv"));
+
+/* ── integration contract IO ──
+ * Legacy v0.2 workspaces have no contract.json → they behave as FULL with the
+ * data matrix waived (they never inventoried one); new inits always write it. */
+function readContract(target) {
+  try {
+    const c = JSON.parse(fs.readFileSync(wsPath(target, "contract.json"), "utf8"));
+    if (!LEVELS[c.level]) return { level: "full", data: c.data !== false, legacy: false };
+    return { level: c.level, data: c.data !== false, legacy: false };
+  } catch {
+    return { level: "full", data: false, legacy: true };
+  }
+}
+function writeContract(target, c) {
+  fs.writeFileSync(
+    wsPath(target, "contract.json"),
+    JSON.stringify({ level: c.level, data: c.data !== false, created: c.created ?? new Date().toISOString().slice(0, 10) }, null, 2) + "\n",
+  );
+}
 
 /* ────────────────────────── stack sniff + templates ────────────────────────── */
 
@@ -155,13 +212,20 @@ function sniffStack(target) {
   return "unknown";
 }
 
-function renderTemplate(file, target, stack) {
+function renderTemplate(file, target, stack, contract) {
   const p = path.join(TPL_DIR, file);
   if (!fs.existsSync(p)) die(`template missing from the stax-migrate package: ${p}`);
+  const c = contract ?? readContract(target);
+  const lv = LEVELS[c.level];
   return fs.readFileSync(p, "utf8")
     .replaceAll("{{TARGET}}", target)
     .replaceAll("{{STACK}}", stack)
-    .replaceAll("{{CLI}}", CLI_PATH);
+    .replaceAll("{{CLI}}", CLI_PATH)
+    .replaceAll("{{LEVEL}}", c.level)
+    .replaceAll("{{LEVEL_LABEL}}", lv.label)
+    .replaceAll("{{LEVEL_DESC}}", lv.desc)
+    .replaceAll("{{LEVEL_ACCEPT}}", lv.accept.join(" | "))
+    .replaceAll("{{DATA_ON}}", c.data ? "yes" : "no (waived at init)");
 }
 
 function phasePrompt(target, n) {
@@ -176,64 +240,142 @@ function phasePrompt(target, n) {
 
 const unmigrated = (rows) => rows.filter((r) => (r.status || "").toLowerCase() !== "migrated");
 
+/** Rows that BLOCK the gate at `level`:
+ *  status empty / not accepted by the level, or a non-migrated terminal
+ *  status without a reason in `evidence` — silence is never acceptance. */
+function blockingRows(rows, level) {
+  const accept = LEVELS[level].accept;
+  return rows
+    .map((r) => {
+      const s = (r.status || "").toLowerCase();
+      if (!accept.includes(s))
+        return { row: r, why: s ? `status "${s}" not accepted at level ${level} (accepted: ${accept.join("|")})` : "empty status" };
+      if (s !== "migrated" && !(r.evidence || "").trim())
+        return { row: r, why: `${s} without a cited reason in evidence` };
+      return null;
+    })
+    .filter(Boolean);
+}
+
 function idList(rows, cap = 20) {
-  const ids = rows.map((r) => r.id || "(no id)");
+  const ids = rows.map((r) => (r.row ? r.row.id : r.id) || "(no id)");
   return ids.slice(0, cap).join(", ") + (ids.length > cap ? ` … +${ids.length - cap} more` : "");
 }
 
+function blockList(blocks, cap = 12) {
+  return blocks.slice(0, cap).map((b) => `${b.row.id || "(no id)"} — ${b.why}`);
+}
+
+/** A row that is skipped at mapping time (deferred/out-of-scope/wrapped WITH
+ *  a reason) is exempt from mapping-completeness checks. */
+const skippedWithReason = (r) =>
+  ["deferred", "out-of-scope", "wrapped"].includes((r.status || "").toLowerCase()) && (r.evidence || "").trim() !== "";
+
 function checkPhase(target, n) {
   const problems = [];
+  const contract = readContract(target);
+  const { level } = contract;
   const fRows = readFeatures(target);
   const eRows = readElements(target);
+  const dRows = readData(target);
   if (n === 1) {
     const p = wsPath(target, "inventory.md");
     if (!fs.existsSync(p) || fs.readFileSync(p, "utf8").trim().length < 40)
-      problems.push(`${WS}/inventory.md is missing or empty — phase 1 must produce the forensic inventory`);
+      problems.push(`${WS}/inventory.md is missing or empty — phase 1 must produce the forensic inventory (features AND schema/functions)`);
   } else if (n === 2) {
     if (fRows.length === 0)
       problems.push("feature-matrix.csv has 0 rows — phase 2 must convert inventory.md into one row per capability");
+    if (contract.data && dRows.length === 0)
+      problems.push("data-matrix.csv has 0 rows — phase 2 must inventory every table/collection AND every server function/endpoint (D-NNN). No backend at all? waive it: stax-migrate level " + level + " --no-data");
   } else if (n === 3) {
     if (eRows.length === 0)
       problems.push("element-matrix.csv has 0 rows — phase 3 must crawl the design down to icons, hex values, and margins");
   } else if (n === 4) {
     if (fRows.length === 0) problems.push("feature-matrix.csv has 0 rows — run phase 2 first");
-    const empty = fRows.filter((r) => !r.mapping);
-    if (empty.length) problems.push(`${empty.length} feature row(s) with an empty mapping: ${idList(empty)}`);
+    const empty = fRows.filter((r) => !r.mapping && !skippedWithReason(r));
+    if (empty.length) problems.push(`${empty.length} feature row(s) with an empty mapping (and no reasoned skip status): ${idList(empty)}`);
+    const dEmpty = dRows.filter((r) => !r.panel_binding && !skippedWithReason(r));
+    if (dEmpty.length) problems.push(`${dEmpty.length} data row(s) with an empty panel_binding — every table/function must name the panel that reads it (or carry a reasoned skip status): ${idList(dEmpty)}`);
   } else if (n === 5) {
     if (eRows.length === 0) problems.push("element-matrix.csv has 0 rows — run phase 3 first");
-    const empty = eRows.filter((r) => !r.stax_target);
+    const empty = eRows.filter((r) => !r.stax_target && !skippedWithReason(r));
     if (empty.length) problems.push(`${empty.length} element row(s) with an empty stax_target: ${idList(empty)}`);
   } else if (n === 7 || n === 8) {
     if (fRows.length === 0)
       problems.push("feature-matrix.csv has 0 rows — the guarantee has nothing to guarantee; run phases 1-2 first");
     if (eRows.length === 0)
       problems.push("element-matrix.csv has 0 rows — the pixel guarantee has nothing to guarantee; run phase 3 first");
-    const unF = unmigrated(fRows);
-    const unE = unmigrated(eRows);
-    if (unF.length) problems.push(`${unF.length} feature row(s) with status != migrated: ${idList(unF)}`);
-    if (unE.length) problems.push(`${unE.length} element row(s) with status != migrated: ${idList(unE)}`);
+    if (contract.data && dRows.length === 0)
+      problems.push("data-matrix.csv has 0 rows — the data guarantee has nothing to guarantee; run phase 2 first");
+    for (const [label, rows] of [["feature", fRows], ["element", eRows], ["data", dRows]]) {
+      const blocks = blockingRows(rows, level);
+      if (blocks.length) {
+        problems.push(`${blocks.length} ${label} row(s) block the ${level.toUpperCase()} gate:`);
+        for (const line of blockList(blocks)) problems.push(`    ${line}`);
+      }
+    }
+    // a migrated data source that can WRITE must name its write path — the
+    // foot action / composer that mutates it. Reads without writes are fine.
+    // ops vocabulary: c/r/u/d (and legacy "w") — anything beyond pure read is a write.
+    const writable = dRows.filter((r) =>
+      (r.status || "").toLowerCase() === "migrated" && /[cudw]/i.test(r.ops || "") && !(r.write_path || "").trim());
+    if (writable.length)
+      problems.push(`${writable.length} migrated WRITABLE data row(s) with no write_path — a table you can write needs the foot action that writes it: ${idList(writable)}`);
   } else if (n === 9) {
     if (!fs.existsSync(wsPath(target, "REPORT.md")))
       problems.push(`${WS}/REPORT.md is missing — phase 9 must write the final before/after report`);
+    else if (!fs.readFileSync(wsPath(target, "REPORT.md"), "utf8").toLowerCase().includes("integration contract"))
+      problems.push(`${WS}/REPORT.md has no "Integration contract" section — the report must attest the level (${level}) and the three coverage numbers, and list every wrapped/deferred/out-of-scope row with its reason`);
   }
   return problems;
 }
 
 /* ────────────────────────── commands ────────────────────────── */
 
-function cmdInit(target) {
+async function askLevel() {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  console.log();
+  console.log("  " + bold("INTEGRATION LEVEL") + dim(" — the contract every gate will enforce. Nothing below it ever passes."));
+  LEVEL_KEYS.forEach((k, i) => {
+    console.log(`    ${bold(i + 1)}) ${cyan(k.padEnd(9))} ${LEVELS[k].label}${k === "full" ? green("  (recommended)") : ""}`);
+    console.log(`       ${dim(LEVELS[k].desc)}`);
+  });
+  const a = (await rl.question(`  select 1-${LEVEL_KEYS.length} or name [1 = full]: `)).trim().toLowerCase();
+  rl.close();
+  if (LEVELS[a]) return a;
+  const i = Number(a);
+  if (Number.isInteger(i) && i >= 1 && i <= LEVEL_KEYS.length) return LEVEL_KEYS[i - 1];
+  return "full";
+}
+
+async function cmdInit(target, flags) {
   const stack = sniffStack(target);
   fs.mkdirSync(wsPath(target), { recursive: true });
   const fresh = !fs.existsSync(wsPath(target, "state.json"));
 
+  // the integration contract — flag wins; else interactive; else full
+  let level = flags.level;
+  if (level !== undefined && !LEVELS[level])
+    die(`unknown --level "${level}" — levels: ${LEVEL_KEYS.join(" | ")}`);
+  const hadContract = fs.existsSync(wsPath(target, "contract.json"));
+  if (!level) {
+    if (hadContract) level = readContract(target).level; // re-init keeps the contract
+    else if (process.stdin.isTTY && process.stdout.isTTY) level = await askLevel();
+    else level = "full";
+  }
+  const contract = { level, data: !flags["no-data"] };
+  writeContract(target, contract);
+
   for (const ph of PHASES)
-    fs.writeFileSync(wsPath(target, ph.file), renderTemplate(ph.file, target, stack));
+    fs.writeFileSync(wsPath(target, ph.file), renderTemplate(ph.file, target, stack, contract));
   // design-spec.md is the canonical pixel contract — always refreshed, like the briefs
   fs.writeFileSync(wsPath(target, "design-spec.md"), fs.readFileSync(path.join(TPL_DIR, "design-spec.md"), "utf8"));
   if (!fs.existsSync(wsPath(target, "feature-matrix.csv")))
     fs.writeFileSync(wsPath(target, "feature-matrix.csv"), serializeCSV([], CSV_HEADER));
   if (!fs.existsSync(wsPath(target, "element-matrix.csv")))
     fs.writeFileSync(wsPath(target, "element-matrix.csv"), serializeCSV([], ELEM_HEADER));
+  if (!fs.existsSync(wsPath(target, "data-matrix.csv")))
+    fs.writeFileSync(wsPath(target, "data-matrix.csv"), serializeCSV([], DATA_HEADER));
   if (!fs.existsSync(wsPath(target, "decision-log.md")))
     fs.writeFileSync(
       wsPath(target, "decision-log.md"),
@@ -254,7 +396,9 @@ function cmdInit(target) {
   line(bold(mag("STAX-MIGRATE")) + dim(" · panels-inside-panels refonte engine"));
   line(dim("target    ") + target);
   line(dim("stack     ") + cyan(stack));
-  line(dim("workspace ") + `${WS}/  ` + dim(fresh ? "(created)" : "(already existed — templates refreshed, matrix/state/log preserved)"));
+  line(dim("contract  ") + bold(mag(level.toUpperCase())) + dim(" — " + LEVELS[level].desc));
+  line(dim("data      ") + (contract.data ? "tables + server functions gated (data-matrix.csv)" : yellow("WAIVED (--no-data) — no data matrix will be required")));
+  line(dim("workspace ") + `${WS}/  ` + dim(fresh ? "(created)" : "(already existed — templates refreshed, matrices/contract/state/log preserved)"));
   line();
   rule("┌", "┐");
   boxRow("THE 9 PHASES", bold);
@@ -262,19 +406,20 @@ function cmdInit(target) {
   for (const r of rows) boxRow(r);
   rule("└", "┘");
   line();
-  line(bold("THE GUARANTEE") + " — two matrices are law: feature-matrix.csv (every capability)");
-  line("and element-matrix.csv (every icon, button, card, badge, margin — converted");
-  line("against design-spec.md). Every phase reads/writes them, and `stax-migrate done`");
-  line("refuses to advance while any row of either is unmigrated.");
-  line(green("No feature — and no pixel — is ever lost. Mechanically."));
+  line(bold("THE CONTRACT") + ` — level ${bold(level)}: gates accept only [${LEVELS[level].accept.join(" | ")}],`);
+  line("and every non-migrated terminal status must cite its reason in the evidence");
+  line("column — an uncited skip BLOCKS. Three matrices are law: features (F-NNN),");
+  line("elements (E-NNN vs design-spec.md), and data (D-NNN — every table and server");
+  line("function, bound to the panel that reads it and the foot action that writes it).");
+  line(green("No feature, pixel, table, or function is ever lost silently. Mechanically."));
   line();
-  line(dim("files: ") + PHASES.map((p) => p.file).join(" ") + dim(" · design-spec.md · feature-matrix.csv · element-matrix.csv · decision-log.md · state.json"));
+  line(dim("files: ") + PHASES.map((p) => p.file).join(" ") + dim(" · design-spec.md · feature/element/data-matrix.csv · contract.json · decision-log.md · state.json"));
   line();
   line(bold("next → ") + cyan(`stax-migrate next ${target}`) + dim("   (phase 1 brief + how to run it)"));
   line();
 }
 
-function matrixBlock(label, rows) {
+function matrixBlock(label, rows, level) {
   const total = rows.length;
   const counts = {};
   for (const r of rows) { const s = r.status || "(empty)"; counts[s] = (counts[s] || 0) + 1; }
@@ -285,26 +430,78 @@ function matrixBlock(label, rows) {
   const bar = "█".repeat(fill) + "░".repeat(barLen - fill);
   const byStatus = Object.entries(counts).map(([k, v]) => `${k} ${bold(v)}`).join(" · ") || dim("—");
   console.log("  " + dim(label.padEnd(10)) + `${bold(total)} row(s)   ${byStatus}`);
-  console.log("  " + " ".repeat(10) + `[${pct === 100 && total > 0 ? green(bar) : cyan(bar)}] ${bold(pct + "%")} migrated`);
-  const un = unmigrated(rows);
-  if (un.length) console.log("  " + " ".repeat(10) + dim("next unmigrated: ") + yellow(idList(un, 10)));
-  else if (total > 0) console.log("  " + " ".repeat(10) + green("every row migrated — gate green"));
+  const blocks = blockingRows(rows, level);
+  console.log("  " + " ".repeat(10) + `[${blocks.length === 0 && total > 0 ? green(bar) : cyan(bar)}] ${bold(pct + "%")} migrated` +
+    dim(` · gate(${level}): `) + (total === 0 ? dim("no rows yet") : blocks.length === 0 ? green("green") : red(`${blocks.length} blocking`)));
+  if (blocks.length) console.log("  " + " ".repeat(10) + dim("blocking: ") + yellow(idList(blocks, 8)));
 }
 
 function cmdStatus(target) {
   requireWorkspace(target);
   const st = readState(target);
+  const contract = readContract(target);
   console.log();
   console.log("  " + bold(mag("STAX-MIGRATE")) + dim(" · status — ") + target);
+  console.log("  " + dim("contract  ") + bold(mag(contract.level.toUpperCase())) + dim(` — accepts [${LEVELS[contract.level].accept.join(" | ")}] · non-migrated needs a cited reason`) + (contract.legacy ? yellow(" · legacy workspace (no contract.json — re-run init to choose a level)") : ""));
   if (st.phase > LAST_PHASE) {
     console.log("  " + green(bold(`phase     COMPLETE — all ${LAST_PHASE} phases passed`)));
   } else {
     const ph = PHASES[st.phase - 1];
     console.log("  " + dim("phase     ") + bold(`${st.phase}/${LAST_PHASE} — ${ph.name}`) + dim(` (${ph.does})`));
   }
-  matrixBlock("features", readFeatures(target));
-  matrixBlock("elements", readElements(target));
+  matrixBlock("features", readFeatures(target), contract.level);
+  matrixBlock("elements", readElements(target), contract.level);
+  if (contract.data) matrixBlock("data", readData(target), contract.level);
+  else console.log("  " + dim("data      waived (--no-data) — no tables/functions gated"));
   console.log();
+}
+
+/** The one-shot honesty check: the contracted level vs live coverage, all three matrices. */
+function cmdContract(target) {
+  requireWorkspace(target);
+  const c = readContract(target);
+  const lv = LEVELS[c.level];
+  console.log();
+  console.log("  " + bold(mag("INTEGRATION CONTRACT")) + dim(" — ") + target);
+  console.log("  " + dim("level     ") + bold(mag(c.level.toUpperCase())) + " — " + lv.label);
+  console.log("  " + dim("          ") + dim(lv.desc));
+  console.log("  " + dim("accepts   ") + lv.accept.join(" · ") + dim("  (anything else — or an uncited skip — blocks)"));
+  console.log("  " + dim("data      ") + (c.data ? "tables + server functions gated" : yellow("waived")));
+  const sets = [["features", readFeatures(target)], ["elements", readElements(target)]];
+  if (c.data) sets.push(["data", readData(target)]);
+  let allGreen = true;
+  for (const [label, rows] of sets) {
+    const blocks = blockingRows(rows, c.level);
+    const skipped = rows.filter((r) => (r.status || "").toLowerCase() !== "migrated" && !blocks.some((b) => b.row === r));
+    if (blocks.length) allGreen = false;
+    if (rows.length === 0) { allGreen = false; console.log("  " + dim(label.padEnd(10)) + yellow("no rows yet")); continue; }
+    console.log("  " + dim(label.padEnd(10)) + (blocks.length === 0 ? green(`HONORED — ${rows.length} row(s) terminal`) : red(`${blocks.length}/${rows.length} row(s) in breach`)) +
+      (skipped.length ? dim(` · ${skipped.length} reasoned skip(s)`) : ""));
+    for (const line of blockList(blocks, 8)) console.log("      " + red("· ") + line);
+  }
+  console.log("  " + (allGreen ? green(bold("CONTRACT HONORED — the integration is what it claims to be.")) : red(bold("CONTRACT IN BREACH — this is NOT a " + c.level.toUpperCase() + " integration yet."))));
+  console.log();
+  if (!allGreen) process.exitCode = 1;
+}
+
+function cmdLevel(target, name, flags) {
+  requireWorkspace(target);
+  const c = readContract(target);
+  if (!name) {
+    console.log(bold(mag(c.level.toUpperCase())) + " — " + LEVELS[c.level].desc + (c.data ? "" : yellow("  [data waived]")));
+    return;
+  }
+  if (!LEVELS[name]) die(`unknown level "${name}" — levels: ${LEVEL_KEYS.join(" | ")}`);
+  const st = readState(target);
+  const loosening = LEVEL_KEYS.indexOf(name) > LEVEL_KEYS.indexOf(c.level);
+  if (loosening && st.phase > 1 && !flags.force)
+    die(`refusing to LOWER the contract from ${c.level} to ${name} mid-migration — that is how 10% integrations happen.\n  if this is a deliberate re-scope: stax-migrate level ${name} ${target} --force  (the change is logged)`);
+  const next = { level: name, data: flags["no-data"] ? false : c.data };
+  writeContract(target, next);
+  if (loosening && st.phase > 1)
+    fs.appendFileSync(wsPath(target, "decision-log.md"),
+      `${new Date().toISOString().slice(0, 10)} · CONTRACT · level lowered ${c.level} → ${name} (--force) — every gate now accepts [${LEVELS[name].accept.join("|")}]\n`);
+  console.log(green(`✓ contract level: ${c.level} → ${bold(name)}`) + dim(" — gates now enforce ") + LEVELS[name].label);
 }
 
 function cmdPrompt(n, target) {
@@ -328,7 +525,7 @@ function cmdNext(target) {
   console.log("  " + cyan(`stax-migrate run ${target} --agent claude`) + dim("   (or --agent codex)"));
   console.log("  " + dim("or copy the brief above into any coding agent, cwd = ") + target);
   console.log(bold("THEN") + "  " + cyan(`stax-migrate done ${target}`) + dim("   — the exit gate decides, not the agent"));
-  if (st.phase === 7) console.log(dim("  phase 7 loops: re-run it (<=5 F rows + their E rows per run) until both matrices are 100%."));
+  if (st.phase === 7) console.log(dim("  phase 7 loops: re-run it (<=5 F rows + their E/D rows per run) until every matrix meets the contract."));
   console.log(dim("─".repeat(78)));
 }
 
@@ -345,7 +542,7 @@ function cmdDone(target) {
     console.log(red(bold(`✗ REFUSED — phase ${st.phase} (${ph.name}) exit criteria not met:`)));
     for (const p of problems) console.log(red("  · ") + p);
     if (st.phase === 7)
-      console.log(dim("  loop phase 7 (each run migrates <=5 F rows + their E rows) until both matrices are 100%, then retry."));
+      console.log(dim("  loop phase 7 (each run migrates <=5 F rows + their E/D rows) until every matrix meets the contract, then retry."));
     if (st.phase === 8)
       console.log(dim("  gaps and design findings go back through phase 7: stax-migrate run --phase 7, then re-run the gate."));
     process.exitCode = 1;
@@ -356,8 +553,9 @@ function cmdDone(target) {
   st.phase += 1;
   writeState(target, st);
   if (st.phase > LAST_PHASE) {
-    console.log(green(bold("✓ MIGRATION COMPLETE")) + green(` — ${LAST_PHASE}/${LAST_PHASE} phases passed, every row of BOTH matrices migrated,`));
-    console.log(green(`  coverage + design gates green, report at ${WS}/REPORT.md. The grammar holds, to the pixel.`));
+    const lvl = readContract(target).level;
+    console.log(green(bold("✓ MIGRATION COMPLETE")) + green(` — ${LAST_PHASE}/${LAST_PHASE} phases passed at level ${bold(lvl.toUpperCase())}: every row of all`));
+    console.log(green(`  matrices terminal, every skip cited, report at ${WS}/REPORT.md. The contract is honored, to the pixel.`));
   } else {
     console.log(green(`✓ phase ${st.phase - 1} (${ph.name}) passed`) + ` → now at phase ${bold(`${st.phase}/${LAST_PHASE}`)} — ${PHASES[st.phase - 1].name}`);
     console.log(dim(`  next: stax-migrate next ${target}`));
@@ -423,20 +621,32 @@ function cmdHelp() {
 ${bold(mag("stax-migrate"))} — any legacy web app → the Stax panels-inside-panels grammar
 
 ${bold("USAGE")}
-  stax-migrate ${cyan("init")}   [dir]                  create ${WS}/ (9 phase briefs, both matrices, design spec, log, state)
-  stax-migrate ${cyan("status")} [dir]                  phase + both matrices: counts, two coverage bars, unmigrated ids
+  stax-migrate ${cyan("init")}   [dir] [--level full|standard|starter|shell] [--no-data]
+                                        create ${WS}/ — asks the integration level (TTY) and writes contract.json
+  stax-migrate ${cyan("status")} [dir]                  contract + phase + three matrices: counts, coverage bars, blocking ids
+  stax-migrate ${cyan("contract")} [dir]                the honesty check: contracted level vs live coverage (exit 1 on breach)
+  stax-migrate ${cyan("level")}  [name] [dir] [--force] show or change the level — LOWERING mid-migration needs --force and is logged
   stax-migrate ${cyan("prompt")} [n] [dir]              print phase n's brief (default: current phase) — pipe anywhere
   stax-migrate ${cyan("next")}   [dir]                  print the current phase brief + how to run it
   stax-migrate ${cyan("done")}   [dir]                  validate the phase exit gate, then advance (or refuse)
   stax-migrate ${cyan("run")}    [dir] --agent claude|codex [--phase n]
                                         drive ONE phase via an agent CLI, then re-check the gate
 
+${bold("THE INTEGRATION CONTRACT")}
+  ${cyan("full")}      100% integrated — everything migrated, old UI purged. Nothing deferred.  ${green("(recommended)")}
+  ${cyan("standard")}  everything terminal — migrated, or wrapped/deferred WITH a cited reason.
+  ${cyan("starter")}   chosen core spaces at 100% — the rest explicitly out-of-scope, with reasons.
+  ${cyan("shell")}     the Stax shell wraps the app — every route reachable as a (wrapped) panel.
+
 ${bold("PHILOSOPHY")}
-  1. Two matrices are the truth — features (F-NNN) and elements (E-NNN, down to a single icon).
-  2. Every phase reads and writes them; a capability or pixel outside them does not exist.
-  3. The gate blocks "done" while one row of either is unmigrated — mechanical, not vibes.
+  1. Three matrices are the truth — features (F-NNN), elements (E-NNN, down to one icon),
+     and data (D-NNN — every table AND every server function, bound to the panel that
+     reads it and the foot action that writes it).
+  2. The LEVEL is a contract, not a mood: gates enforce it, and lowering it mid-migration
+     is loud, forced, and logged. "10% integrated and quietly done" cannot happen.
+  3. An empty status always blocks; a skip without a cited reason always blocks.
   4. Agents do the work; the human advances phases — one phase per run, never a loop.
-  5. The old app keeps running until every row has proof it lives in the new grammar, to the pixel.
+  5. The old app keeps running until every row has proof it lives in the new grammar.
 `);
 }
 
@@ -457,56 +667,77 @@ function parseFlags(args) {
   return { flags, pos };
 }
 
-const [cmd, ...restArgs] = process.argv.slice(2);
-const { flags, pos } = parseFlags(restArgs);
+/* main-guard: only dispatch when executed as a CLI (direct node call or a bin
+ * shim symlink) — importing this module for tests/embedding stays silent. */
+function isMain() {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try { return fs.realpathSync(entry) === CLI_PATH; } catch { return false; }
+}
 
-try {
-  switch (cmd) {
-    case "init":
-      cmdInit(resolveTarget(pos[0]));
-      break;
-    case "status":
-      cmdStatus(resolveTarget(pos[0]));
-      break;
-    case "prompt": {
-      let n, dirArg;
-      if (pos[0] !== undefined && /^\d+$/.test(pos[0])) { n = Number(pos[0]); dirArg = pos[1]; }
-      else { dirArg = pos[0]; }
-      const target = resolveTarget(dirArg);
-      if (n === undefined) {
-        const st = readState(target);
-        n = Math.min(st.phase || 1, LAST_PHASE);
+async function main() {
+  const [cmd, ...restArgs] = process.argv.slice(2);
+  const { flags, pos } = parseFlags(restArgs);
+  try {
+    switch (cmd) {
+      case "init":
+        await cmdInit(resolveTarget(pos[0]), flags);
+        break;
+      case "status":
+        cmdStatus(resolveTarget(pos[0]));
+        break;
+      case "contract":
+        cmdContract(resolveTarget(pos[0]));
+        break;
+      case "level": {
+        let name, dirArg;
+        if (pos[0] !== undefined && LEVELS[pos[0]]) { name = pos[0]; dirArg = pos[1]; }
+        else { dirArg = pos[0]; }
+        cmdLevel(resolveTarget(dirArg), name, flags);
+        break;
       }
-      cmdPrompt(n, target);
-      break;
+      case "prompt": {
+        let n, dirArg;
+        if (pos[0] !== undefined && /^\d+$/.test(pos[0])) { n = Number(pos[0]); dirArg = pos[1]; }
+        else { dirArg = pos[0]; }
+        const target = resolveTarget(dirArg);
+        if (n === undefined) {
+          const st = readState(target);
+          n = Math.min(st.phase || 1, LAST_PHASE);
+        }
+        cmdPrompt(n, target);
+        break;
+      }
+      case "next":
+        cmdNext(resolveTarget(pos[0]));
+        break;
+      case "done":
+        cmdDone(resolveTarget(pos[0]));
+        break;
+      case "run":
+        cmdRun(resolveTarget(pos[0]), flags.agent, flags.phase);
+        break;
+      case undefined:
+      case "help":
+      case "--help":
+      case "-h":
+        cmdHelp();
+        break;
+      default:
+        console.error(red(`unknown command "${cmd}"`));
+        cmdHelp();
+        process.exitCode = 1;
     }
-    case "next":
-      cmdNext(resolveTarget(pos[0]));
-      break;
-    case "done":
-      cmdDone(resolveTarget(pos[0]));
-      break;
-    case "run":
-      cmdRun(resolveTarget(pos[0]), flags.agent, flags.phase);
-      break;
-    case undefined:
-    case "help":
-    case "--help":
-    case "-h":
-      cmdHelp();
-      break;
-    default:
-      console.error(red(`unknown command "${cmd}"`));
-      cmdHelp();
+  } catch (e) {
+    if (e instanceof CliError) {
+      console.error(red("✗ ") + e.message);
       process.exitCode = 1;
-  }
-} catch (e) {
-  if (e instanceof CliError) {
-    console.error(red("✗ ") + e.message);
-    process.exitCode = 1;
-  } else {
-    throw e;
+    } else {
+      throw e;
+    }
   }
 }
 
-export { parseCSV, serializeCSV, sniffStack, checkPhase }; // for tests / embedding
+if (isMain()) await main();
+
+export { parseCSV, serializeCSV, sniffStack, checkPhase, blockingRows, readContract, writeContract, LEVELS, CSV_HEADER, ELEM_HEADER, DATA_HEADER, WS }; // for tests / embedding

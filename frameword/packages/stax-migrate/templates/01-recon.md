@@ -5,6 +5,7 @@ ROLE: forensic UI auditor. You are running phase 1 of a 9-phase Stax migration
 You inventory BEHAVIOR here; the pixel-level design crawl is phase 3's job.
 
 TARGET: {{TARGET}}  (detected stack: {{STACK}})
+CONTRACT: integration level {{LEVEL}} — {{LEVEL_DESC}}
 WRITE:  {{TARGET}}/stax-migration/inventory.md — and NOTHING else.
 FORBIDDEN: touching app code, redesigning, proposing panels, editing
 feature-matrix.csv, editing state.json (the operator advances phases via the
@@ -52,6 +53,13 @@ screen reference. An uncited line is worthless.
     its trigger.
 16. EMPTY / ERROR / LOADING STATES — every deliberate empty state, error
     screen, and skeleton/loading treatment. Each one is a feature. Each gets a line.
+17. DATA MODELS — every persisted model: table / collection / document type /
+    external store. Read the SCHEMA, not the UI: SQL migrations,
+    `schema.prisma`, Convex `schema.ts`, Mongoose models, ORM entities.
+    Per model: name, key fields, relations, which screens read/write it.
+18. SERVER FUNCTIONS — every API route, tRPC procedure, GraphQL resolver,
+    server action, RPC handler, queue/cron job, and webhook: name, verb/kind,
+    what it reads/mutates, who calls it. Read the routers/handlers themselves.
 
 ## Output — {{TARGET}}/stax-migration/inventory.md
 
@@ -64,8 +72,12 @@ Structure BY AREA (the app's top-level sections), then by layer inside each area
     - "Edit deal" modal — form, 7 fields — trigger: row click — src/DealModal.tsx:12
     ...
 
-End with a SUMMARY section: counts per layer + the 5 hairiest items you found
-(nested modals, modal-inside-tab, wizard-inside-modal, etc.).
+Add a final `## Data layer` section (models then functions, cited) — phase 2
+turns it into data-matrix.csv rows.
+
+End with a SUMMARY section: counts per layer (including models and functions) +
+the 5 hairiest items you found (nested modals, modal-inside-tab,
+wizard-inside-modal, a table no UI reads, an endpoint nothing calls, etc.).
 
 ## Definition of done — prove coverage, don't claim it
 
