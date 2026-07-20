@@ -333,10 +333,11 @@ function Shell() {
         if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
         const fid = ws.state.focusedPanelId;
         const fp = fid ? ws.state.panelsById[fid] : undefined;
-        if (fp && fp.role !== "root" && fp.placement === "context") {
+        if (fp && fp.placement === "context") {
           e.preventDefault();
-          if (fp.retention === "retained") { ws.unpinPanel(fid!); say("Unpinned"); }
-          else { ws.pinPanel(fid!); say("Pinned — survives every page"); }
+          const on = fp.role === "root" ? !!fp.pinned : fp.retention === "retained";
+          if (on) { ws.unpinPanel(fid!); say("Unpinned"); }
+          else { ws.pinPanel(fid!); say(fp.role === "root" ? "Pinned — this Space survives switches" : "Pinned — survives every page"); }
         }
         return;
       }
@@ -738,7 +739,8 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   const isCanvas = p.target.panelType === "canvas";
   const isRef = p.placement === "reference";
   const isRoot = p.role === "root";
-  const retained = p.retention === "retained";
+  // a root is always retention:"retained" — its pin state lives in `pinned`
+  const retained = isRoot ? !!p.pinned : p.retention === "retained";
   const width = panelWidth(ws.registry, p, wOverride);
   const refIndex = ws.state.referenceRailOrder.indexOf(id);
   // per-panel search (the zip's foot search) — panels with a real list get it
@@ -748,7 +750,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   );
 
   return (
-    <section className={"panel" + (isRef ? " ref" : "") + (p.retention === "retained" && p.role !== "root" ? " pinned" : "") + (id === ws.state.focusedPanelId ? " focused" : "")} aria-label={n.title || titleOfKey(p.target.resourceKey)}
+    <section className={"panel" + (isRef ? " ref" : "") + (retained && !isRef ? " pinned" : "") + (id === ws.state.focusedPanelId ? " focused" : "")} aria-label={n.title || titleOfKey(p.target.resourceKey)}
       onMouseDown={() => { if (!isRef && ws.state.focusedPanelId !== id) ws.focusPanel(id); }}
       style={compact ? undefined : isCanvas ? { width, flex: "1 1 auto", minWidth: 520 } : { width }}>
       <div className="panel-bar">
@@ -772,14 +774,14 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
               onClick={() => { const i = ws.path.indexOf(id); if (i < ws.path.length - 1) ws.focusPanel(ws.path[i + 1]); }}>›</button>
           </>
         ) : null}
-        {!isRoot && !isRef && (
+        {!isRef && (
           <button className={"pin-btn" + (retained ? " on" : "")} aria-pressed={retained}
-            title="Pin — keep this panel when drilling elsewhere"
+            title={isRoot ? "Pin — keep this Space in the rail when you switch" : "Pin — keep this panel when drilling elsewhere"}
             onClick={() => (retained ? ws.unpinPanel(id) : ws.pinPanel(id))}>
             PIN
           </button>
         )}
-        <button className="bar-btn" title={isRoot ? "Close space" : "Close"} style={{ fontSize: 15 }}
+        <button className="bar-btn" title={isRef ? "Remove reference" : isRoot ? "Close space" : "Close"} style={{ fontSize: 15 }}
           onClick={() => ws.closePanel(id)}>×</button>
       </div>
 

@@ -141,6 +141,80 @@ describe("pin → detach (the flagship v2 transition)", () => {
   });
 });
 
+describe("pinned ROOT — a pin outlives its Space, the root included", () => {
+  test("pinPanel on the root sets pinned (retention stays retained)", () => {
+    let s = openSpace(emptyWorkspace(), "crm", T("space", "accounts"));
+    s = pinPanel(s, s.rootInstanceId!);
+    const root = s.panelsById[s.rootInstanceId!];
+    expect(root.pinned).toBe(true);
+    expect(root.retention).toBe("retained");
+    expect(validate(s)).toEqual([]);
+  });
+  test("a pinned root DETACHES into the rail on a Space switch — demoted to a plain reference", () => {
+    let s = openSpace(emptyWorkspace(), "crm", T("space", "accounts"));
+    s = pinPanel(s, s.rootInstanceId!);
+    s = openSpace(s, "reports", T("space", "reports"));
+    expect(keys(s)).toEqual(["reports"]);
+    expect(refKeys(s)).toEqual(["accounts"]);
+    const ref = s.panelsById[s.referenceRailOrder[0]];
+    expect(ref.role).toBe("detail");
+    expect(ref.placement).toBe("reference");
+    expect(ref.parentInstanceId).toBeNull();
+    expect(validate(s)).toEqual([]);
+  });
+  test("an UNpinned root is deleted on a Space switch (unchanged behavior)", () => {
+    let s = openSpace(emptyWorkspace(), "crm", T("space", "accounts"));
+    s = openSpace(s, "reports", T("space", "reports"));
+    expect(refKeys(s)).toEqual([]);
+    expect(Object.keys(s.panelsById).length).toBe(1);
+  });
+  test("unpinPanel on a pinned root clears the pin", () => {
+    let s = openSpace(emptyWorkspace(), "crm", T("space", "accounts"));
+    s = pinPanel(s, s.rootInstanceId!);
+    s = unpinPanel(s, s.rootInstanceId!);
+    expect(s.panelsById[s.rootInstanceId!].pinned).toBe(false);
+    s = openSpace(s, "reports", T("space", "reports"));
+    expect(refKeys(s)).toEqual([]);
+  });
+  test("closing a pinned root detaches it and empties the thread", () => {
+    let s = openSpace(emptyWorkspace(), "crm", T("space", "accounts"));
+    s = pinPanel(s, s.rootInstanceId!);
+    s = closePanel(s, s.rootInstanceId!);
+    expect(s.rootInstanceId).toBeNull();
+    expect(s.spaceId).toBeNull();
+    expect(refKeys(s)).toEqual(["accounts"]);
+    expect(validate(s)).toEqual([]);
+  });
+  test("closing a root-born reference removes ONLY the reference (never nulls the thread)", () => {
+    let s = openSpace(emptyWorkspace(), "crm", T("space", "accounts"));
+    s = pinPanel(s, s.rootInstanceId!);
+    s = openSpace(s, "reports", T("space", "reports"));
+    const refId = s.referenceRailOrder[0];
+    s = closePanel(s, refId);
+    expect(s.panelsById[refId]).toBeUndefined();
+    expect(keys(s)).toEqual(["reports"]);              // active thread untouched
+    expect(validate(s)).toEqual([]);
+  });
+  test("pinned-root detach with its own pinned descendant: BOTH reach the rail", () => {
+    let s = crmChain();
+    s = pinPanel(s, s.contextLeafId!);                 // pin jo
+    s = pinPanel(s, s.rootInstanceId!);                // pin the root too
+    s = openSpace(s, "reports", T("space", "reports"));
+    expect(refKeys(s).sort()).toEqual(["accounts", "jo"]);
+    expect(validate(s)).toEqual([]);
+  });
+  test("duplicate guard: a rail reference for the same target wins over a detaching root", () => {
+    let s = openSpace(emptyWorkspace(), "crm", T("space", "accounts"));
+    s = pinPanel(s, s.rootInstanceId!);
+    s = openSpace(s, "reports", T("space", "reports")); // accounts → rail
+    s = openSpace(s, "crm", T("space", "accounts"));    // fresh accounts root
+    s = pinPanel(s, s.rootInstanceId!);
+    s = openSpace(s, "reports", T("space", "reports")); // would detach a 2nd accounts
+    expect(refKeys(s)).toEqual(["accounts"]);           // still exactly one
+    expect(validate(s)).toEqual([]);
+  });
+});
+
 describe("close & navigate — subtree policy, no silent orphans", () => {
   test("closing a middle ancestor: previews close, retained detach", () => {
     let s = crmChain();

@@ -38,6 +38,10 @@ export interface PanelInstance {
   role: PanelRole;
   retention: PanelRetention;
   placement: PanelPlacement;
+  /** roots only: a pinned root DETACHES into the reference rail when its
+   *  Space is replaced or closed, instead of being deleted — a pin outlives
+   *  its Space, the root included. (Non-roots use `retention`.) */
+  pinned?: boolean;
 }
 
 export interface WorkspaceState {
@@ -167,7 +171,7 @@ export function openSpace(
   const s = clone(state);
   if (s.rootInstanceId && s.panelsById[s.rootInstanceId]) {
     applyBranchPolicy(s, s.rootInstanceId);
-    delete s.panelsById[s.rootInstanceId];
+    detachOrDeleteRoot(s, s.rootInstanceId);
   }
   const id = mint(s);
   s.panelsById[id] = {
@@ -215,15 +219,35 @@ export function openDetail(
   return s;
 }
 
+/** A replaced/closed root: a PINNED root detaches into the reference rail
+ *  (an existing reference for the same target wins); an unpinned one is deleted.
+ *  Detaching DEMOTES role → "detail": "root" names a position in the active
+ *  thread, and a detached panel no longer holds it (invariant: one root). */
+function detachOrDeleteRoot(s: WorkspaceState, rootId: string): void {
+  const root = s.panelsById[rootId];
+  if (!root) return;
+  const dupe = s.referenceRailOrder.find((r) => sameTarget(s.panelsById[r].target, root.target));
+  if (root.pinned && !dupe) {
+    root.role = "detail";
+    root.placement = "reference";
+    root.parentInstanceId = null;
+    root.pinned = false;
+    s.referenceRailOrder.push(rootId);
+  } else {
+    delete s.panelsById[rootId];
+  }
+}
+
 export function pinPanel(state: WorkspaceState, instanceId: string): WorkspaceState {
   const s = clone(state);
   const p = s.panelsById[instanceId];
-  if (!p || p.role === "root" || p.placement !== "context") return s;
-  p.retention = "retained";
+  if (!p || p.placement !== "context") return s;
+  if (p.role === "root") p.pinned = true;
+  else p.retention = "retained";
   return s;
 }
 
-/** Attached panel → back to preview. Detached reference → closes it. */
+/** Attached panel → back to preview (root: unpinned). Detached reference → closes it. */
 export function unpinPanel(state: WorkspaceState, instanceId: string): WorkspaceState {
   const s = clone(state);
   const p = s.panelsById[instanceId];
@@ -233,19 +257,27 @@ export function unpinPanel(state: WorkspaceState, instanceId: string): Workspace
     delete s.panelsById[instanceId];
     return s;
   }
-  if (p.role !== "root") p.retention = "preview";
+  if (p.role === "root") p.pinned = false;
+  else p.retention = "preview";
   return s;
 }
 
 export function closePanel(state: WorkspaceState, instanceId: string): WorkspaceState {
   const p = state.panelsById[instanceId];
   if (!p) return clone(state);
+  // a detached reference closes as a reference — even one that was a root once
+  if (p.placement === "reference") {
+    const s = clone(state);
+    s.referenceRailOrder = s.referenceRailOrder.filter((r) => r !== instanceId);
+    delete s.panelsById[instanceId];
+    return s;
+  }
   if (p.role === "root") {
     // closing the root ends the thread — pinned descendants detach first,
     // and existing references survive (a pin outlives its space)
     const s = clone(state);
     applyBranchPolicy(s, instanceId);
-    delete s.panelsById[instanceId];
+    detachOrDeleteRoot(s, instanceId);
     s.spaceId = null;
     s.rootInstanceId = null;
     s.contextLeafId = null;
@@ -253,11 +285,6 @@ export function closePanel(state: WorkspaceState, instanceId: string): Workspace
     return s;
   }
   const s = clone(state);
-  if (p.placement === "reference") {
-    s.referenceRailOrder = s.referenceRailOrder.filter((r) => r !== instanceId);
-    delete s.panelsById[instanceId];
-    return s;
-  }
   applyBranchPolicy(s, instanceId); // its descendants: previews close, retained detach
   const parent = s.panelsById[instanceId].parentInstanceId;
   delete s.panelsById[instanceId];
