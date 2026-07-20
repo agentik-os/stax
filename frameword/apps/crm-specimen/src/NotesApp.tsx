@@ -256,7 +256,7 @@ export function NotesRoot({ panelId }: { panelId: string }) {
     ws.openDetail(panelId, { panelType: "notefolder", resourceKey: "nfd:" + id });
 
   return (
-    <div className="card">
+    <div className="section">
       <div className="lab">Notes · {s.notes.length}</div>
       {s.notes.length === 0 && folders.length === 0 && <p style={{ marginTop: 6 }}>No notes yet — start one from the foot.</p>}
       <div className="drills" style={{ marginTop: 8 }}>
@@ -306,7 +306,7 @@ export function FolderPanel({ folderKey, panelId }: { folderKey: string; panelId
   const notes = s.notes.filter((n) => n.folder === id)
     .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.ts - a.ts);
   return (
-    <div className="card">
+    <div className="section">
       <div className="lab" style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {ren !== null ? (
           <input className="inline-edit" autoFocus value={ren}

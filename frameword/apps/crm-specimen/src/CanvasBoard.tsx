@@ -1013,7 +1013,7 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
         <RichNotes key={id} html={n.notes ?? ""}
           onChange={(h) => board.update((st) => ({ ...st, nodes: st.nodes.map((x) => (x.id === id ? { ...x, notes: h } : x)) }), false)} />
       </div>
-      <div className="card">
+      <div className="section">
         <div className="lab">Sub-cards · {n.subs?.length ?? 0}</div>
         {(n.subs?.length ?? 0) === 0 && <p style={{ marginTop: 6 }}>Break this card into features — each sub-card can later be extracted as its own connected card.</p>}
         <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
@@ -1065,7 +1065,7 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
           <button className="d-btn outline sm" type="submit">Add</button>
         </form>
       </div>
-      <div className="card">
+      <div className="section">
         <div className="lab">Connections · {conns.length}</div>
         {conns.length === 0 && <p style={{ marginTop: 6 }}>No connections yet — drag from any of the 4 handles on the board.</p>}
         <div className="drills" style={{ marginTop: 8 }}>
@@ -1149,7 +1149,7 @@ export function EdgeInspector({ edgeKey, panelId }: { edgeKey: string; panelId: 
           <Tgl on={e.shape === "step"} label="Step" onClick={() => upd({ shape: "step" })} />
         </div>
       </div>
-      <div className="card">
+      <div className="section">
         <div className="lab">Endpoints</div>
         <div className="drills" style={{ marginTop: 8 }}>
           {[{ n: src, tag: "from" }, { n: dst, tag: "to" }].map(({ n, tag }) => n && (

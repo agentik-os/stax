@@ -16,6 +16,7 @@ import { BlockLive } from "./BlockLive";
 import { ProfileBody, AvatarBubble, useProfile } from "./Profile";
 import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, FolderPanel, notesApp, useNotesApp } from "./NotesApp";
 import { DataHome, DataTable, DataRow, dataApp, useDataApp } from "./DataApp";
+import { NotifBell } from "./Notifications";
 
 /* ── registry : width belongs to the KIND, not the user ──────────────── */
 const REGISTRY: PanelRegistry = {
@@ -382,6 +383,7 @@ function Shell() {
         <button className="tb-btn" title="Canvas board — your whiteboard" onClick={() => ws.openSpace("canvas", targetOf("sec:canvas"))}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M12 17v4" /><path d="M8 21h8" /><path d="M7.5 12l3-3.5 2.5 2 3.5-4" /></svg>
         </button>
+        <NotifBell />
         <button className="tb-btn" title="Theme" onClick={() => setThemeMenu((v) => !v)}>◐</button>
         {themeMenu && (
           <>
@@ -860,7 +862,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
                 const src = board.node(nid);
                 if (src) board.update((st) => ({ ...st, seq: st.seq + 1, nodes: [...st.nodes, { ...src, id: "n" + (st.seq + 1), x: src.x + 24, y: src.y + 24 }] }));
               }}>
-              Duplicate — ⌘D
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg> Duplicate — ⌘D
             </button>
             <button className="d-btn destructive sm"
               onClick={() => {
@@ -868,7 +870,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
                 board.update((st) => ({ ...st, nodes: st.nodes.filter((x) => x.id !== nid), edges: st.edges.filter((e) => e.source !== nid && e.target !== nid) }));
                 ws.closePanel(id);
               }}>
-              Delete element
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete element
             </button>
           </div>
         ) : p.target.panelType === "canvasedge" ? (
@@ -879,40 +881,40 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
                 board.update((st) => ({ ...st, edges: st.edges.filter((x) => x.id !== eid) }));
                 ws.closePanel(id);
               }}>
-              Delete link
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete link
             </button>
           </div>
         ) : p.target.panelType === "note" ? (
           <div className="foot-actions">
             <button className="d-btn destructive sm"
               onClick={() => { notesApp.removeNote(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
-              Delete note
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete note
             </button>
           </div>
         ) : p.target.panelType === "notes" ? (
           <div className="foot-actions">
             <button className="foot-cta"
               onClick={() => ws.openDetail(id, { panelType: "note", resourceKey: "nte:" + notesApp.addNote() })}>
-              + New note
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New note
             </button>
-            <button className="d-btn outline sm" onClick={() => notesApp.addFolder()}>+ New folder</button>
+            <button className="d-btn outline sm" onClick={() => notesApp.addFolder()}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.2 3.9A2 2 0 0 0 7.5 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /><path d="M12 10v6M9 13h6" /></svg> New folder</button>
           </div>
         ) : p.target.panelType === "notefolder" ? (
           <div className="foot-actions">
             <button className="foot-cta"
               onClick={() => ws.openDetail(id, { panelType: "note", resourceKey: "nte:" + notesApp.addNote(p.target.resourceKey.slice(4)) })}>
-              + New note here
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New note here
             </button>
             <button className="d-btn destructive sm"
               onClick={() => { notesApp.removeFolder(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
-              Delete folder
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete folder
             </button>
           </div>
         ) : p.target.panelType === "datahome" ? (
           <div className="foot-actions">
             <button className="foot-cta"
               onClick={() => ws.openDetail(id, { panelType: "datatable", resourceKey: "dtc:" + dataApp.addCollection() })}>
-              + New table
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New table
             </button>
           </div>
         ) : p.target.panelType === "datatable" ? (
@@ -922,11 +924,11 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
                 const cid = p.target.resourceKey.slice(4);
                 ws.openDetail(id, { panelType: "datarow", resourceKey: "dtr:" + cid + ":" + dataApp.addRow(cid) });
               }}>
-              + New row
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New row
             </button>
             <button className="d-btn destructive sm"
               onClick={() => { dataApp.removeCollection(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
-              Delete table
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete table
             </button>
           </div>
         ) : p.target.panelType === "datarow" ? (
@@ -937,21 +939,21 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
                 dataApp.removeRow(cid, rid);
                 ws.closePanel(id);
               }}>
-              Delete row
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete row
             </button>
           </div>
         ) : p.target.panelType === "task" ? (
           <div className="foot-actions">
             <button className="d-btn destructive sm"
               onClick={() => { notesApp.removeTask(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
-              Delete task
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete task
             </button>
           </div>
         ) : p.target.panelType === "tasks" ? (
-          <button className="foot-cta" onClick={() => notesApp.addCategory()}>+ New category</button>
+          <button className="foot-cta" onClick={() => notesApp.addCategory()}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New category</button>
         ) : p.target.panelType === "block" ? (
           <button className="foot-cta" onClick={() => ws.openDetail(id, { panelType: "blocklive", resourceKey: p.target.resourceKey })}>
-            Open live demo — full width
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg> Live demo — full width
           </button>
         ) : p.target.panelType === "blocklive" ? (
           <span className="foot-note">Live demo — real size, live tokens; change the accent in Settings and watch it follow</span>
