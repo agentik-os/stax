@@ -1025,6 +1025,8 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .panel-foot .foot-search { min-width: 0; }
 .panel-foot .foot-cta:disabled { opacity: 0.45; pointer-events: none; }
 
+a.tb-btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: inherit; }
+
 /* compact sidebar — dashboard switcher (the topbar nav is hidden ≤760px) */
 .sb-dash { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 10px 10px 2px; }
 .sb-dash button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 2px 6px; border: 1px solid var(--border); border-radius: 9px; color: var(--muted-foreground); background: var(--card); }

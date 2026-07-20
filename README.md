@@ -2,6 +2,16 @@
 
 **Live demo → [stax-agentik-oss-projects.vercel.app](https://stax-agentik-oss-projects.vercel.app/)** — the full specimen, deployed.
 
+**See it live** — deep links straight into the flagship showcases (the URL hash IS the workspace):
+
+- [Platform console](https://stax-agentik-oss-projects.vercel.app/#%7B%22spaceId%22%3A%22pf-console%22%2C%22path%22%3A%5B%7B%22t%22%3A%22section%22%2C%22k%22%3A%22sec%3Apf-console%22%7D%5D%7D) — an org console rebuilt panel-first: API keys, billing, limits, live logs
+- [API keys table](https://stax-agentik-oss-projects.vercel.app/#%7B%22spaceId%22%3A%22pf-console%22%2C%22path%22%3A%5B%7B%22t%22%3A%22section%22%2C%22k%22%3A%22sec%3Apf-console%22%7D%2C%7B%22t%22%3A%22pfkeys%22%2C%22k%22%3A%22pf%3Akeys%22%7D%5D%7D) — search, segment filters, masked reveal-once secrets, row → panel
+- [The CRM chain](https://stax-agentik-oss-projects.vercel.app/#%7B%22spaceId%22%3A%22crm%22%2C%22path%22%3A%5B%7B%22t%22%3A%22space%22%2C%22k%22%3A%22space%3Acrm%22%7D%2C%7B%22t%22%3A%22account%22%2C%22k%22%3A%22acc%3Aacme%22%7D%2C%7B%22t%22%3A%22contact%22%2C%22k%22%3A%22con%3Ajo%22%7D%2C%7B%22t%22%3A%22opportunity%22%2C%22k%22%3A%22opp%3Arefonte%22%7D%5D%7D) — accounts → contact → opportunity, four panels deep in one URL
+- [Canvas board](https://stax-agentik-oss-projects.vercel.app/#%7B%22spaceId%22%3A%22canvas%22%2C%22path%22%3A%5B%7B%22t%22%3A%22canvas%22%2C%22k%22%3A%22sec%3Acanvas%22%7D%5D%7D) — a Figma-class whiteboard as a panel; nodes drill to inspectors
+- [Data tables](https://stax-agentik-oss-projects.vercel.app/#%7B%22spaceId%22%3A%22data%22%2C%22path%22%3A%5B%7B%22t%22%3A%22datahome%22%2C%22k%22%3A%22sec%3Adata%22%7D%5D%7D) — Notion/Airtable-class views; every row opens as a page panel
+- [Build hub](https://stax-agentik-oss-projects.vercel.app/#%7B%22spaceId%22%3A%22pf-studio%22%2C%22path%22%3A%5B%7B%22t%22%3A%22section%22%2C%22k%22%3A%22sec%3Apf-studio%22%7D%2C%7B%22t%22%3A%22pfhub%22%2C%22k%22%3A%22pf%3Ahub%22%7D%5D%7D) — six paste-ready agent prompts, opening prefilled in the Studio composer
+
+
 **One mechanic: click anything with depth and a panel opens to the right. The parent stays.**
 
 Stax is as much a **design system** as a navigation model: a complete WhitePaper UI
@@ -21,7 +31,7 @@ pinned references that survive navigation, URL-synced state, and a registry that
 | `frameword/apps/crm-specimen` | The full specimen app — WhitePaper design system, 65-component gallery ×3 structural versions, 43 dashboard blocks with full-width live demos, Figma/Miro-class canvas (multi-board, 4-way handles, movable links, right-click menus, AI board builder), notes + tasks (kanban, subtasks), **Data: Airtable-class tables where every row opens as a Notion-class page**, agent drawer, master-prompt kit |
 | `frameword/packages/stax-migrate` | **The migration engine** — a zero-dependency CLI that drives a complete refonte of ANY legacy app to the panel grammar via Claude Code or Codex, with a mechanical no-feature-left-behind guarantee |
 | `DESIGN-SPEC.md` | **The pixel contract** — panel anatomy and interior margins, type & number laws, the accent ramp, icon spec, and the old-element → Stax conversion table |
-| `PANEL-LOGIC.md` · `CONCEPT-BRIEF.md` · `PROMPT-KIT.md` | The concept, the laws, and paste-ready prompts to adapt ANY app to the panel grammar |
+| `PANEL-LOGIC.md` · `CONCEPT-BRIEF.md` · `agents.md` / `llms.txt` | The concept, the laws, and the six generated master prompts for coding agents (source of truth: the in-app Prompt pack) |
 | `demo/panel-logic-demo.html` | Standalone pedagogical demo — open in a browser, zero build |
 
 ## Install & run
