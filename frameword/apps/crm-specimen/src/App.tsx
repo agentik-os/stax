@@ -237,6 +237,17 @@ function Shell() {
   }, [ws.state.spaceId]);
   const activeDash = DASHBOARDS.find((d) => d.id === dash) ?? DASHBOARDS[0];
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // sidebar view: an OPEN Space gets its own dedicated menu; ‹ returns to the
+  // dashboard's space list (the console "Back to project" pattern)
+  const [sbView, setSbView] = useState<"dash" | "space">("space");
+  useEffect(() => {
+    if (ws.state.spaceId && dashboardOfSpace(ws.state.spaceId) === dash) setSbView("space");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ws.state.spaceId, dash]);
+  const sbSpace = sbView === "space" && ws.state.spaceId && dashboardOfSpace(ws.state.spaceId) === dash
+    ? SPACES.find((s) => s.spaceId === ws.state.spaceId) ?? null
+    : null;
+  const pathKeys = new Set(ws.path.map((id) => ws.state.panelsById[id]?.target.resourceKey));
   const [org, setOrgState] = useState<Org>(() => ORGS.find((o) => o.id === localStorage.getItem("frameword-org")) ?? ORGS[0]);
   const [orgMenu, setOrgMenu] = useState(false);
   const setOrg = (o: Org) => { setOrgState(o); localStorage.setItem("frameword-org", o.id); };
@@ -569,34 +580,44 @@ function Shell() {
               <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 9.5, opacity: 0.7 }}>⌘K</span>
             </button>
           </div>
-          {activeDash.groups.map((g) => (
-            <div key={g.label} style={{ marginBottom: 12 }}>
-              <div className="sb-label">{g.label}</div>
+          {sbSpace ? (
+            /* ── DEDICATED SPACE MENU — the sidebar mirrors the OPEN Space,
+             *    not the dashboard's space list (the console "Back to project"
+             *    pattern): ‹ back to the dashboard, then this Space's own
+             *    tree, deep-linkable, following the active thread. ── */
+            <div className="sb-space">
+              <button className="sb-back" onClick={() => setSbView("dash")}>
+                <span className="chevb">‹</span> {activeDash.label}
+              </button>
+              <div className="sb-space-head">
+                <SpaceIcon id={sbSpace.spaceId} />
+                <span>{sbSpace.label}</span>
+              </div>
               <nav className="sb-nav">
-                {g.spaces.map((sp) => {
-                  const rootNode = DOMAIN[sp.rootKey];
-                  const subs = (rootNode.children ?? []).filter(() => (rootNode.children ?? []).length <= 8);
-                  const open = expanded[sp.spaceId] ?? ws.state.spaceId === sp.spaceId;
+                {(DOMAIN[sbSpace.rootKey]?.children ?? []).map((key, i) => {
+                  const kids = DOMAIN[key]?.children ?? [];
+                  const canExpand = kids.length > 0 && kids.length <= 14;
+                  const open = expanded[key] ?? false;
+                  const onPath = pathKeys.has(key);
                   return (
-                    <div key={sp.spaceId}>
-                      <button
-                        className={"sb-item" + (ws.state.spaceId === sp.spaceId ? " on" : "")}
-                        onClick={() => { ws.openSpace(sp.spaceId, targetOf(sp.rootKey)); if (compact) setSbOpen(false); }}>
-                        <SpaceIcon id={sp.spaceId} />
-                        {sp.label}
-                        {subs.length > 0 && (
+                    <div key={key}>
+                      <button className={"sb-item sub" + (onPath ? " on" : "")}
+                        onClick={() => { deepLink(key); if (compact) setSbOpen(false); }}>
+                        <span className="no">{String(i + 1).padStart(2, "0")}</span>
+                        <span className="sb-tt">{DOMAIN[key].title}</span>
+                        {canExpand && (
                           <span className={"chev" + (open ? " open" : "")}
-                            onClick={(e) => { e.stopPropagation(); setExpanded((m) => ({ ...m, [sp.spaceId]: !open })); }}>
+                            onClick={(e) => { e.stopPropagation(); setExpanded((m) => ({ ...m, [key]: !open })); }}>
                             ›
                           </span>
                         )}
                       </button>
-                      {subs.length > 0 && open && (
+                      {canExpand && open && (
                         <div className="sb-sub">
-                          {subs.map((key) => (
-                            <button key={key} className="sb-subitem"
-                              onClick={() => { deepLink(key); if (compact) setSbOpen(false); }}>
-                              {DOMAIN[key].title}
+                          {kids.map((k2) => (
+                            <button key={k2} className={"sb-subitem" + (pathKeys.has(k2) ? " on" : "")}
+                              onClick={() => { deepLink(k2); if (compact) setSbOpen(false); }}>
+                              {DOMAIN[k2].title}
                             </button>
                           ))}
                         </div>
@@ -606,7 +627,24 @@ function Shell() {
                 })}
               </nav>
             </div>
-          ))}
+          ) : (
+            activeDash.groups.map((g) => (
+              <div key={g.label} style={{ marginBottom: 12 }}>
+                <div className="sb-label">{g.label}</div>
+                <nav className="sb-nav">
+                  {g.spaces.map((sp) => (
+                    <button key={sp.spaceId}
+                      className={"sb-item" + (ws.state.spaceId === sp.spaceId ? " on" : "")}
+                      onClick={() => { ws.openSpace(sp.spaceId, targetOf(sp.rootKey)); setSbView("space"); if (compact) setSbOpen(false); }}>
+                      <SpaceIcon id={sp.spaceId} />
+                      {sp.label}
+                      <span className="chev">›</span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            ))
+          )}
           <div className="sb-foot">
             <div>
               <div className="usage-block">

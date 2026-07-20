@@ -1033,3 +1033,15 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .sb-dash button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 2px 6px; border: 1px solid var(--border); border-radius: 9px; color: var(--muted-foreground); background: var(--card); }
 .sb-dash button span { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); letter-spacing: 0.03em; }
 .sb-dash button.on { background: var(--accent-soft); border-color: color-mix(in oklab, var(--accent) 40%, var(--border)); color: var(--accent); }
+
+/* ── dedicated space menu — the sidebar mirrors the OPEN Space ── */
+.sb-back { display: flex; align-items: center; gap: 7px; width: 100%; padding: 5px 10px 5px 6px; margin-bottom: 6px; border-radius: 8px; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.05); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted-foreground); text-align: left; }
+.sb-back:hover { background: var(--secondary); color: var(--foreground); }
+.sb-back .chevb { font-size: 14px; line-height: 1; }
+.sb-space-head { display: flex; align-items: center; gap: 10px; padding: 4px 10px 10px; font-family: var(--font-serif); font-size: calc(var(--fz-title, 27px) * 0.56); font-weight: 600; color: var(--foreground); border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.sb-space-head svg { color: var(--muted-foreground); flex: none; }
+.sb-item.sub { gap: 9px; }
+.sb-item.sub .no { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); color: var(--muted-foreground); font-variant-numeric: tabular-nums; flex: none; width: 17px; }
+.sb-item.sub.on .no { color: var(--accent); }
+.sb-item.sub .sb-tt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.sb-subitem.on { background: var(--secondary); color: var(--foreground); }
