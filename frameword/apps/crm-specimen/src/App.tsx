@@ -572,7 +572,9 @@ function Shell() {
           </>
         )}
         <span style={{ flex: 1 }} />
-        <button className="crumb-theme" title="Theme" onClick={() => setThemeMenu((v) => !v)}>◐</button>
+        <button className="crumb-theme" title="Theme" onClick={() => setThemeMenu((v) => !v)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none" /></svg>
+        </button>
       </div>}
 
       {drawer && <AgentDrawer onClose={() => setDrawer(false)} />}
