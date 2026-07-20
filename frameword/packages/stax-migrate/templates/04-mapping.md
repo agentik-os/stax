@@ -20,6 +20,9 @@ allows skipping a row (deferred / out-of-scope / wrapped), the skip is DECLARED
 NOW: set that status on the row AND write the reason in `evidence`
 (e.g. `out-of-scope: admin-only surface, 3 users, revisit Q4`). A row left
 empty "because we won't do it" is a gate violation, not a scope call.
+STARTER contracts additionally require the in-scope areas to be DECLARED
+(`node {{CLI}} scope <area1,area2> {{TARGET}}`) before this phase's gate
+passes — an in-scope row can never be marked out-of-scope.
 
 ## Mapping vocabulary — write `kind/panel-type` (kebab-case), e.g. `drill/deal-detail`
 

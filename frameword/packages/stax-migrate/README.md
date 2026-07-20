@@ -31,8 +31,12 @@ three live in files:
 
   \* every non-migrated status **must cite its reason** in the `evidence`
   column — an uncited skip blocks the gate. An empty status blocks at every
-  level. That is the whole anti-10% mechanism: nothing is ever skipped
-  silently.
+  level. `migrated` itself needs cited evidence (file:line / runtime proof) —
+  a bulk status-flip dies at the gate. A `starter` contract must **declare its
+  in-scope areas** (`stax-migrate scope deals,contacts`): in-scope rows can
+  never be marked out-of-scope. And the gates remember every row id they have
+  ever seen — deleting a row without a decision-log entry naming it blocks.
+  That is the whole anti-10% mechanism: nothing is ever skipped silently.
 
 - **`feature-matrix.csv` — behavior is law.** Phase 1 inventories every surface
   of the old app; phase 2 turns every capability — and every *sub*-capability
@@ -111,7 +115,9 @@ stax-migrate init   [dir] [--level full|standard|starter|shell] [--no-data]
 stax-migrate status [dir]      contract + phase + three matrices: counts, coverage bars, blocking ids
 stax-migrate contract [dir]    the honesty check: contracted level vs live coverage (exit 1 on breach)
 stax-migrate level  [name] [dir] [--force]
-                               show or change the level — lowering mid-migration needs --force, and is logged
+                               show or change the level — lowering mid-migration (or waiving data) needs --force, and is logged
+stax-migrate scope  [a,b,c] [dir] [--force]
+                               declare the STARTER in-scope areas — in-scope rows must reach 100%; changes are logged
 stax-migrate prompt [n] [dir]  print phase n's brief to stdout — pipe/paste into any agent
 stax-migrate next   [dir]      current phase brief + exactly how to run it
 stax-migrate done   [dir]      validate the phase's exit gate, advance or refuse with ids

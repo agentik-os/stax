@@ -70,6 +70,13 @@ data-matrix.csv:
 Open EVERY Space. Zero app-bundle console errors is the bar. List each error
 found in the gate log; each one is a blocker.
 
+## The artifact — {{TARGET}}/stax-migration/audit-8.md
+
+WRITE your findings to `audit-8.md` — the gate requires it. Structure: one
+section per audit above, each with the protocol you ran, the raw counts, and
+every finding (or the explicit sentence "zero gaps found" with the counts that
+prove you looked). An audit that leaves no artifact did not happen.
+
 ## The gate
 
 Green ONLY when, in a single full pass: zero gaps (audit 1), zero design

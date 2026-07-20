@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   checkPhase,
   blockingRows,
+  noteSeen,
   serializeCSV,
   LEVELS,
   CSV_HEADER,
@@ -14,20 +15,22 @@ import {
 } from "../index.mjs";
 
 /** scratch workspace with a contract + the three matrices */
-function ws(level: string, opts: { data?: boolean; f?: object[]; e?: object[]; d?: object[]; report?: string } = {}) {
+function ws(level: string, opts: { data?: boolean; scope?: string[]; seen?: object; audit8?: string; f?: object[]; e?: object[]; d?: object[]; report?: string } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "staxm-"));
   fs.mkdirSync(path.join(dir, WS), { recursive: true });
-  fs.writeFileSync(path.join(dir, WS, "state.json"), JSON.stringify({ phase: 7 }));
-  fs.writeFileSync(path.join(dir, WS, "contract.json"), JSON.stringify({ level, data: opts.data !== false }));
+  fs.writeFileSync(path.join(dir, WS, "state.json"), JSON.stringify({ phase: 7, ...(opts.seen ? { seen: opts.seen } : {}) }));
+  fs.writeFileSync(path.join(dir, WS, "contract.json"), JSON.stringify({ level, data: opts.data !== false, scope: opts.scope ?? [] }));
   fs.writeFileSync(path.join(dir, WS, "feature-matrix.csv"), serializeCSV(opts.f ?? [], CSV_HEADER));
   fs.writeFileSync(path.join(dir, WS, "element-matrix.csv"), serializeCSV(opts.e ?? [], ELEM_HEADER));
   fs.writeFileSync(path.join(dir, WS, "data-matrix.csv"), serializeCSV(opts.d ?? [], DATA_HEADER));
   if (opts.report !== undefined) fs.writeFileSync(path.join(dir, WS, "REPORT.md"), opts.report);
+  if (opts.audit8 !== undefined) fs.writeFileSync(path.join(dir, WS, "audit-8.md"), opts.audit8);
   return dir;
 }
-const F = (id: string, status: string, evidence = "") => ({ id, area: "a", feature: "f", status, evidence });
-const E = (id: string, status: string, evidence = "") => ({ id, area: "a", element: "e", status, evidence });
-const D = (id: string, status: string, over: object = {}) => ({ id, layer: "db", name: "t", kind: "table", ops: "r", status, ...over });
+// migrated rows default to cited evidence — the new rule is tested explicitly with an "" override
+const F = (id: string, status: string, evidence = status === "migrated" ? "src/x.tsx:1" : "", area = "a") => ({ id, area, feature: "f", status, evidence });
+const E = (id: string, status: string, evidence = status === "migrated" ? "styles.css:9" : "") => ({ id, area: "a", element: "e", status, evidence });
+const D = (id: string, status: string, over: object = {}) => ({ id, layer: "db", name: "t", kind: "table", ops: "r", status, evidence: status === "migrated" ? "src/store.ts:4" : "", ...over });
 
 describe("blockingRows — the anti-10% rule", () => {
   test("empty status blocks at EVERY level", () => {
@@ -90,6 +93,49 @@ describe("phase 7/8 gate — level-aware across all three matrices", () => {
     expect(checkPhase(dir, 7)).toEqual([]);
     fs.writeFileSync(path.join(dir, WS, "feature-matrix.csv"), serializeCSV([F("F-001", "deferred", "r")], CSV_HEADER));
     expect(checkPhase(dir, 7).join("\n")).toContain("F-001"); // still strict full
+  });
+});
+
+describe("v0.3.1 hardening — the anti-gaming rules", () => {
+  test("MIGRATED without evidence blocks at every level (bulk status-flips die here)", () => {
+    for (const level of Object.keys(LEVELS)) {
+      const blocks = blockingRows([F("F-001", "migrated", "")], level);
+      expect(blocks.length).toBe(1);
+      expect(blocks[0].why).toContain("without evidence");
+    }
+    expect(blockingRows([F("F-001", "migrated", "src/panels/Deals.tsx:12")], "full")).toEqual([]);
+  });
+  test("starter: out-of-scope on a DECLARED in-scope area blocks; outside the scope it passes", () => {
+    const inScope = blockingRows([F("F-001", "out-of-scope", "later", "deals")], "starter", ["deals"]);
+    expect(inScope.length).toBe(1);
+    expect(inScope[0].why).toContain("DECLARED IN SCOPE");
+    expect(blockingRows([F("F-002", "out-of-scope", "admin-only", "admin")], "starter", ["deals"])).toEqual([]);
+  });
+  test("starter without a declared scope refuses phases 4/7/8/9", () => {
+    const dir = ws("starter", { f: [F("F-001", "migrated")], e: [E("E-001", "migrated")], d: [D("D-001", "migrated")] });
+    expect(checkPhase(dir, 7).join("\n")).toContain("no declared scope");
+    const scoped = ws("starter", { scope: ["a"], f: [F("F-001", "migrated")], e: [E("E-001", "migrated")], d: [D("D-001", "migrated")] });
+    expect(checkPhase(scoped, 7)).toEqual([]);
+  });
+  test("deleting a previously-seen row blocks — unless the drop is logged with its id", () => {
+    const dir = ws("full", { seen: { f: ["F-001", "F-002"], e: [], d: [] }, f: [F("F-001", "migrated")], e: [E("E-001", "migrated")], d: [D("D-001", "migrated")] });
+    expect(checkPhase(dir, 7).join("\n")).toContain("F-002");
+    fs.appendFileSync(path.join(dir, WS, "decision-log.md"), "2026-07-21 · F-002 · dropped: dead code removed upstream\n");
+    expect(checkPhase(dir, 7)).toEqual([]);
+  });
+  test("noteSeen unions ids and never forgets", () => {
+    const dir = ws("full", { f: [F("F-001", "migrated")], e: [E("E-001", "migrated")], d: [D("D-001", "migrated")] });
+    noteSeen(dir);
+    fs.writeFileSync(path.join(dir, WS, "feature-matrix.csv"), serializeCSV([F("F-009", "migrated")], CSV_HEADER));
+    noteSeen(dir);
+    const seen = JSON.parse(fs.readFileSync(path.join(dir, WS, "state.json"), "utf8")).seen;
+    expect(seen.f.sort()).toEqual(["F-001", "F-009"]);
+  });
+  test("phase 8 requires the audit artifact even when the matrices are green", () => {
+    const noArt = ws("full", { f: [F("F-001", "migrated")], e: [E("E-001", "migrated")], d: [D("D-001", "migrated")] });
+    expect(checkPhase(noArt, 8).join("\n")).toContain("audit-8.md");
+    const withArt = ws("full", { audit8: "## Re-crawl\nzero gaps found — 41 routes reconciled against 41 F rows.\n## Design sweep\nzero hex leaks, zero native selects (grep output attached).\n## Data re-crawl\n12 models = 12 D rows, 3 writable bindings exercised live.\n## Console\nclean.", f: [F("F-001", "migrated")], e: [E("E-001", "migrated")], d: [D("D-001", "migrated")] });
+    expect(checkPhase(withArt, 8)).toEqual([]);
   });
 });
 

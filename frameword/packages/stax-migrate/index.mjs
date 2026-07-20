@@ -181,17 +181,33 @@ const readData = (target) => readCSVRows(wsPath(target, "data-matrix.csv"));
 function readContract(target) {
   try {
     const c = JSON.parse(fs.readFileSync(wsPath(target, "contract.json"), "utf8"));
-    if (!LEVELS[c.level]) return { level: "full", data: c.data !== false, legacy: false };
-    return { level: c.level, data: c.data !== false, legacy: false };
+    const scope = Array.isArray(c.scope) ? c.scope.map((s) => String(s).trim()).filter(Boolean) : [];
+    if (!LEVELS[c.level]) return { level: "full", data: c.data !== false, scope, legacy: false };
+    return { level: c.level, data: c.data !== false, scope, legacy: false };
   } catch {
-    return { level: "full", data: false, legacy: true };
+    return { level: "full", data: false, scope: [], legacy: true };
   }
 }
 function writeContract(target, c) {
   fs.writeFileSync(
     wsPath(target, "contract.json"),
-    JSON.stringify({ level: c.level, data: c.data !== false, created: c.created ?? new Date().toISOString().slice(0, 10) }, null, 2) + "\n",
+    JSON.stringify({
+      level: c.level,
+      data: c.data !== false,
+      scope: Array.isArray(c.scope) ? c.scope : [],
+      created: c.created ?? new Date().toISOString().slice(0, 10),
+    }, null, 2) + "\n",
   );
+}
+
+/** Union the CURRENT matrix ids into state.json — the gates' memory. A row
+ *  that was ever seen can never silently vanish: deletion must be logged. */
+function noteSeen(target) {
+  const st = readState(target);
+  const seen = st.seen ?? {};
+  const union = (k, rows) => [...new Set([...(seen[k] ?? []), ...rows.map((r) => r.id).filter(Boolean)])];
+  st.seen = { f: union("f", readFeatures(target)), e: union("e", readElements(target)), d: union("d", readData(target)) };
+  writeState(target, st);
 }
 
 /* ────────────────────────── stack sniff + templates ────────────────────────── */
@@ -241,17 +257,26 @@ function phasePrompt(target, n) {
 const unmigrated = (rows) => rows.filter((r) => (r.status || "").toLowerCase() !== "migrated");
 
 /** Rows that BLOCK the gate at `level`:
- *  status empty / not accepted by the level, or a non-migrated terminal
- *  status without a reason in `evidence` — silence is never acceptance. */
-function blockingRows(rows, level) {
+ *  status empty / not accepted by the level; ANY terminal status without
+ *  `evidence` (migrated rows must cite their file:line/runtime proof — a
+ *  bulk status-flip with no citations is the cheapest way to fake a
+ *  migration); and at starter, out-of-scope on a DECLARED in-scope area. */
+function blockingRows(rows, level, scope = []) {
   const accept = LEVELS[level].accept;
   return rows
     .map((r) => {
       const s = (r.status || "").toLowerCase();
       if (!accept.includes(s))
         return { row: r, why: s ? `status "${s}" not accepted at level ${level} (accepted: ${accept.join("|")})` : "empty status" };
-      if (s !== "migrated" && !(r.evidence || "").trim())
-        return { row: r, why: `${s} without a cited reason in evidence` };
+      if (!(r.evidence || "").trim())
+        return {
+          row: r,
+          why: s === "migrated"
+            ? "migrated without evidence — cite the file:line (or runtime proof) that serves it"
+            : `${s} without a cited reason in evidence`,
+        };
+      if (level === "starter" && s === "out-of-scope" && scope.length && scope.includes((r.area || "").trim()))
+        return { row: r, why: `area "${r.area}" is DECLARED IN SCOPE — out-of-scope is not allowed on it` };
       return null;
     })
     .filter(Boolean);
@@ -278,6 +303,24 @@ function checkPhase(target, n) {
   const fRows = readFeatures(target);
   const eRows = readElements(target);
   const dRows = readData(target);
+  // deletion guard — a row the gates have seen can only leave the matrix with
+  // a decision-log entry naming its id. Silent deletion is the one move that
+  // would defeat the whole guarantee.
+  if (n >= 2) {
+    const seen = readState(target).seen ?? {};
+    let dlog = "";
+    try { dlog = fs.readFileSync(wsPath(target, "decision-log.md"), "utf8"); } catch { /* no log yet */ }
+    for (const [k, label, rows] of [["f", "feature", fRows], ["e", "element", eRows], ["d", "data", dRows]]) {
+      const cur = new Set(rows.map((r) => r.id));
+      const missing = (seen[k] ?? []).filter((id) => !cur.has(id) && !dlog.includes(id));
+      if (missing.length)
+        problems.push(`${missing.length} previously-seen ${label} row(s) DELETED without a decision-log entry: ${missing.slice(0, 10).join(", ")}${missing.length > 10 ? " …" : ""} — restore them, or log the drop with the row id`);
+    }
+  }
+  // a starter contract without a declared scope is unfalsifiable — refuse to
+  // map or migrate until the in-scope areas are named
+  if (level === "starter" && contract.scope.length === 0 && [4, 7, 8, 9].includes(n))
+    problems.push(`starter contract has no declared scope — name the in-scope areas first: stax-migrate scope <area1,area2> ${target}`);
   if (n === 1) {
     const p = wsPath(target, "inventory.md");
     if (!fs.existsSync(p) || fs.readFileSync(p, "utf8").trim().length < 40)
@@ -308,11 +351,18 @@ function checkPhase(target, n) {
     if (contract.data && dRows.length === 0)
       problems.push("data-matrix.csv has 0 rows — the data guarantee has nothing to guarantee; run phase 2 first");
     for (const [label, rows] of [["feature", fRows], ["element", eRows], ["data", dRows]]) {
-      const blocks = blockingRows(rows, level);
+      const blocks = blockingRows(rows, level, contract.scope);
       if (blocks.length) {
         problems.push(`${blocks.length} ${label} row(s) block the ${level.toUpperCase()} gate:`);
         for (const line of blockList(blocks)) problems.push(`    ${line}`);
       }
+    }
+    // phase 8 is the ADVERSARIAL pass — it must leave an artifact, or a second
+    // `done` right after phase 7 would skip the audit entirely
+    if (n === 8) {
+      const auditP = wsPath(target, "audit-8.md");
+      if (!fs.existsSync(auditP) || fs.readFileSync(auditP, "utf8").trim().length < 200)
+        problems.push(`${WS}/audit-8.md is missing or trivial — phase 8 must WRITE its re-crawl + design sweep + data re-crawl findings (even "zero gaps found", with the protocols and counts) before the gate advances`);
     }
     // a migrated data source that can WRITE must name its write path — the
     // foot action / composer that mutates it. Reads without writes are fine.
@@ -363,7 +413,7 @@ async function cmdInit(target, flags) {
     else if (process.stdin.isTTY && process.stdout.isTTY) level = await askLevel();
     else level = "full";
   }
-  const contract = { level, data: !flags["no-data"] };
+  const contract = { level, data: !flags["no-data"], scope: flags.scope ? String(flags.scope).split(",").map((s) => s.trim()).filter(Boolean) : (hadContract ? readContract(target).scope : []) };
   writeContract(target, contract);
 
   for (const ph of PHASES)
@@ -419,7 +469,7 @@ async function cmdInit(target, flags) {
   line();
 }
 
-function matrixBlock(label, rows, level) {
+function matrixBlock(label, rows, level, scope) {
   const total = rows.length;
   const counts = {};
   for (const r of rows) { const s = r.status || "(empty)"; counts[s] = (counts[s] || 0) + 1; }
@@ -430,7 +480,7 @@ function matrixBlock(label, rows, level) {
   const bar = "█".repeat(fill) + "░".repeat(barLen - fill);
   const byStatus = Object.entries(counts).map(([k, v]) => `${k} ${bold(v)}`).join(" · ") || dim("—");
   console.log("  " + dim(label.padEnd(10)) + `${bold(total)} row(s)   ${byStatus}`);
-  const blocks = blockingRows(rows, level);
+  const blocks = blockingRows(rows, level, scope);
   console.log("  " + " ".repeat(10) + `[${blocks.length === 0 && total > 0 ? green(bar) : cyan(bar)}] ${bold(pct + "%")} migrated` +
     dim(` · gate(${level}): `) + (total === 0 ? dim("no rows yet") : blocks.length === 0 ? green("green") : red(`${blocks.length} blocking`)));
   if (blocks.length) console.log("  " + " ".repeat(10) + dim("blocking: ") + yellow(idList(blocks, 8)));
@@ -443,15 +493,17 @@ function cmdStatus(target) {
   console.log();
   console.log("  " + bold(mag("STAX-MIGRATE")) + dim(" · status — ") + target);
   console.log("  " + dim("contract  ") + bold(mag(contract.level.toUpperCase())) + dim(` — accepts [${LEVELS[contract.level].accept.join(" | ")}] · non-migrated needs a cited reason`) + (contract.legacy ? yellow(" · legacy workspace (no contract.json — re-run init to choose a level)") : ""));
+  if (contract.level === "starter")
+    console.log("  " + dim("scope     ") + (contract.scope.length ? contract.scope.join(" · ") : yellow("NOT DECLARED — required before phase 4: stax-migrate scope <areas>")));
   if (st.phase > LAST_PHASE) {
     console.log("  " + green(bold(`phase     COMPLETE — all ${LAST_PHASE} phases passed`)));
   } else {
     const ph = PHASES[st.phase - 1];
     console.log("  " + dim("phase     ") + bold(`${st.phase}/${LAST_PHASE} — ${ph.name}`) + dim(` (${ph.does})`));
   }
-  matrixBlock("features", readFeatures(target), contract.level);
-  matrixBlock("elements", readElements(target), contract.level);
-  if (contract.data) matrixBlock("data", readData(target), contract.level);
+  matrixBlock("features", readFeatures(target), contract.level, contract.scope);
+  matrixBlock("elements", readElements(target), contract.level, contract.scope);
+  if (contract.data) matrixBlock("data", readData(target), contract.level, contract.scope);
   else console.log("  " + dim("data      waived (--no-data) — no tables/functions gated"));
   console.log();
 }
@@ -467,11 +519,13 @@ function cmdContract(target) {
   console.log("  " + dim("          ") + dim(lv.desc));
   console.log("  " + dim("accepts   ") + lv.accept.join(" · ") + dim("  (anything else — or an uncited skip — blocks)"));
   console.log("  " + dim("data      ") + (c.data ? "tables + server functions gated" : yellow("waived")));
+  if (c.level === "starter")
+    console.log("  " + dim("scope     ") + (c.scope.length ? c.scope.join(" · ") : yellow("NOT DECLARED — the contract is unfalsifiable until areas are named")));
   const sets = [["features", readFeatures(target)], ["elements", readElements(target)]];
   if (c.data) sets.push(["data", readData(target)]);
   let allGreen = true;
   for (const [label, rows] of sets) {
-    const blocks = blockingRows(rows, c.level);
+    const blocks = blockingRows(rows, c.level, c.scope);
     const skipped = rows.filter((r) => (r.status || "").toLowerCase() !== "migrated" && !blocks.some((b) => b.row === r));
     if (blocks.length) allGreen = false;
     if (rows.length === 0) { allGreen = false; console.log("  " + dim(label.padEnd(10)) + yellow("no rows yet")); continue; }
@@ -494,14 +548,37 @@ function cmdLevel(target, name, flags) {
   if (!LEVELS[name]) die(`unknown level "${name}" — levels: ${LEVEL_KEYS.join(" | ")}`);
   const st = readState(target);
   const loosening = LEVEL_KEYS.indexOf(name) > LEVEL_KEYS.indexOf(c.level);
+  const waivingData = c.data && flags["no-data"];
   if (loosening && st.phase > 1 && !flags.force)
     die(`refusing to LOWER the contract from ${c.level} to ${name} mid-migration — that is how 10% integrations happen.\n  if this is a deliberate re-scope: stax-migrate level ${name} ${target} --force  (the change is logged)`);
-  const next = { level: name, data: flags["no-data"] ? false : c.data };
+  if (waivingData && !flags.force)
+    die(`refusing to WAIVE the data matrix mid-migration — dropping the database/functions guarantee is a contract loosening.\n  if the project truly has no backend: stax-migrate level ${name} ${target} --no-data --force  (the change is logged)`);
+  const next = { level: name, data: flags["no-data"] ? false : (flags.data ? true : c.data), scope: c.scope };
   writeContract(target, next);
-  if (loosening && st.phase > 1)
+  const logLine = (msg) => fs.appendFileSync(wsPath(target, "decision-log.md"), `${new Date().toISOString().slice(0, 10)} · CONTRACT · ${msg}\n`);
+  if (loosening && st.phase > 1) logLine(`level lowered ${c.level} → ${name} (--force) — every gate now accepts [${LEVELS[name].accept.join("|")}]`);
+  if (waivingData) logLine(`data matrix WAIVED (--no-data --force) — tables and server functions are no longer gated`);
+  console.log(green(`✓ contract level: ${c.level} → ${bold(name)}`) + dim(" — gates now enforce ") + LEVELS[name].label + (waivingData ? yellow("  [data waived — logged]") : ""));
+}
+
+/** Declare (or amend) the STARTER in-scope areas — the falsifiability anchor:
+ *  in-scope rows must migrate; out-of-scope is only legal outside the scope. */
+function cmdScope(target, list, flags) {
+  requireWorkspace(target);
+  const c = readContract(target);
+  if (!list) {
+    console.log(c.scope.length ? c.scope.join(" · ") : dim("no scope declared") + (c.level === "starter" ? yellow("  — required before phase 4") : ""));
+    return;
+  }
+  const next = [...new Set(String(list).split(",").map((s) => s.trim()).filter(Boolean))];
+  if (next.length === 0) die("empty scope — pass a comma-separated area list: stax-migrate scope deals,contacts " + target);
+  if (c.scope.length && !flags.force)
+    die(`a scope is already declared (${c.scope.join(", ")}) — changing it mid-migration re-scopes the contract.\n  deliberate? stax-migrate scope ${list} ${target} --force  (the change is logged)`);
+  writeContract(target, { ...c, scope: next });
+  if (c.scope.length)
     fs.appendFileSync(wsPath(target, "decision-log.md"),
-      `${new Date().toISOString().slice(0, 10)} · CONTRACT · level lowered ${c.level} → ${name} (--force) — every gate now accepts [${LEVELS[name].accept.join("|")}]\n`);
-  console.log(green(`✓ contract level: ${c.level} → ${bold(name)}`) + dim(" — gates now enforce ") + LEVELS[name].label);
+      `${new Date().toISOString().slice(0, 10)} · CONTRACT · scope changed [${c.scope.join(",")}] → [${next.join(",")}] (--force)\n`);
+  console.log(green("✓ scope declared: ") + next.join(" · ") + dim("  — these areas must reach 100% migrated; out-of-scope is only legal outside them"));
 }
 
 function cmdPrompt(n, target) {
@@ -531,6 +608,7 @@ function cmdNext(target) {
 
 function cmdDone(target) {
   requireWorkspace(target);
+  noteSeen(target); // the gate's memory: every current row id, forever
   const st = readState(target);
   if (st.phase > LAST_PHASE) {
     console.log(green(`✓ migration already complete — all ${LAST_PHASE} phases passed.`));
@@ -574,6 +652,7 @@ const INSTALL_HINTS = {
 
 function cmdRun(target, agent, phaseFlag) {
   requireWorkspace(target);
+  noteSeen(target);
   const st = readState(target);
   if (st.phase > LAST_PHASE && !phaseFlag) {
     console.log(green("✓ migration already complete — nothing to run."));
@@ -626,6 +705,7 @@ ${bold("USAGE")}
   stax-migrate ${cyan("status")} [dir]                  contract + phase + three matrices: counts, coverage bars, blocking ids
   stax-migrate ${cyan("contract")} [dir]                the honesty check: contracted level vs live coverage (exit 1 on breach)
   stax-migrate ${cyan("level")}  [name] [dir] [--force] show or change the level — LOWERING mid-migration needs --force and is logged
+  stax-migrate ${cyan("scope")}  [a,b,c] [dir] [--force] declare the STARTER in-scope areas — in-scope rows must reach 100%
   stax-migrate ${cyan("prompt")} [n] [dir]              print phase n's brief (default: current phase) — pipe anywhere
   stax-migrate ${cyan("next")}   [dir]                  print the current phase brief + how to run it
   stax-migrate ${cyan("done")}   [dir]                  validate the phase exit gate, then advance (or refuse)
@@ -689,6 +769,14 @@ async function main() {
       case "contract":
         cmdContract(resolveTarget(pos[0]));
         break;
+      case "scope": {
+        let list, dirArg;
+        if (pos[0] !== undefined && (pos[0].includes(",") || (!fs.existsSync(path.resolve(process.cwd(), pos[0])) && pos[1] !== undefined))) { list = pos[0]; dirArg = pos[1]; }
+        else if (pos.length === 1 && pos[0] !== undefined && !fs.existsSync(path.resolve(process.cwd(), pos[0]))) { list = pos[0]; }
+        else { dirArg = pos[0]; if (pos[1] !== undefined) list = pos[1]; }
+        cmdScope(resolveTarget(dirArg), list, flags);
+        break;
+      }
       case "level": {
         let name, dirArg;
         if (pos[0] !== undefined && LEVELS[pos[0]]) { name = pos[0]; dirArg = pos[1]; }
@@ -740,4 +828,4 @@ async function main() {
 
 if (isMain()) await main();
 
-export { parseCSV, serializeCSV, sniffStack, checkPhase, blockingRows, readContract, writeContract, LEVELS, CSV_HEADER, ELEM_HEADER, DATA_HEADER, WS }; // for tests / embedding
+export { parseCSV, serializeCSV, sniffStack, checkPhase, blockingRows, readContract, writeContract, noteSeen, LEVELS, CSV_HEADER, ELEM_HEADER, DATA_HEADER, WS }; // for tests / embedding
