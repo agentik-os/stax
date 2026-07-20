@@ -18,6 +18,38 @@ const Ph = ({ w = "100%", h = 8, r = 3, o = 1 }: { w?: number | string; h?: numb
   <span style={{ display: "block", width: w, height: h, borderRadius: r, background: "var(--border)", opacity: o }} />
 );
 const muted = { color: "var(--muted-foreground)" } as const;
+function TabsDemo({ v }: { v: 1 | 2 | 3 }) {
+  const [tab, setTab] = useState(0);
+  const CONTENT = ["Everything about the record, at a glance.", "The trail — every touch, in order.", "Attachments live beside the thread."];
+  const labels = v === 3 ? ["Deals", "Won", "Lost"] : v === 2 ? ["Details", "Activity", "Files"] : ["List", "Kanban", "Timeline"];
+  return (
+    <Zone col>
+      {v === 1 && (
+        <div className="d-tabs">
+          {labels.map((t, i) => (
+            <button key={t} className={"d-tab" + (tab === i ? " on" : "")} onClick={() => setTab(i)}>{t}</button>
+          ))}
+        </div>
+      )}
+      {v === 2 && (
+        <div className="d-row" style={{ gap: 16, borderBottom: "1px solid var(--border)", width: "100%", maxWidth: 280, paddingBottom: 0 }}>
+          {labels.map((t, i) => (
+            <button key={t} onClick={() => setTab(i)}
+              style={{ paddingBottom: 8, fontSize: 12.5, fontWeight: tab === i ? 600 : 500, color: tab === i ? "var(--foreground)" : "var(--muted-foreground)", borderBottom: tab === i ? "2px solid var(--accent)" : "2px solid transparent", marginBottom: -1, background: "transparent", cursor: "pointer" }}>{t}</button>))}
+        </div>
+      )}
+      {v === 3 && (
+        <div style={{ display: "flex", alignItems: "flex-end" }}>
+          {labels.map((t, i) => (
+            <button key={t} onClick={() => setTab(i)}
+              style={{ padding: "7px 14px", fontSize: 12, border: "1px solid var(--border)", borderBottom: tab === i ? "1px solid var(--card)" : "1px solid var(--border)", borderRadius: "8px 8px 0 0", marginLeft: i ? -1 : 0, background: tab === i ? "var(--card)" : "var(--secondary)", color: tab === i ? "var(--foreground)" : "var(--muted-foreground)", fontWeight: tab === i ? 600 : 500, cursor: "pointer" }}>{t}</button>))}
+        </div>
+      )}
+      <div style={{ fontSize: 12.5, color: "var(--muted-foreground)", padding: "10px 2px 0" }}>{CONTENT[tab]}</div>
+    </Zone>
+  );
+}
+
 const mono10 = { fontFamily: "var(--font-mono)", fontSize: "var(--fz-mono, 10px)" as string | number, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted-foreground)" } as const;
 
 export function ComponentDemo({ name }: { name: string }) {
@@ -1267,20 +1299,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
       )}<Note>V1 basic · V2 caption + totals footer · V3 Notion-style composed table — checkbox, icon+name, tag pills, avatar, status column. Every row stays a DrillTrigger.</Note></>);
 
     case "Tabs":
-      return (<>{v === 1 ? (
-        <Zone><div className="d-tabs"><span className="d-tab on">List</span><span className="d-tab">Kanban</span><span className="d-tab">Timeline</span></div></Zone>
-      ) : v === 2 ? (
-        <Zone><div className="d-row" style={{ gap: 16, borderBottom: "1px solid var(--border)", width: "100%", maxWidth: 280, paddingBottom: 0 }}>
-          {["Details", "Activity", "Files"].map((t, i) => (
-            <span key={t} style={{ paddingBottom: 8, fontSize: 12.5, fontWeight: i === 0 ? 600 : 500, color: i === 0 ? "var(--foreground)" : "var(--muted-foreground)", borderBottom: i === 0 ? "2px solid var(--accent)" : "2px solid transparent", marginBottom: -1 }}>{t}</span>))}
-        </div></Zone>
-      ) : (
-        <Zone><div style={{ display: "flex", alignItems: "flex-end" }}>
-          {["Deals", "Won", "Lost"].map((t, i) => (
-            <span key={t} style={{ padding: "7px 14px", fontSize: 12, border: "1px solid var(--border)", borderBottom: i === 0 ? "1px solid var(--card)" : "1px solid var(--border)", borderRadius: "8px 8px 0 0", marginLeft: i ? -1 : 0, background: i === 0 ? "var(--card)" : "var(--secondary)", color: i === 0 ? "var(--foreground)" : "var(--muted-foreground)", fontWeight: i === 0 ? 600 : 500 }}>{t}</span>))}
-        </div></Zone>
-      )}<Note>V1 segmented well · V2 underline with accent · V3 folder tabs. They switch REPRESENTATION — never navigation.</Note></>);
-
+      return (<><TabsDemo v={v} /><Note>V1 segmented well · V2 underline with accent · V3 folder tabs — all clickable; in the grammar, tabs become sibling drills.</Note></>);
     case "Textarea":
       return (<>{v === 1 ? (
         <Zone><textarea className="d-input" style={{ width: "100%", maxWidth: 280, height: 70, resize: "none" }} defaultValue="Compte-rendu : périmètre validé…" readOnly /></Zone>

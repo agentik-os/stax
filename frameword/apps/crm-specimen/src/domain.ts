@@ -1,11 +1,14 @@
 /**
- * App domain — two groups of Spaces:
- *  FRAMEWORK  — the self-documenting sections from the design prototype
- *               (Overview · The model · The laws · Improvements · Architecture ·
- *                Prompt pack · Components — the full shadcn/ui gallery)
- *  WORKSPACE  — the CRM specimen (account → contact → opportunity → activity)
+ * App domain — the content of every panel, as data. Three dashboards:
+ *  FRAMEWORK  — the self-documenting sections (Overview · The model · The laws ·
+ *               Improvements · Architecture · Prompt pack · Components · Blocks):
+ *               the framework, documented inside the framework.
+ *  CRM        — a small CRM specimen (account → contact → opportunity → activity)
+ *               proving the grammar on real-shaped records.
+ *  ANALYTICS  — a second demo dashboard proving the shell swaps sidebars.
  *
- * This file is application data. The panel router never imports it.
+ * This file is application data. The panel engine never imports it — panels
+ * address content by { panelType, resourceKey } and the app resolves keys here.
  */
 import { BLOCKS, BLOCK_CATS } from "./BlockDemo";
 
@@ -68,8 +71,8 @@ export const DASHBOARDS: Dashboard[] = [
     groups: [{
       label: "Workspace",
       spaces: [
-        { spaceId: "crm", rootKey: "space:crm", label: "Comptes" },
-        { spaceId: "reports", rootKey: "space:reports", label: "Rapports" },
+        { spaceId: "crm", rootKey: "space:crm", label: "Accounts" },
+        { spaceId: "reports", rootKey: "space:reports", label: "Reports" },
       ],
     }],
   },
@@ -78,8 +81,8 @@ export const DASHBOARDS: Dashboard[] = [
     groups: [{
       label: "Analytics",
       spaces: [
-        { spaceId: "ana-overview", rootKey: "sec:ana-overview", label: "Vue d'ensemble" },
-        { spaceId: "ana-revenue", rootKey: "sec:ana-revenue", label: "Revenus" },
+        { spaceId: "ana-overview", rootKey: "sec:ana-overview", label: "Overview" },
+        { spaceId: "ana-revenue", rootKey: "sec:ana-revenue", label: "Revenue" },
       ],
     }],
   },
@@ -95,70 +98,70 @@ export const DOMAIN: Record<string, DomainNode> = {
   /* ═══ FRAMEWORK · Overview ═══ */
   "sec:overview": {
     panelType: "section", title: "One mechanic, everywhere.", eyebrow: "Overview · 01",
-    subtitle: "Click anything with depth and a panel opens to the right. The parent stays.",
+    subtitle: "Click anything with depth and a panel opens to the right. The parent stays. That is the entire navigation model.",
     kpis: [{ v: "1", l: "mechanic" }, { v: "7", l: "laws" }, { v: "∞", l: "depth" }],
-    blocks: [{ kind: "card", label: "01 — The pitch", text: "Click anything that has depth and a panel opens to the right. The parent stays. Depth is infinite. State is data — the same stack that paints the screen is the URL, the persisted workspace, and the agent's working memory. That is the framework; everything else is discipline around it." }],
+    blocks: [{ kind: "card", label: "01 — The pitch", text: "Stax replaces pages, modals and tabs with one move: anything with depth opens as a new panel to the RIGHT of its source, and the source stays on stage. The open panels form one serializable JSON object (WorkspaceState) — the same data that paints the screen is the URL hash, the persisted workspace, and an agent's working memory. Everything else in this app — the seven laws, the WhitePaper tokens, the registry, the migration engine — is discipline around that one mechanic." }],
     children: ["ov:why", "ov:vs", "depth:1", "ov:origin"],
     footActions: [{ label: "Open the model →", kind: "primary", space: "model" }],
   },
   "depth:1": {
     panelType: "doc", title: "Depth 1", subtitle: "Feel the mechanic before reading about it.",
-    blocks: [{ kind: "card", label: "What to notice", text: "This panel opened beside its parent — nothing was replaced, nothing was covered. The drill below opens depth 2 the exact same way." }],
-    body: "× closes. The root never moves. The foot below is the panel contract — actions live there, not up here.",
+    blocks: [{ kind: "card", label: "What to notice", text: "This panel opened beside its parent — nothing was replaced, nothing was covered (Law 3). The drill below opens depth 2 the exact same way, and the breadcrumb bar at the bottom grew a segment." }],
+    body: "× closes this panel. The root never moves (Law 2). Actions live in the foot below — never floating in the body (Law 6).",
     children: ["depth:2"],
   },
   "depth:2": {
     panelType: "doc", title: "Depth 2", subtitle: "Same shell, one level deeper.",
-    blocks: [{ kind: "card", label: "What to notice", text: "The preview badge: an unpinned panel is transient — opening a sibling from the parent replaces it. PIN it and it survives as a reference instead." }],
+    blocks: [{ kind: "card", label: "What to notice", text: "An unpinned panel is a PREVIEW — transient. Opening a sibling from the same parent replaces it (the branch policy). Press P, or click PIN in the bar: retention becomes \"retained\" and the panel survives branch changes by detaching into the reference rail instead (Law 4)." }],
     children: ["depth:3"],
   },
   "depth:3": {
     panelType: "doc", title: "Depth 3", subtitle: "The stage scrolls; the thread holds.",
-    blocks: [{ kind: "card", label: "What to notice", text: "The breadcrumb toolbar below grew with you — each segment navigates back. The URL is carrying this entire path right now." }],
+    blocks: [{ kind: "card", label: "What to notice", text: "The breadcrumb grew with you — each segment calls navigateTo, which rewinds the branch below it under the subtree policy. The URL hash carries this exact path right now: copy it into a new tab and land here." }],
     children: ["depth:4"],
   },
   "depth:4": {
     panelType: "doc", title: "Depth ∞", subtitle: "It never ends — that's the point.",
-    body: "Any node can open a child, forever. Depth is a routing capability; the rendered stage stays bounded. Escape pops back one level at a time.",
+    body: "Any node can open a child, forever. Depth is a routing capability; the rendered stage stays bounded and scrolls horizontally. Escape closes the leaf panel, one level at a time.",
   },
   "ov:why": {
     panelType: "doc", title: "Why it wins", subtitle: "Context, depth, predictability, composability.",
     blocks: [
-      { kind: "card", label: "01 — Context is preserved", text: "The parent stays visible while you drill. You never wonder where you are — the path is the screen." },
-      { kind: "card", label: "02 — Depth is infinite", text: "Any node can open a child, forever. Year → goal → project → task → activity without a single page load." },
-      { kind: "card", label: "03 — One motion, learned once", text: "Open right. Actions in the foot. Back is ×. Every feature you ever add inherits the same grammar." },
-      { kind: "card", label: "04 — Everything is a panel", text: "A dashboard, a form, a chat, a reader, a kanban, a graph — same shell. Composability is the business model." },
+      { kind: "card", label: "01 — Context is preserved", text: "The parent stays visible while you drill (Law 3). You never wonder where you are — the path IS the screen, and the breadcrumb is derived from it, not maintained beside it." },
+      { kind: "card", label: "02 — Depth is infinite", text: "Any node can open a child, forever. Account → contact → opportunity → activity without a single page load, and the whole chain fits in one URL." },
+      { kind: "card", label: "03 — One motion, learned once", text: "Open right. Actions in the foot. Back is ×. Every feature ever added — canvas, tables, notes — inherits the same grammar for free." },
+      { kind: "card", label: "04 — Everything is a panel", text: "A dashboard, a form, a whiteboard, a data grid, a kanban, a settings page — same shell, different panelType. Composability is the business model." },
     ],
   },
   "ov:vs": {
     panelType: "doc", title: "Versus tabs, modals, pages", subtitle: "What every alternative loses.",
     blocks: [
-      { kind: "card", label: "Tabs — siblings vanish", text: "Only one thing visible; state hides in memory. Panels keep every open sibling on stage." },
-      { kind: "card", label: "Modals — context is stolen", text: "They dim the world to ask one question, and they cannot nest. A panel is a modal that respects its parent." },
-      { kind: "card", label: "Page routes — everything resets", text: "Navigation forgets; back is a gamble. The stack keeps the whole journey — and still gives you a URL." },
-      { kind: "card", label: "Accordions — vertical sprawl", text: "Depth becomes scroll distance and everything jumps. Panels give depth its own axis." },
+      { kind: "card", label: "Tabs — siblings vanish", text: "Only one thing visible; the rest hides in memory. Panels keep every open sibling on stage, and pinned ones survive navigation." },
+      { kind: "card", label: "Modals — context is stolen", text: "A modal dims the world to ask one question, and it cannot nest. A panel is a modal that respects its parent — it opens beside its source and keeps the thread on stage." },
+      { kind: "card", label: "Page routes — everything resets", text: "Navigation forgets; back is a gamble. The stack keeps the whole journey — and still gives you a URL, because the ContextPath encodes into the hash." },
+      { kind: "card", label: "Accordions — vertical sprawl", text: "Depth becomes scroll distance and everything below jumps. Panels give depth its own axis: left to right." },
     ],
   },
   "ov:origin": {
-    panelType: "doc", title: "Where it came from", subtitle: "LifeOS → Panel System → this.",
+    panelType: "doc", title: "Where it came from", subtitle: "LifeOS → Panel System → Stax.",
     blocks: [
       { kind: "card", label: "2025 — LifeOS, the prototype", text: "A personal dashboard. The panels-inside-panels mechanic emerges and refuses to leave." },
       { kind: "card", label: "2026 — Panel System, the extraction", text: "The mechanic becomes laws, an engine and a stylesheet inside the Agentik design system." },
-      { kind: "card", label: "Now — the clean-room rewrite", text: "Public: a pure reducer, a shadcn-style registry, a Convex adapter. Nothing here is theory — the mechanic shipped twice before it had a name." },
+      { kind: "card", label: "Now — Stax, the clean-room rewrite", text: "Public: a pure reducer (@frameword/panels-core, 25 laws tests), React bindings, this specimen app, and stax-migrate — an engine that rebuilds legacy apps on the grammar. Nothing here is theory; the mechanic shipped twice before it had a name." },
     ],
   },
 
   /* ═══ FRAMEWORK · The model ═══ */
   "sec:model": {
     panelType: "section", title: "Panels inside panels.", eyebrow: "The model · 02",
-    subtitle: "The interface is a horizontal stack of columns. Clicking anything with depth opens a panel to the right — the parent stays. State is data; seven pure operations are the entire API.",
+    subtitle: "The interface is a horizontal stack of panels. State is one JSON object; seven intent commands are the only way to change it. Everything on screen derives from that state.",
     blocks: [
       { kind: "diagram" },
       { kind: "ops" },
-      { kind: "row", label: "BAR", text: "56px, always. Eyebrow + controls — the hairline under it runs unbroken across the stage." },
-      { kind: "row", label: "BODY", text: "Title, content, drills. Scrolls alone — the bar and foot never move." },
-      { kind: "row", label: "FOOT", text: "The single action zone. Add, publish, reply, decompose — always here, never floating." },
-      { kind: "row", label: "PILLS", text: "Labels center with line-height:1 + a hair more top padding — cap-height sits high; naive centering reads 1px off." },
+      { kind: "row", label: "BAR", text: "56px tall, always. Mono eyebrow (uppercase, wide tracking) + pin and close controls. The hairline under it runs unbroken across the stage." },
+      { kind: "row", label: "BODY", text: "Padding 18/18/16. Serif title, subtitle, cards, drills. The body scrolls alone — the bar and foot never move." },
+      { kind: "row", label: "FOOT", text: "Padding 11/14. THE single action zone — primary CTA on the accent, destructive in red text. Never floating buttons, never metadata lines." },
+      { kind: "row", label: "WIDTH", text: "From the registry only: S 380 · M 480 · L 640 · XL 800. A device-local override lives in the foot gear; shared state never stores a width." },
     ],
     children: ["md:contract", "md:sizes", "md:axes", "depth:1"],
     footActions: [
@@ -169,146 +172,149 @@ export const DOMAIN: Record<string, DomainNode> = {
   "md:contract": {
     panelType: "doc", title: "The panel contract", subtitle: "A panel is a target — the host renders it.",
     blocks: [
-      { kind: "code", code: "type PanelTarget = {\n  panelType: string    // a registered panel type\n  resourceKey: string  // addresses the content\n  params?: object\n}" },
-      { kind: "card", label: "The single rule", text: "A panel never renders another panel — it calls openDetail with a new target. That is what makes the stack serializable, deduplicable, and drivable by an agent." },
+      { kind: "code", code: "type PanelTarget = {\n  panelType: string    // a registered panel type\n  resourceKey: string  // addresses the content\n  params?: object      // JSON only\n}" },
+      { kind: "card", label: "The single rule", text: "A panel never renders another panel — it calls openDetail(parentInstanceId, target) and the reducer decides what exists. Same target + same parent REVEALS the existing instance instead of duplicating (Law 5). That is what makes the stack serializable, deduplicable, and drivable by an agent." },
+      { kind: "card", label: "The state, in full", text: "WorkspaceState = { schemaVersion, spaceId, rootInstanceId, contextLeafId, focusedPanelId, panelsById, referenceRailOrder, nextId }. Each PanelInstance = { instanceId, target, spaceId, parentInstanceId, role: root|detail, retention: preview|retained, placement: context|reference }. Ancestry is parent links, never visual order; the ContextPath (root → leaf) is DERIVED from them, never stored." },
+      { kind: "card", label: "The branch policy", text: "Every branch change below a parent — opening a sibling, clicking a crumb, closing a panel, switching Space — applies one rule to the orphaned subtree: preview panels CLOSE; retained panels DETACH into the reference rail (parentInstanceId becomes null, explicitly). If a reference for the same target already sits on the rail, the existing one wins and the newcomer is dropped." },
     ],
   },
   "md:sizes": {
     panelType: "doc", title: "Sizing grammar — S · M · L · XL", subtitle: "Width belongs to the kind, not the user.",
     blocks: [
-      { kind: "card", label: "S · 380", text: "Inspectors, confirmations, depth probes." },
-      { kind: "card", label: "M · 480", text: "Lists, records, detail views — the workhorse." },
-      { kind: "card", label: "L · 640", text: "Dashboards, editors, module roots." },
-      { kind: "card", label: "XL · 800", text: "Boards, canvases, timelines — still never full-bleed." },
-      { kind: "card", label: "Why fixed", text: "Four widths keep the stage rhythmic; a free resize handle would make every stack a ransom note. A per-panel override lives in the foot gear — device-local, never in the shared state." },
+      { kind: "card", label: "S · 380", text: "Inspectors and leaves: law, activity, task, canvas node and link inspectors." },
+      { kind: "card", label: "M · 480", text: "The workhorse: docs, accounts, contacts, opportunities, reports, prompts, components, notes, settings." },
+      { kind: "card", label: "L · 640", text: "Roots and pages: space, section, the data row page." },
+      { kind: "card", label: "XL · 800", text: "Work surfaces: canvas (flexes wider), data tables, the tasks kanban, full-width block demos — still never full-bleed; the right gutter stays." },
+      { kind: "card", label: "Why fixed", text: "Four widths keep the stage rhythmic; a free resize handle would make every stack a ransom note. The per-panel override in the foot gear is device-local presentation — it never enters the shared, serialized state." },
     ],
   },
   "md:axes": {
     panelType: "doc", title: "Two axes — stack + canvas", subtitle: "Containment and topology, one bridge.",
     blocks: [
-      { kind: "card", label: "Depth — the stack", text: "\"What's inside this?\" — the horizontal rail of panels." },
-      { kind: "card", label: "Breadth — the canvas", text: "\"How do these connect?\" — a wide panel type rendering a node graph (React Flow)." },
-      { kind: "code", code: "openDetail(i, { panelType: 'node-inspector',\n                resourceKey: nodeId })" },
-      { kind: "card", label: "The bridge", text: "Drilling a graph node opens its inspector as the next column, exactly like any drill. { nodes, edges } is JSON too — it shares URL sync, persistence and agent context with the stack." },
+      { kind: "card", label: "Depth — the stack", text: "\"What's inside this?\" — the horizontal rail of panels, ancestry as parent links." },
+      { kind: "card", label: "Breadth — the canvas", text: "\"How do these connect?\" — a wide panel type rendering a node graph. Shipped in this app on @xyflow/react: open the whiteboard from the topbar." },
+      { kind: "code", code: "// clicking a canvas node drills its inspector\nopenDetail(canvasPanelId, {\n  panelType: 'canvasnode',\n  resourceKey: 'cvn:' + node.id,\n})" },
+      { kind: "card", label: "The bridge", text: "Drilling a graph node opens its inspector as the next column, exactly like any drill — a link opens the link inspector the same way. { nodes, edges } is JSON too: the board store persists, undoes and redoes, and every open inspector stays in sync through it." },
     ],
   },
 
   /* ═══ FRAMEWORK · The laws ═══ */
   "sec:laws": {
     panelType: "section", title: "Seven laws, one engine.", eyebrow: "The laws · 03",
-    subtitle: "Encoded in the engine — not in each screen. Violations are validator errors, not review comments.",
+    subtitle: "Encoded in the reducer and checked by validate() — violations are engine errors, not review comments. 25 tests keep them true.",
     children: ["law:1", "law:2", "law:3", "law:4", "law:5", "law:6", "law:7"],
   },
   "law:1": {
     panelType: "law", title: "Spaces never mix", subtitle: "Law 1", meta: "engine",
     blocks: [
-      { kind: "do", label: "Do", text: "Opening a Space replaces the ACTIVE thread — the ContextPath. Pinned references are yours: they ride across pages and survive closing the root." },
-      { kind: "dont", label: "Don't", text: "Never show two Spaces' threads side by side; references are the only cross-Space citizens — detached, explicit, never pretending to belong." },
+      { kind: "do", label: "Do", text: "Opening a Space replaces the ACTIVE thread — the ContextPath. Pinned references are yours: they ride across Spaces and survive closing the root." },
+      { kind: "dont", label: "Don't", text: "Never show two Spaces' threads side by side. References are the only cross-Space citizens — detached, explicit, never pretending to belong to the new branch." },
     ],
   },
   "law:2": {
     panelType: "law", title: "The root is fixed", subtitle: "Law 2", meta: "engine",
     blocks: [
-      { kind: "do", label: "Do", text: "The RootPanel stays leftmost — not movable, not pinnable. Its × closes the Space." },
+      { kind: "do", label: "Do", text: "The root panel stays leftmost — not movable, not pinnable, always retained. Its × closes the whole Space." },
       { kind: "dont", label: "Don't", text: "Nothing may displace the root; there is no navigation without an anchor." },
     ],
   },
   "law:3": {
     panelType: "law", title: "Drilling keeps the parent", subtitle: "Law 3", meta: "engine",
     blocks: [
-      { kind: "do", label: "Do", text: "A child opens beside its source. Opening a sibling from the same parent replaces the preview." },
+      { kind: "do", label: "Do", text: "A child opens beside its source; the source stays mounted and interactive. Opening a sibling from the same parent replaces the preview." },
       { kind: "dont", label: "Don't", text: "Never navigate away from the parent to show the child — context is the whole point." },
     ],
   },
   "law:4": {
     panelType: "law", title: "Pin detaches, never lies", subtitle: "Law 4", meta: "engine",
     blocks: [
-      { kind: "do", label: "Do", text: "PIN sets retention:\"retained\". If a branch change would orphan it, it detaches into the reference rail — parentInstanceId becomes null, explicitly." },
-      { kind: "dont", label: "Don't", text: "Never keep an orphaned panel in the rail as if it belonged to the new branch. Visual order is not parentage." },
+      { kind: "do", label: "Do", text: "PIN sets retention:\"retained\". If a branch change would orphan the panel, it detaches into the reference rail — parentInstanceId becomes null, explicitly." },
+      { kind: "dont", label: "Don't", text: "Never keep an orphaned panel on stage as if it belonged to the new branch. Visual order is not parentage." },
     ],
   },
   "law:5": {
     panelType: "law", title: "Identity is context-scoped", subtitle: "Law 5", meta: "engine",
     blocks: [
-      { kind: "do", label: "Do", text: "Same target + same parent reveals the existing instance. The same target under a different parent is a different thread — a distinct instance." },
-      { kind: "dont", label: "Don't", text: "No global dedup by resource — and never two instances under one parent." },
+      { kind: "do", label: "Do", text: "Same target + same parent reveals and focuses the existing instance. The same target under a different parent is a different thread — a distinct instance." },
+      { kind: "dont", label: "Don't", text: "No global dedup by resource — and never two instances of one target under one parent." },
     ],
   },
   "law:6": {
     panelType: "law", title: "Actions live in the foot", subtitle: "Law 6", meta: "anatomy",
     blocks: [
-      { kind: "do", label: "Do", text: "Add, publish, reply, resume — always in the anchored foot. Body is content; the bar is chrome." },
-      { kind: "dont", label: "Don't", text: "No floating primary buttons in the body. A read-only panel says so in the foot." },
+      { kind: "do", label: "Do", text: "Add, publish, reply, delete — always in the anchored foot. The body is content; the bar is chrome." },
+      { kind: "dont", label: "Don't", text: "No floating primary buttons in the body, no object-state toggles in the foot. A read-only panel says \"Read-only\" in the foot." },
     ],
   },
   "law:7": {
     panelType: "law", title: "Serializable & derived", subtitle: "Law 7", meta: "engine",
     blocks: [
-      { kind: "do", label: "Do", text: "State is JSON. The ContextPath, the breadcrumb, the URL, the agent context — all derived from it. Reload restores everything." },
+      { kind: "do", label: "Do", text: "State is JSON. The ContextPath, the breadcrumb, the URL hash, the agent context — all derived from it. Reload restores everything, pins included." },
       { kind: "dont", label: "Don't", text: "No components, closures or fetched rows in navigation state. Ever." },
     ],
   },
 
-  /* ═══ FRAMEWORK · Improvements ═══ */
+  /* ═══ FRAMEWORK · Improvements — the shipped evolution log ═══ */
   "sec:improvements": {
-    panelType: "section", title: "Improvements", eyebrow: "Improvements · 04",
-    subtitle: "Each one ships independently. Live ones are running in this very app.",
+    panelType: "section", title: "The evolution log.", eyebrow: "Improvements · 04",
+    subtitle: "What shipped beyond the core engine. Every entry marked live is running in this very build; specced entries are designed but not in this bundle.",
+    blocks: [{ kind: "card", label: "Shipped in this specimen", text: "Canvas boards with an AI builder · Data tables with views and calcs · Notes + tasks with kanban · a notification center · the agent drawer · PushHost mobile · URL sync and persistence — plus the stax-migrate engine for legacy apps (see Architecture · 05)." }],
     children: ["imp:url", "imp:keys", "imp:persist", "imp:realtime", "imp:canvas", "imp:mobile", "imp:modules", "imp:agent", "imp:a11y", "imp:ideas"],
   },
   "imp:url": {
     panelType: "improvement", title: "URL-synced stacks", subtitle: "A link is a teleport.", meta: "live",
     blocks: [
-      { kind: "card", label: "Live — this app", text: "Every open, pin and close runs through encode(state) ↔ decode(string) into the hash. Support sends you their exact screen; a bug report reproduces itself; a bookmark is a saved workspace." },
-      { kind: "card", label: "Next.js", text: "The stack maps to a catch-all segment — the server can prefetch data for every panel in the link before first paint." },
+      { kind: "card", label: "Live — this app", text: "Every open, pin, close and crumb click re-encodes the ContextPath into location.hash (encodeLocation). Paste the URL into a new tab: reconcileLocation rebuilds the exact stack, revealing existing panels instead of duplicating. On boot, the URL wins over the localStorage snapshot." },
+      { kind: "card", label: "In a Next.js host", text: "The encoded path maps to a catch-all segment, so the server can prefetch data for every panel in the link before first paint." },
     ],
   },
   "imp:keys": {
-    panelType: "improvement", title: "Command palette + keys", subtitle: "Every destination is typeable.", meta: "live",
+    panelType: "improvement", title: "Command palette + keyboard map", subtitle: "Every destination is typeable.", meta: "live",
     blocks: [
-      { kind: "card", label: "Live — try it now", text: "⌘K opens the palette — every panel, section and action. ↑↓ moves, ↵ opens (roots replace, records deep-link), esc closes." },
-      { kind: "card", label: "Specced", text: "← → moves panel focus, p pins, w closes, 1–7 jumps to sections. The palette reads the panel registry — nothing is bolted on." },
+      { kind: "card", label: "Live — the real map", text: "⌘K palette (every space, panel and action; ↑↓ moves, ↵ opens, esc closes) · ⌘B toggles the sidebar · ⌘J toggles the agent drawer · ⌘1-3 switches organization · P pins/unpins the focused panel · esc closes in precedence order: palette → drawer → menus → leaf panel. On the canvas: ⌘Z / ⇧⌘Z undo-redo, ⌘D duplicates, ⌘A selects all, arrow keys nudge, ⌫ deletes the selection." },
+      { kind: "card", label: "Why it is cheap", text: "The palette reads DOMAIN and the registry — navigation is data, so every destination is enumerable and typeable. Nothing is bolted on." },
     ],
   },
   "imp:persist": {
     panelType: "improvement", title: "Persistence", subtitle: "Reload and land exactly here.", meta: "live",
     blocks: [
-      { kind: "card", label: "Live — this app", text: "URL wins; localStorage restores when there is no hash; written on every navigation, restored before first paint. Reload — pins included." },
-      { kind: "card", label: "In production", text: "Signed in, the stack writes to a Convex stacks table — per user, per Space, last writer wins. Open your laptop where your phone left off." },
+      { kind: "card", label: "Live — this app", text: "The workspace persists to localStorage (key frameword-crm) on every navigation and restores before first paint when there is no hash — URL always wins. Module stores persist separately: boards, notes/tasks, data tables, notifications, agent conversations, appearance prefs." },
+      { kind: "card", label: "In production", text: "Signed in, the stack writes to a Convex stacks table — per user, per Space, last-writer-wins. Open your laptop where your phone left off. See Architecture → Convex schema." },
     ],
   },
   "imp:realtime": {
-    panelType: "improvement", title: "Presence & realtime", subtitle: "A dot on the exact panel someone is reading.", meta: "specced",
+    panelType: "improvement", title: "Notifications & presence", subtitle: "The bell is live; presence is specced.", meta: "live",
     blocks: [
-      { kind: "card", label: "One live query", text: "Presence keyed by stack URL and panel id. Share your stack link and you are in the same place — same panels, live cursors, edits streaming in." },
-      { kind: "card", label: "Not core algebra", text: "The reducer doesn't know about presence. It rides alongside the stack, keyed by the same ids. Agents can appear as presence too." },
+      { kind: "card", label: "Live — notification center", text: "The topbar bell: unread dot, four kinds (mention, task, agent, system), search, kind filters, mark-read and mark-all-read. One module store keeps the badge and the open list in sync, persisted to localStorage." },
+      { kind: "card", label: "Specced — presence", text: "One live query keyed by stack URL and panel id puts a dot on the exact panel a teammate is reading. Not core algebra: presence rides beside the stack, keyed by the same ids — agents can appear as presence too." },
     ],
   },
   "imp:canvas": {
-    panelType: "improvement", title: "The canvas bridge", subtitle: "Topology as a panel type.", meta: "specced",
+    panelType: "improvement", title: "Canvas boards + AI builder", subtitle: "Topology as a panel type — shipped.", meta: "live",
     blocks: [
-      { kind: "card", label: "Relational content", text: "A pipeline, an agent graph, a dependency map — a canvas panel renders it as a node graph; drilling a node opens its inspector as the next column." },
-      { kind: "card", label: "Two views, one model", text: "\"Explode to canvas\" and \"collapse to stack\" are the same state rendered two ways. Ships as the canvas + node-inspector registry items." },
+      { kind: "card", label: "Live — a Figma/Miro-class board", text: "Multiple named boards on React Flow: card, note, shape, label and step nodes; 4-way connection handles; movable link midpoints; inline edge labels; dashed, animated and arrowed links; right-click menus; snap grid; minimap; 50-step undo/redo. Clicking a node or a link opens its inspector as the NEXT panel — the bridge is an ordinary drill." },
+      { kind: "card", label: "Live — build a board by prompt", text: "Ask the agent (⌘J): \"canvas: Idea -> Prototype -> Ship\". boardFromPrompt parses arrow chains (one per line for branches) and named templates — sprint, retro, roadmap, funnel, onboarding, launch — then lays out and opens the board." },
     ],
   },
   "imp:mobile": {
     panelType: "improvement", title: "PushHost — mobile", subtitle: "Same reducer, one card at a time.", meta: "live",
     blocks: [
-      { kind: "card", label: "Live below 640px", text: "ColumnHost swaps for PushHost: one column visible, parents peeking at the left edge, a back chevron in the bar. An iOS-style back-stack over the exact same state." },
-      { kind: "card", label: "Same everything", text: "Same ids, same URL, same laws — a stack link opened on a phone lands on the same stack." },
+      { kind: "card", label: "Live below 640px", text: "useIsCompact(640) swaps ColumnHost for PushHost: one panel visible, the parent peeking at the left edge, a back chevron in the bar, references as a chip tray. An iOS-style back-stack over the exact same state." },
+      { kind: "card", label: "Same everything", text: "Same instance ids, same URL codec, same laws — a stack link opened on a phone lands on the same stack." },
     ],
   },
   "imp:modules": {
-    panelType: "improvement", title: "Panel modules", subtitle: "One folder registers everything.", meta: "specced",
+    panelType: "improvement", title: "Panel modules", subtitle: "One folder registers everything.", meta: "live pattern",
     blocks: [
       { kind: "code", code: "definePanelModule({\n  id: 'inbox', label: 'Inbox', root: InboxRoot,\n  panels: {\n    thread:  { view: ThreadPanel,  size: 'M' },\n    message: { view: MessagePanel, size: 'S' },\n  },\n})" },
-      { kind: "card", label: "✶ The endgame", text: "A registry of community modules — a CRM, an inbox, an analytics board — that install like shadcn components and snap into any shell." },
+      { kind: "card", label: "✶ Proven three times here", text: "NotesApp, DataApp and CanvasBoard each ship as one file: a tiny store (useSyncExternalStore + localStorage) plus panel components registered in the app REGISTRY. definePanelModule is the specced packaging of that pattern; the endgame is a registry of community modules that install like shadcn components and snap into any shell." },
     ],
   },
   "imp:agent": {
     panelType: "improvement", title: "Stack-as-working-memory", subtitle: "The agent sees what you see.", meta: "live",
     blocks: [
       { kind: "code", code: "agent.ask({ stack, resolve: load })" },
-      { kind: "card", label: "Live — the ✶ drawer", text: "One action resolves every open panel via its registered load(params) and answers from those records. Because navigation is an algebra, the agent can also answer BY navigating — answers become panels." },
+      { kind: "card", label: "Live — the ✶ drawer (⌘J)", text: "Every answer starts from the serialized stack: the path is what you are doing, pinned references are what you keep. Because navigation is an algebra, the agent also answers BY navigating — ask for a board and it opens the canvas and builds it. Three drawer sizes, persisted conversation history, file and voice-note attachments." },
     ],
   },
   "imp:a11y": {
@@ -316,7 +322,7 @@ export const DOMAIN: Record<string, DomainNode> = {
     blocks: [
       { kind: "card", label: "Landmark", text: "Every panel is a region with an aria-label; screen readers walk the stack like a list." },
       { kind: "card", label: "Focus", text: "Opening a panel moves focus into it; closing returns focus to the drill that opened it." },
-      { kind: "card", label: "Keyboard", text: "Roving tabindex across columns; the palette makes every destination typeable." },
+      { kind: "card", label: "Keyboard", text: "Roving tabindex across columns; the ⌘K palette already makes every destination typeable." },
       { kind: "card", label: "Motion", text: "prefers-reduced-motion disables slide-ins; panels appear in place." },
     ],
   },
@@ -328,53 +334,53 @@ export const DOMAIN: Record<string, DomainNode> = {
       { kind: "card", label: "✶ 3 — Panel promotion", text: "A child ejects into a new root when it outgrows preview life." },
       { kind: "card", label: "✶ 4 — Split stage", text: "Two stacks side by side for compare workflows — this deal against that one." },
       { kind: "card", label: "✶ 5 — Agent tours", text: "The agent drives the stack panel by panel — onboarding as navigation, not tooltips." },
-      { kind: "card", label: "✶ 6 — Module marketplace", text: "Community modules on the registry — whole sections that install like components." },
+      { kind: "card", label: "✶ 6 — Module marketplace", text: "Community modules on a registry — whole sections that install like components." },
     ],
   },
 
   /* ═══ FRAMEWORK · Architecture ═══ */
   "sec:architecture": {
     panelType: "section", title: "Architecture", eyebrow: "Architecture · 05",
-    subtitle: "Packages for the algebra, copy-paste for the pixels.",
+    subtitle: "Two packages for the algebra, one specimen for the pixels, one engine for migrations.",
     blocks: [
-      { kind: "card", label: "1 — @frameword/panels-core", text: "Pure reducer — zero React, zero DOM. Intent commands, invariants as a validator, encode/decode, a laws test-kit (23 tests green)." },
-      { kind: "card", label: "2 — @frameword/panels-react", text: "WorkspaceProvider, useWorkspace, the panel-type registry, URL + storage sync, PushHost breakpoint — bindings, not styling." },
-      { kind: "card", label: "3 — registry, shadcn-style", text: "npx stax add — the rendering layer, copy-paste into your repo, styled by your tokens. Fork freely." },
-      { kind: "card", label: "4 — create-stax-app", text: "Next.js 15 + Convex + Clerk, a neutral demo board, the agent seam wired to the open stack." },
-      { kind: "code", code: "npx stax@latest add shell drill panel breadcrumb \\\n  command-palette drawer canvas node-inspector" },
+      { kind: "card", label: "1 — @frameword/panels-core", text: "packages/panels-core — the pure reducer. Zero React, zero DOM, zero dependencies. WorkspaceState + the intent commands, the branch policy, validate() (the engine invariants), and the URL codec (encodeLocation / decodeLocation / reconcileLocation). 25 laws tests green in test/laws.test.ts." },
+      { kind: "card", label: "2 — @frameword/panels-react", text: "packages/panels-react — bindings only, zero styling. WorkspaceProvider (urlSync + storageKey), useWorkspace(), the PanelRegistry mapping panelType → size (PANEL_WIDTHS: S 380 · M 480 · L 640 · XL 800), panelWidth() with a device-local override, useIsCompact(640) for the mobile PushHost." },
+      { kind: "card", label: "3 — apps/crm-specimen", text: "This app — the rendering layer and the design language. App.tsx (shell, registry, ⌘K palette, agent drawer, settings), domain.ts (every panel's content — the file you are reading), CanvasBoard.tsx, DataApp.tsx, NotesApp.tsx, Notifications.tsx, and styles.css + tokens.css carrying the WhitePaper values from DESIGN-SPEC.md." },
+      { kind: "card", label: "4 — stax-migrate", text: "packages/stax-migrate — a zero-dependency Node CLI that rebuilds ANY legacy app on this grammar in 9 gated phases via Claude Code or Codex. Two CSV matrices are the law — every feature (F-NNN) and every visual element (E-NNN) — and the done gate refuses to advance below 100% of both." },
+      { kind: "code", code: "cd frameword && bun install && bun test    # 25 laws\ncd apps/crm-specimen && bunx vite          # run this app\nnode packages/stax-migrate/index.mjs \\\n  init /path/to/legacy-app                 # start a migration" },
     ],
     children: ["arch:registry", "arch:convex"],
   },
   "arch:registry": {
-    panelType: "doc", title: "Registry map", subtitle: "The eight installable items.",
+    panelType: "doc", title: "Registry map", subtitle: "Every panel type this app registers, with its width class.",
     blocks: [
-      { kind: "card", label: "shell", text: "Sidebar + topbar + stage — the app frame." },
-      { kind: "card", label: "drill", text: "The row that opens a child — never a link, never a modal." },
-      { kind: "card", label: "panel", text: "One column — fixed-height header, scrollable body, anchored footer." },
-      { kind: "card", label: "breadcrumb", text: "Derived from the stack — each segment navigates." },
-      { kind: "card", label: "command-palette", text: "⌘K — fuzzy-pick any registered panel type." },
-      { kind: "card", label: "drawer", text: "A fixed overlay for transversal tools — never part of the stack." },
-      { kind: "card", label: "canvas", text: "Wraps @xyflow/react as a wide, graph-typed panel." },
-      { kind: "card", label: "node-inspector", text: "Schema-driven detail panel, opened by drilling a graph node." },
+      { kind: "card", label: "How it works", text: "REGISTRY: Record<panelType, { size }> lives in App.tsx. panelWidth() resolves instance → user override → kind default → M. Width belongs to the KIND; the user override in the foot gear is device-local only." },
+      { kind: "card", label: "Docs", text: "section L · doc M · law S · improvement M · prompt M · component M · block M · blocklive XL (full-width live demo)." },
+      { kind: "card", label: "CRM", text: "space L · account M · contact M · opportunity M · activity S · report M." },
+      { kind: "card", label: "Canvas", text: "canvas XL (flexes to fill the stage, min 520) · canvasnode S · canvasedge S — the inspectors opened by clicking a node or a link." },
+      { kind: "card", label: "Data", text: "datahome M · datatable XL · datarow L — a row opens as a page, the next panel." },
+      { kind: "card", label: "Notes & tasks", text: "notes M · notefolder M · note M · tasks XL (kanban) · task S." },
+      { kind: "card", label: "System", text: "settings M · profile M — opened from the account menu or ⌘K; they belong to no dashboard." },
+      { kind: "card", label: "Key resolution", text: "resourceKey prefixes route to their stores: sec:/ov:/md:/law:/imp:/pr:/cmp:/blk: resolve in DOMAIN; cvn:/cve: in the board store; nte:/nfd:/tsk: in the notes store; dtc:/dtr: in the data store." },
     ],
   },
   "arch:convex": {
-    panelType: "doc", title: "Convex schema", subtitle: "Three tables, one adapter.",
+    panelType: "doc", title: "Convex schema", subtitle: "The specced production adapter — three tables, one mutation.",
     blocks: [
       { kind: "code", code: "stacks:   { userId, spaceId, state, updatedAt }\n           .index('by_user', ['userId','spaceId'])\npresence: { stackUrl, userId, panelId, ts }\n           .index('by_stack', ['stackUrl'])\nprefs:    { userId, theme, density }" },
-      { kind: "card", label: "One mutation, one query", text: "The stack writes on every navigation; presence renders as dots on panel bars. Optimistic locally, last-writer-wins. Signed out, everything falls back to localStorage — this app does exactly that." },
+      { kind: "card", label: "One mutation, one query", text: "Signed in, the stack writes on every navigation — optimistic locally, last-writer-wins — and presence renders as dots on panel bars. Signed out (and in this demo build) everything falls back to localStorage plus the URL hash. The reducer never knows which backend sits under it." },
     ],
   },
 
   /* ═══ FRAMEWORK · Prompt pack ═══ */
   "sec:prompts": {
     panelType: "section", title: "Prompt pack", eyebrow: "Prompt pack · 06",
-    subtitle: "P0-P3 teach and build. M1-M6 are the MASTER KIT: paste-ready prompts that let any coding agent decompose an existing dashboard, map it to the panel grammar, and migrate or build on it.",
+    subtitle: "P0-P3 teach and build. M1-M6 are the MASTER KIT: paste-ready prompts that let any coding agent decompose an existing app, map it to the panel grammar, migrate it, build new on it, wire an agent, and audit against the laws.",
     children: ["pr:p0", "pr:p1", "pr:p2", "pr:p3", "pr:m-decompose", "pr:m-map", "pr:m-migrate", "pr:m-build", "pr:m-agent", "pr:m-laws"],
-    blocks: [{ kind: "card", label: "How to use", text: "Paste the canonical context once at the start of a session, then the task prompt. Ask the model to cite code, screenshots or tests for material claims." }],
+    blocks: [{ kind: "card", label: "How to use", text: "Paste one prompt into any coding agent as-is. For a full migration, prefer the stax-migrate CLI (Architecture · 05) — it drives the same protocols as 9 gated phases with mechanical exit gates. Always demand citations — file:line, screenshots, or test output — for every material claim." }],
   },
   "pr:p0": {
-    panelType: "prompt", title: "P0 — Concept explainer", subtitle: "Brand-agnostic. Teaches the paradigm.", meta: "concept",
+    panelType: "prompt", title: "P0 — Concept explainer", subtitle: "Brand-agnostic. Teaches the paradigm in five lines.", meta: "concept",
     blocks: [{ kind: "code", code: "The interface is a stack of in-page panels.\nClicking anything with depth opens a panel to the\nright; the parent stays. No pages, no modals, no\ntabs — one mechanic, one action zone, one back.\nState is a serializable list; everything derives." }],
   },
   "pr:p1": {
@@ -395,7 +401,7 @@ export const DOMAIN: Record<string, DomainNode> = {
   "pr:m-decompose": {
     panelType: "prompt", title: "M1 — Decompose the existing", subtitle: "Forensic inventory of every route, modal, tab, and flow before a single panel is drawn.", meta: "forensic · step 1",
     blocks: [
-      { kind: "card", label: "WHEN", text: "Use FIRST on any existing app you want to migrate to the panel grammar. Run it before mapping, before any redesign talk — the mapping (M2) and migration plan (M3) both consume its feature matrix. Also use it when a migration stalls mid-way: re-run to find what the model silently skipped." },
+      { kind: "card", label: "WHEN", text: "Use FIRST on any existing app you want to migrate to the panel grammar. Run it before mapping, before any redesign talk — the mapping (M2) and migration plan (M3) both consume its feature matrix. Also use it when a migration stalls mid-way: re-run to find what the model silently skipped. (stax-migrate phase 1 runs this protocol automatically.)" },
       { kind: "code", label: "MASTER PROMPT — paste into any coding agent", code: "ROLE: Forensic UI auditor. Target: the app in this repo (or the URL/screens I provide). Goal: a complete FEATURE MATRIX before migrating to Stax, a panels-inside-panels (Miller columns) framework. Do NOT redesign, refactor, or propose panels yet — inventory only.\nPROTOCOL — inventory each layer. EVERY row carries a citation (file:line, router-config entry, or screenshot ref). Uncited rows are rejected.\n1. ROUTES: every route/page/layout — URL pattern, params, guards, lazy boundaries.\n2. NAVIGATION: every nav surface (sidebar, topbar, breadcrumbs, command palette, footer) and the exact target of each item.\n3. MODALS & OVERLAYS: every modal, dialog, popover, drawer, action-toast. Record trigger, content type (form | confirm | detail | picker | media), and content size (count fields/sections).\n4. TABS & SEGMENTS: every tab bar / segmented control; note whether tabs facet the SAME entity or switch BETWEEN entities.\n5. DETAIL VIEWS: every master->detail relation (list row -> what opens, and where it opens).\n6. CRUD FLOWS: per entity: create / read / update / delete path, including multi-step wizards (record step count).\n7. FILTERS / SEARCH / SORT: where each control lives and what scope it filters.\n8. CHARTS & DASHBOARDS: every visualization, its data source, and whether it drills down on click.\n9. CROSS-CUTTING: chat/assistant surfaces, settings, notifications, global search, onboarding.\nOUTPUT: write `feature-matrix.md` — one table, columns: id | layer | name | current pattern (route/modal/tab/wizard/drawer/...) | entity | has-depth? (does it open something deeper) | size hint S/M/L/XL by content density | citation.\nThen a SUMMARY: counts per pattern + the 5 hairiest items (nested modals, modal-inside-tab, wizard-inside-modal, etc.).\nDEFINITION OF DONE: every route and every overlay in the codebase appears in the matrix. Prove coverage: run `grep -riE \"modal|dialog|drawer|<Tabs\" src | wc -l` (adapt to the stack), show the output, and reconcile the count against your matrix rows. Unreconciled hits = the audit is not done." }
     ],
   },
@@ -409,7 +415,7 @@ export const DOMAIN: Record<string, DomainNode> = {
   "pr:m-migrate": {
     panelType: "prompt", title: "M3 — Migration plan (refonte)", subtitle: "Seven gated phases from inventory to law-clean workspace, each with verifiable acceptance criteria.", meta: "refonte · phased",
     blocks: [
-      { kind: "card", label: "WHEN", text: "Use when you commit to actually rebuilding an existing dashboard on the panel grammar. It turns M1+M2 outputs into an executable, gated plan — hand each phase to a coding agent and refuse to advance until that phase's acceptance evidence is green. Also use it to audit a half-done migration: grade the current state against the phase gates." },
+      { kind: "card", label: "WHEN", text: "Use when you commit to actually rebuilding an existing dashboard on the panel grammar. It turns M1+M2 outputs into an executable, gated plan — hand each phase to a coding agent and refuse to advance until that phase's acceptance evidence is green. Also use it to audit a half-done migration: grade the current state against the phase gates. (The stax-migrate CLI is the productized version: 9 phases, dual matrices, mechanical gates.)" },
       { kind: "code", label: "MASTER PROMPT — paste into any coding agent", code: "ROLE: Migration planner for a refonte of this app onto Stax (panels-inside-panels; no modals/tabs/pages; serializable WorkspaceState { panelsById, contextLeafId, referenceRailOrder }; registry maps panelType -> size S/M/L/XL). Produce `migration-plan.md` with EXACTLY these 7 phases. For each: scope, concrete tasks, ACCEPTANCE CRITERIA, and the evidence the implementing model must show. A phase without shown evidence is NOT passed.\nPHASE 1 — INVENTORY: run the M1 forensic audit -> feature-matrix.md. Accept only if every route AND every modal is cited file:line and grep counts reconcile.\nPHASE 2 — MAPPING: apply the M2 rules -> mapping.md + registry draft. Accept only if zero TBD rows and every modal maps to a panel with a size.\nPHASE 3 — REGISTRY: implement the panel registry (panelType -> component, size, title resolver). Accept: it compiles, and a demo/story per panelType renders — show build output + one screenshot grid.\nPHASE 4 — SPACES: implement WorkspaceState + space switching (one space active). Accept: state serializes to JSON and restores an identical workspace — show the round-trip test RUNNING and passing.\nPHASE 5 — DRILLS: wire every drill in mapping.md; parent stays mounted; closing a panel closes its descendants. Accept: the 5 deepest chains clicked through with screenshots or an e2e run log.\nPHASE 6 — REFERENCES: pin -> detached reference on the rail, surviving navigation AND space switches. Accept: pin an item, switch space twice, dump referenceRailOrder — unchanged, reference still live.\nPHASE 7 — POLISH & PURGE: widths from registry only, design tokens only, delete every leftover modal/tab/detail-route. Accept: `grep -riE \"modal|<Dialog|<Tabs\" src` returns zero app-level hits (show output) and the M6 laws report is all-PASS.\nSTANDING DEMANDS ON THE IMPLEMENTING MODEL: cite file:line for every claim; ship RUNNING code (build log, test output, or screenshot — never intent); no phase starts before the previous phase's evidence is shown green. Restate these demands inside each phase's brief." }
     ],
   },
@@ -423,7 +429,7 @@ export const DOMAIN: Record<string, DomainNode> = {
   "pr:m-agent": {
     panelType: "prompt", title: "M5 — Wire an AI agent into the workspace", subtitle: "The panel stack becomes the agent's context; the reducer becomes its only steering wheel.", meta: "agentic layer",
     blocks: [
-      { kind: "card", label: "WHEN", text: "Use once the workspace runs (post-M3 or post-M4) and you want an in-app AI copilot. The key insight it enforces: WorkspaceState is already a perfect context document — path = what the user is doing, references = what they care about. Use it also to retrofit guardrails onto an agent that currently mutates UI state directly." },
+      { kind: "card", label: "WHEN", text: "Use once the workspace runs (post-M3 or post-M4) and you want an in-app AI copilot. The key insight it enforces: WorkspaceState is already a perfect context document — path = what the user is doing, references = what they care about. Use it also to retrofit guardrails onto an agent that currently mutates UI state directly. This app's ✶ drawer implements the pattern." },
       { kind: "code", label: "MASTER PROMPT — paste into any coding agent", code: "ROLE: Integrate an AI agent into a Stax workspace. Principle: the WorkspaceState IS the agent's context, and the panel reducer IS its only navigation API. First locate and cite (file:line) the real WorkspaceState type and reducer actions in this repo — do not invent parallel ones.\nCONTEXT CONTRACT — on every agent turn, serialize and inject: (1) the active space id; (2) the PATH: panels from root to contextLeafId, in order, each as { panelType, entityId, title, key facts }; (3) the REFERENCE RAIL in referenceRailOrder, same shape, flagged pinned:true. Weighting: the path is what the user is doing NOW; references are what they deliberately keep — say so in the system prompt. NEVER inject panels from inactive spaces.\nNAVIGATION RULES — the agent drives the UI exclusively through the same actions a click dispatches: openPanel(parentId, panelType, entityId) = drill right; closePanel(id) = closes its descendants too; pinPanel(id) = promote to reference; switchSpace(id). Direct DOM or state mutation is forbidden.\nGUARDRAILS (implement, don't just document): (a) max 2 panel opens per agent turn, each justified in its visible reply; (b) never close a panel the user opened this session without asking; (c) never unpin a reference; (d) destructive actions (delete, send, pay) are PROPOSED as a panel showing the exact payload — never executed silently; (e) context needed from another space -> ask before switching.\nIMPLEMENT: (1) `serializeContext(state: WorkspaceState): AgentContext` — pure function, unit-tested against a fixture asserting the exact JSON; (2) the tool/function schema for the 4 nav actions; (3) a demo exchange where the user asks a question, the agent cites a pinned reference, and opens the correct drill.\nEVIDENCE REQUIRED: the fixture test passing (real run output, not prose) and one end-to-end trace: user message -> injected context JSON -> tool call -> WorkspaceState diff. Every wiring claim cited file:line." }
     ],
   },
@@ -437,48 +443,48 @@ export const DOMAIN: Record<string, DomainNode> = {
 
   /* ═══ WORKSPACE · CRM ═══ */
   "space:crm": {
-    panelType: "space", title: "Comptes", subtitle: "3 comptes actifs — clique une ligne pour ouvrir le détail.",
-    children: ["acc:acme", "acc:globex", "acc:initech"], composer: "Nouveau compte…",
-    kpis: [{ v: "3", l: "comptes" }, { v: "5", l: "opportunités" }, { v: "46k€", l: "pipeline" }],
+    panelType: "space", title: "Accounts", subtitle: "3 active accounts — click a row to open its detail beside this list.",
+    children: ["acc:acme", "acc:globex", "acc:initech"], composer: "New account…",
+    kpis: [{ v: "3", l: "accounts" }, { v: "5", l: "opportunities" }, { v: "€46k", l: "pipeline" }],
   },
-  "acc:acme": { panelType: "account", title: "Acme SARL", subtitle: "Industrie · Lyon", meta: "2 contacts", children: ["con:jo", "con:max"], composer: "Nouveau contact…" },
-  "acc:globex": { panelType: "account", title: "Globex", subtitle: "Retail · Paris", meta: "1 contact", children: ["con:lea"], composer: "Nouveau contact…" },
-  "acc:initech": { panelType: "account", title: "Initech", subtitle: "SaaS · Nantes", meta: "prospect", body: "Compte prospect — aucun contact enregistré. Le panneau feuille n'a pas de drill." },
-  "con:jo": { panelType: "contact", title: "Jo Lambert", subtitle: "Directrice des opérations", meta: "2 opps", children: ["opp:refonte", "opp:maintenance"], composer: "Nouvelle opportunité…" },
-  "con:max": { panelType: "contact", title: "Max Verne", subtitle: "Responsable achats", meta: "1 opp", children: ["opp:equipement"], composer: "Nouvelle opportunité…" },
-  "con:lea": { panelType: "contact", title: "Léa Fontaine", subtitle: "CTO", meta: "1 opp", children: ["opp:migration"], composer: "Nouvelle opportunité…" },
-  "opp:refonte": { panelType: "opportunity", title: "Refonte e-commerce", subtitle: "18 000 € · proposition envoyée", children: ["act:call1", "act:demo1"], seeAlso: ["con:max"], composer: "Nouvelle activité…" },
-  "opp:maintenance": { panelType: "opportunity", title: "Maintenance 2026", subtitle: "8 000 € · négociation", children: ["act:relance1"], composer: "Nouvelle activité…" },
-  "opp:equipement": { panelType: "opportunity", title: "Équipement atelier", subtitle: "6 500 € · qualification", children: ["act:visite1"], composer: "Nouvelle activité…" },
-  "opp:migration": { panelType: "opportunity", title: "Migration cloud", subtitle: "13 500 € · découverte", children: ["act:kickoff"], composer: "Nouvelle activité…" },
-  "act:call1": { panelType: "activity", title: "Appel de cadrage", subtitle: "12 juil. · 30 min", body: "Compte-rendu : périmètre validé, budget confirmé. Épingle ce panneau (PIN) puis redrille ailleurs : il deviendra une référence." },
-  "act:demo1": { panelType: "activity", title: "Démo produit", subtitle: "17 juil. · 1 h", body: "Démo réalisée devant le comité. Objection prix levée par l'option maintenance." },
-  "act:relance1": { panelType: "activity", title: "Relance devis", subtitle: "15 juil. · email", body: "Devis renvoyé avec remise 5 %. En attente de signature." },
-  "act:visite1": { panelType: "activity", title: "Visite atelier", subtitle: "10 juil. · sur site", body: "Besoins mesurés sur place. Chiffrage en cours." },
-  "act:kickoff": { panelType: "activity", title: "Kickoff technique", subtitle: "18 juil. · visio", body: "Architecture cible validée avec la CTO. POC planifié." },
+  "acc:acme": { panelType: "account", title: "Acme Industries", subtitle: "Manufacturing · Lyon", meta: "2 contacts", children: ["con:jo", "con:max"], composer: "New contact…" },
+  "acc:globex": { panelType: "account", title: "Globex", subtitle: "Retail · Paris", meta: "1 contact", children: ["con:lea"], composer: "New contact…" },
+  "acc:initech": { panelType: "account", title: "Initech", subtitle: "SaaS · Nantes", meta: "prospect", body: "Prospect account — no contacts on record yet. A leaf panel has no drills." },
+  "con:jo": { panelType: "contact", title: "Jo Lambert", subtitle: "Operations director", meta: "2 opps", children: ["opp:refonte", "opp:maintenance"], composer: "New opportunity…" },
+  "con:max": { panelType: "contact", title: "Max Verne", subtitle: "Head of procurement", meta: "1 opp", children: ["opp:equipement"], composer: "New opportunity…" },
+  "con:lea": { panelType: "contact", title: "Lea Fontaine", subtitle: "CTO", meta: "1 opp", children: ["opp:migration"], composer: "New opportunity…" },
+  "opp:refonte": { panelType: "opportunity", title: "E-commerce replatform", subtitle: "€18,000 · proposal sent", children: ["act:call1", "act:demo1"], seeAlso: ["con:max"], composer: "New activity…" },
+  "opp:maintenance": { panelType: "opportunity", title: "Maintenance 2026", subtitle: "€8,000 · negotiation", children: ["act:relance1"], composer: "New activity…" },
+  "opp:equipement": { panelType: "opportunity", title: "Workshop equipment", subtitle: "€6,500 · qualification", children: ["act:visite1"], composer: "New activity…" },
+  "opp:migration": { panelType: "opportunity", title: "Cloud migration", subtitle: "€13,500 · discovery", children: ["act:kickoff"], composer: "New activity…" },
+  "act:call1": { panelType: "activity", title: "Scoping call", subtitle: "Jul 12 · 30 min", body: "Notes: scope validated, budget confirmed. PIN this panel, then drill elsewhere — it becomes a reference and survives the branch change." },
+  "act:demo1": { panelType: "activity", title: "Product demo", subtitle: "Jul 17 · 1 h", body: "Demo delivered to the committee. Price objection cleared by the maintenance option." },
+  "act:relance1": { panelType: "activity", title: "Quote follow-up", subtitle: "Jul 15 · email", body: "Quote re-sent with a 5% discount. Awaiting signature." },
+  "act:visite1": { panelType: "activity", title: "Site visit", subtitle: "Jul 10 · on site", body: "Requirements measured on site. Estimate in progress." },
+  "act:kickoff": { panelType: "activity", title: "Technical kickoff", subtitle: "Jul 18 · video call", body: "Target architecture validated with the CTO. POC scheduled." },
   "space:reports": {
-    panelType: "space", title: "Rapports", subtitle: "Vues transverses (lecture seule).",
+    panelType: "space", title: "Reports", subtitle: "Cross-cutting views (read-only).",
     children: ["rep:pipeline", "rep:activite"],
-    kpis: [{ v: "46k€", l: "pipeline" }, { v: "5", l: "activités / sem." }, { v: "37%", l: "taux de gain" }],
+    kpis: [{ v: "€46k", l: "pipeline" }, { v: "5", l: "activities / wk" }, { v: "37%", l: "win rate" }],
   },
-  "rep:pipeline": { panelType: "report", title: "Pipeline par étape", subtitle: "Snapshot hebdomadaire", body: "Découverte 13,5k€ · Qualification 6,5k€ · Proposition 18k€ · Négociation 8k€." },
-  "rep:activite": { panelType: "report", title: "Activité commerciale", subtitle: "30 derniers jours", body: "5 activités consignées. Un panneau lecture seule n'a pas de footer d'action." },
+  "rep:pipeline": { panelType: "report", title: "Pipeline by stage", subtitle: "Weekly snapshot", body: "Discovery €13.5k · Qualification €6.5k · Proposal €18k · Negotiation €8k." },
+  "rep:activite": { panelType: "report", title: "Sales activity", subtitle: "Last 30 days", body: "5 activities logged. A read-only panel has no action foot." },
 
   /* ═══ ANALYTICS dashboard ═══ */
   "sec:ana-overview": {
-    panelType: "space", title: "Vue d'ensemble", subtitle: "Le même moteur, un autre dashboard — la sidebar a changé avec lui.",
-    kpis: [{ v: "46k€", l: "pipeline" }, { v: "12", l: "deals" }, { v: "37%", l: "win rate" }],
+    panelType: "space", title: "Overview", subtitle: "The same engine, another dashboard — the sidebar switched with it.",
+    kpis: [{ v: "€46k", l: "pipeline" }, { v: "12", l: "deals" }, { v: "37%", l: "win rate" }],
     children: ["ana:funnel", "ana:sources"],
   },
-  "ana:funnel": { panelType: "report", title: "Funnel de conversion", subtitle: "Visite → lead → deal", body: "1 240 visites · 86 leads (6,9 %) · 12 deals (14 %). Chaque étape pourrait être un drill vers sa cohorte." },
-  "ana:sources": { panelType: "report", title: "Sources", subtitle: "30 derniers jours", body: "Organique 44 % · Outbound 31 % · Referral 25 %. Un panneau canvas (React Flow) rendrait le graphe d'attribution." },
+  "ana:funnel": { panelType: "report", title: "Conversion funnel", subtitle: "Visit → lead → deal", body: "1,240 visits · 86 leads (6.9%) · 12 deals (14%). Each stage could drill into its cohort." },
+  "ana:sources": { panelType: "report", title: "Sources", subtitle: "Last 30 days", body: "Organic 44% · Outbound 31% · Referral 25%. A canvas panel (React Flow) would render the attribution graph." },
   "sec:ana-revenue": {
-    panelType: "space", title: "Revenus", subtitle: "MRR et projection — lecture seule.",
-    kpis: [{ v: "8,2k€", l: "MRR" }, { v: "+12%", l: "vs juin" }, { v: "98k€", l: "ARR proj." }],
+    panelType: "space", title: "Revenue", subtitle: "MRR and projection — read-only.",
+    kpis: [{ v: "€8.2k", l: "MRR" }, { v: "+12%", l: "vs June" }, { v: "€98k", l: "proj. ARR" }],
     children: ["ana:mrr", "ana:forecast"],
   },
-  "ana:mrr": { panelType: "report", title: "MRR par offre", subtitle: "Juillet 2026", body: "Starter 2,1k€ · Pro 4,6k€ · Enterprise 1,5k€. Les chiffres utilisent les numérales tabulaires du token map." },
-  "ana:forecast": { panelType: "report", title: "Projection T4", subtitle: "Scénario médian", body: "11,4k€ MRR à fin décembre si le win rate tient à 37 %." },
+  "ana:mrr": { panelType: "report", title: "MRR by plan", subtitle: "July 2026", body: "Starter €2.1k · Pro €4.6k · Enterprise €1.5k. Numbers render in the token map's tabular mono — never serif." },
+  "ana:forecast": { panelType: "report", title: "Q4 projection", subtitle: "Median scenario", body: "€11.4k MRR by end of December if the win rate holds at 37%." },
 };
 
 /* ═══ FRAMEWORK · Components — the FULL shadcn/ui gallery, none missing ═══ */
@@ -500,7 +506,7 @@ export const compKey = (name: string) => "cmp:" + name.toLowerCase().replace(/\s
 
 DOMAIN["sec:components"] = {
   panelType: "section", title: "Components", eyebrow: "Components · 07",
-  subtitle: "The complete shadcn/ui catalog rendered with the WhitePaper tokens — every component is a drill; the demo opens beside the list.",
+  subtitle: "The complete shadcn/ui catalog rendered with the WhitePaper tokens — every component is a drill; its demo opens beside the list.",
   kpis: [{ v: String(SHADCN_ALL.length), l: "components" }, { v: String(SHADCN_NEW.length), l: "new" }, { v: "1", l: "token map" }],
   children: SHADCN_ALL.map(compKey),
 };
@@ -525,7 +531,7 @@ const catSubs: Record<string, string> = {
 };
 DOMAIN["sec:blocks"] = {
   panelType: "section", title: "Blocks", eyebrow: "Blocks · 08",
-  subtitle: "Every dashboard element the framework ships — each in 3 versions, with its panel-grammar integration table.",
+  subtitle: "Every dashboard element the framework ships — each in 3 versions, with its panel-grammar integration table and a full-width live demo.",
   kpis: [{ v: String(Object.keys(BLOCKS).length), l: "blocks" }, { v: "3", l: "versions each" }, { v: String(BLOCK_CATS.length), l: "families" }],
   children: BLOCK_CATS.map((c) => "blkcat:" + c.key),
 };
@@ -542,21 +548,21 @@ for (const [k, m] of Object.entries(BLOCKS)) {
 /* the Canvas board — opened from the topbar whiteboard button, in no dashboard */
 DOMAIN["sec:canvas"] = {
   panelType: "canvas", title: "Canvas", eyebrow: "Canvas board",
-  subtitle: "Your whiteboard — cards, notes, shapes and connections.",
+  subtitle: "Your whiteboard — cards, notes, shapes, steps and connections. Multiple boards; right-click for menus; ask the agent (⌘J) to build one.",
 };
 
 /* system panels — reachable from the account menu & the palette, in no dashboard */
 DOMAIN["sec:data"] = {
   panelType: "datahome", title: "Data", eyebrow: "Personal",
-  subtitle: "Tables and pages — Airtable-class grids where every row opens as a document.",
+  subtitle: "Tables and pages — Airtable-class grids with views, filters and calcs; every row opens as a document panel.",
 };
 DOMAIN["sec:notes"] = {
   panelType: "notes", title: "Notes", eyebrow: "Personal",
-  subtitle: "Your notes — each one opens as the next panel, written in rich text.",
+  subtitle: "Your notes — folders, pins, rich text; each note opens as the next panel.",
 };
 DOMAIN["sec:tasks"] = {
   panelType: "tasks", title: "Tasks", eyebrow: "Personal",
-  subtitle: "Your task list — check things off, drill a task for details.",
+  subtitle: "Your task board — list or kanban, priorities, due dates, subtasks; drill a task for detail.",
 };
 DOMAIN["sys:profile"] = {
   panelType: "profile", title: "Profile", eyebrow: "Account",

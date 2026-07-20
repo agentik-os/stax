@@ -4,6 +4,7 @@
  * explains how it plugs into the panel framework (lives / drill / state / size).
  */
 import { useRef, useState, type ReactNode } from "react";
+import { RichNotes } from "./CanvasBoard";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TTImage from "@tiptap/extension-image";
@@ -126,6 +127,8 @@ function Gram({ g }: { g: [string, string, string, string] }) {
 
 /* ── REAL Tiptap integration ─────────────────────────────────────────── */
 export function TiptapDemo({ v }: { v: 1 | 2 | 3 }) {
+  const [rich, setRich] = useState(
+    "<h2>The framework editor</h2><p>The same <b>RichNotes</b> component the canvas, tasks and data pages use — smart paragraph menu, checklists, links, highlight.</p><ul data-type=\"taskList\"><li data-type=\"taskItem\" data-checked=\"true\"><label><input type=\"checkbox\" checked=\"checked\"><span></span></label><div><p>One editor everywhere</p></div></li><li data-type=\"taskItem\" data-checked=\"false\"><label><input type=\"checkbox\"><span></span></label><div><p>Try the Text menu</p></div></li></ul>");
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -139,6 +142,13 @@ export function TiptapDemo({ v }: { v: 1 | 2 | 3 }) {
           ? "<h2>Why panels beat pages</h2><p>The draft lives beside its sources — pin a record, quote it, keep writing. <i>Blog writing without losing the thread.</i></p><blockquote>A panel is a modal that respects its parent.</blockquote>"
           : "<p>Image note-taking — insert screenshots and annotate around them.</p>",
   }, [v]);
+  if ((v as number) === 1) {
+    return (
+      <Zone col>
+        <RichNotes html={rich} onChange={setRich} />
+      </Zone>
+    );
+  }
   if (!editor) return null;
   const B = ({ act, on, label }: { act: () => void; on?: boolean; label: string }) => (
     <button className={on ? "on" : ""} onMouseDown={(e) => { e.preventDefault(); act(); }}>{label}</button>

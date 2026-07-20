@@ -17,6 +17,7 @@ import { ProfileBody, AvatarBubble, useProfile } from "./Profile";
 import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, FolderPanel, notesApp, useNotesApp } from "./NotesApp";
 import { DataHome, DataTable, DataRow, dataApp, useDataApp } from "./DataApp";
 import { NotifBell } from "./Notifications";
+import "flag-icons/css/flag-icons.min.css";
 
 /* ── registry : width belongs to the KIND, not the user ──────────────── */
 const REGISTRY: PanelRegistry = {
@@ -54,9 +55,9 @@ interface Prefs {
   titleFont: string; bodyFont: string; monoFont: string;
   titleSize: "S" | "M" | "L"; bodySize: "S" | "M" | "L"; monoSize: "S" | "M" | "L";
   accent: string; gap: "S" | "M" | "L"; pad: "S" | "M" | "L";
-  crumb: boolean; dots: boolean; zoom: number;
+  crumb: boolean; dots: boolean; zoom: number; lang: string;
 }
-const DEFAULT_PREFS: Prefs = { titleFont: "news", bodyFont: "inter", monoFont: "geist", titleSize: "M", bodySize: "M", monoSize: "M", accent: "default", gap: "M", pad: "M", crumb: true, dots: true, zoom: 100 };
+const DEFAULT_PREFS: Prefs = { titleFont: "news", bodyFont: "inter", monoFont: "geist", titleSize: "M", bodySize: "M", monoSize: "M", accent: "default", gap: "M", pad: "M", crumb: true, dots: true, zoom: 100, lang: "en" };
 const FZ_TITLE: Record<"S" | "M" | "L", string> = { S: "23px", M: "27px", L: "31px" };
 const FZ_BODY: Record<"S" | "M" | "L", string> = { S: "12.5px", M: "13.5px", L: "14.5px" };
 const FZ_MONO: Record<"S" | "M" | "L", string> = { S: "9px", M: "10px", L: "11px" };
@@ -115,6 +116,14 @@ const PrefsCtx = createContext<{
   theme: string; setTheme: (m: string) => void;
 } | null>(null);
 const usePrefs = () => useContext(PrefsCtx)!;
+
+const LANGS = [
+  { id: "en", label: "English", flag: "gb" },
+  { id: "fr", label: "Français", flag: "fr" },
+  { id: "de", label: "Deutsch", flag: "de" },
+  { id: "es", label: "Español", flag: "es" },
+  { id: "pt", label: "Português", flag: "pt" },
+];
 
 const targetOf = (key: string): PanelTarget => ({
   panelType: DOMAIN[key].panelType,
@@ -198,6 +207,7 @@ function Shell() {
   const setOrg = (o: Org) => { setOrgState(o); localStorage.setItem("frameword-org", o.id); };
   const [themeMenu, setThemeMenu] = useState(false);
   const [acctMenu, setAcctMenu] = useState(false);
+  const [langMenu, setLangMenu] = useState(false);
   const prof = useProfile();
   const [drawer, setDrawer] = useState(false);
   const [palette, setPalette] = useState(false);
@@ -493,7 +503,7 @@ function Shell() {
                   <span className="usage-val">62%</span>
                 </div>
                 <div className="usage-track"><div className="usage-fill" style={{ width: "62%" }} /></div>
-                <div className="usage-sub">46k€ ouvert · objectif 75k€</div>
+                <div className="usage-sub">46k open · 75k quarterly target</div>
               </div>
             </div>
             <div style={{ position: "relative" }}>
@@ -507,8 +517,27 @@ function Shell() {
               </button>
               {acctMenu && (
                 <>
-                  <div className="menu-bg" onClick={() => setAcctMenu(false)} />
+                  <div className="menu-bg" onClick={() => { setAcctMenu(false); setLangMenu(false); }} />
                   <div className="acct-menu">
+                    <div className="dp-wrap" style={{ display: "block" }}>
+                      <button className="menu-item" onClick={() => setLangMenu((v) => !v)}>
+                        <span className={"fi fi-" + (LANGS.find((l) => l.id === prefs.lang)?.flag ?? "gb")} style={{ borderRadius: 3, fontSize: 13 }} />
+                        <span style={{ flex: 1 }}>Language</span>
+                        <span style={{ color: "var(--muted-foreground)", fontSize: 10 }}>⌄</span>
+                      </button>
+                      {langMenu && (
+                        <div className="lang-menu">
+                          {LANGS.map((l) => (
+                            <button key={l.id} className={"menu-item" + (prefs.lang === l.id ? " on" : "")}
+                              onClick={() => { setPrefs({ lang: l.id }); setLangMenu(false); say("Language — " + l.label); }}>
+                              <span className={"fi fi-" + l.flag} style={{ borderRadius: 3, fontSize: 13 }} />
+                              <span style={{ flex: 1 }}>{l.label}</span>
+                              {prefs.lang === l.id && <span style={{ color: "var(--accent)", fontSize: 11 }}>✓</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <button className="menu-item" onClick={() => { setAcctMenu(false); ws.openSpace("profile", targetOf("sys:profile")); }}>Profile</button>
                     <button className="menu-item" onClick={() => { setAcctMenu(false); ws.openSpace("settings", targetOf("sys:settings")); }}>Settings</button>
                     <button className="menu-item" onClick={() => { setAcctMenu(false); say("Docs — see PROMPT-KIT.md"); }}>Documentation</button>
@@ -1325,7 +1354,7 @@ function AgentDrawer({ onClose }: { onClose: () => void }) {
       r.start();
       setRec(r);
     } catch {
-      setAtts((a) => [...a, { kind: "audio", dur: 0 }]); // micro refusé — chip démo quand même
+      setAtts((a) => [...a, { kind: "audio", dur: 0 }]); // mic denied — demo chip anyway
     }
   };
 

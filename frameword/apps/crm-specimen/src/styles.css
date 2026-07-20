@@ -806,3 +806,8 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .nf-foot button { font-size: calc(var(--fz-body, 13.5px) - 2px); font-weight: 500; color: var(--accent); padding: 4px 8px; border-radius: 6px; }
 .nf-foot button:hover { background: var(--accent-soft); }
 .nf-foot span { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+
+/* language chooser in the account menu */
+.lang-menu { position: absolute; left: calc(100% + 6px); bottom: -6px; width: 170px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); padding: 5px; z-index: 47; animation: fadeIn 120ms var(--ease); }
+.lang-menu .menu-item.on { background: var(--secondary); }
+.menu-item .fi { flex: none; width: 18px; box-shadow: 0 0 0 1px var(--border); }
