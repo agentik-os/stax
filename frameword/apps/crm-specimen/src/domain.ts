@@ -88,6 +88,17 @@ export const DASHBOARDS: Dashboard[] = [
       ],
     }],
   },
+  {
+    id: "platform", label: "Platform", glyph: "▣",
+    groups: [{
+      label: "Platform",
+      spaces: [
+        { spaceId: "pf-tour", rootKey: "sec:pf-tour", label: "How it maps" },
+        { spaceId: "pf-console", rootKey: "sec:pf-console", label: "Console" },
+        { spaceId: "pf-studio", rootKey: "sec:pf-studio", label: "Studio" },
+      ],
+    }],
+  },
 ];
 export const SPACES: SpaceDef[] = DASHBOARDS.flatMap((d) => d.groups).flatMap((g) => g.spaces);
 
@@ -578,6 +589,150 @@ export const DOMAIN: Record<string, DomainNode> = {
       { kind: "card", label: "Full width, live", text: "The block panel's foot button — Live demo, full width — opens a blocklive panel (XL 800) running the real interactive component. Change the accent or fonts in Settings and watch every version follow: tokens only, no hex." },
       { kind: "card", label: "Where they come from", text: "All 43 blocks ship in the Framework dashboard under Blocks · 08, grouped in 8 families. This list is a curated cut for analytics work — KPI, charts, data and AI surfaces." },
     ],
+  },
+
+  /* ═══ PLATFORM dashboard — platform-class console & studio, in the grammar ═══ */
+  "sec:pf-tour": {
+    panelType: "section", title: "Platform-class UI, one grammar.", eyebrow: "How it maps · Platform",
+    subtitle: "Take a real developer console — settings pages, tabbed sections, master-detail lists, floating composers — and re-express every one of its patterns as panels. This dashboard is that exercise, live.",
+    kpis: [{ v: "13", l: "surfaces" }, { v: "5", l: "mappings" }, { v: "0", l: "pages" }],
+    blocks: [{ kind: "card", label: "The source material", text: "The Console and Studio Spaces beside this one rebuild the recurring surfaces of a modern API platform: key management, people & permissions, projects, billing, spend limits, usage analytics, service health, data-control forms, security empty-states, a prompt composer, a realtime creator, an image grid and a prompt-card hub. Every one is functional — and every one is a panel." }],
+    children: ["map:nav", "map:tabs", "map:detail", "map:composer", "map:states"],
+    footActions: [{ label: "Open the Console", kind: "primary", space: "pf-console" }],
+  },
+  "map:nav": {
+    panelType: "doc", title: "A settings sidebar is a Space", subtitle: "Thirteen nav items, zero page swaps.",
+    blocks: [
+      { kind: "card", label: "The original", text: "A console's settings area is a second sidebar with a dozen page routes — General, API keys, People, Projects, Billing, Limits, Usage, Service health… Each click replaces the whole screen and your place in it." },
+      { kind: "card", label: "The mapping", text: "That sidebar becomes ONE Space root whose drill list is the nav. Opening API keys opens a panel BESIDE the root; opening a key opens a third. The root never moves (Law 2), so 'Back to project' disappears — the project is still on screen." },
+    ],
+    footActions: [{ label: "See it — the Console root", kind: "primary", space: "pf-console" }],
+  },
+  "map:tabs": {
+    panelType: "doc", title: "Tabs become segments or siblings", subtitle: "Two different jobs hid behind one widget.",
+    blocks: [
+      { kind: "do", label: "Do", text: "When tabs FILTER one collection (Members / Invitations, Active / Revoked), use a segmented control — same panel, different view. When tabs hold DIFFERENT content (Visibility / Hosted tools / Data retention), make them sibling drills — different panels." },
+      { kind: "dont", label: "Don't", text: "Never keep a tab bar that swaps the page under the user. The People panel and the Security panel beside this one show both mappings running." },
+    ],
+    footActions: [{ label: "People — segment filter", kind: "primary", drill: "pf:people" }, { label: "Security — segments", kind: "outline", drill: "pf:security" }],
+  },
+  "map:detail": {
+    panelType: "doc", title: "Master-detail is panel → panel", subtitle: "'Select a member to view details' does not exist here.",
+    blocks: [
+      { kind: "card", label: "The original", text: "Console lists reserve half the screen for an empty detail pane with a placeholder sentence, or navigate to a detail route and lose the list." },
+      { kind: "card", label: "The mapping", text: "The list is a panel; clicking a row calls openDetail and the record IS the next panel. The list stays mounted (Law 3), the detail is context-scoped (Law 5), and the empty placeholder pane simply never exists." },
+    ],
+    footActions: [{ label: "API keys — row → panel", kind: "primary", drill: "pf:keys" }],
+  },
+  "map:composer": {
+    panelType: "doc", title: "Floating composers anchor in the foot", subtitle: "'Ask anything', grounded.",
+    blocks: [
+      { kind: "card", label: "The original", text: "Playgrounds float a rounded composer over the canvas — 'Ask anything', 'Describe what you want to see' — plus a config column with native selects and a Save button lost at the end of long forms." },
+      { kind: "card", label: "The mapping", text: "The foot is the one action zone (Law 6): the composer input lives there, next to its primary verb. Config columns become stacked sections with segmented choices; Save becomes the foot CTA that lights up only when the draft is dirty." },
+    ],
+    footActions: [{ label: "Prompt composer", kind: "primary", drill: "pf:prompt" }, { label: "Images grid", kind: "outline", drill: "pf:images" }],
+  },
+  "map:states": {
+    panelType: "doc", title: "Empty states & masked secrets", subtitle: "The platform patterns that survive as-is.",
+    blocks: [
+      { kind: "row", label: "EMPTY", text: "Icon, one sentence, at most one CTA — centered in the panel body. Filter a table to nothing and the same pattern appears inline." },
+      { kind: "row", label: "SECRETS", text: "Mono, masked (sk-stax-…4Kx2), revealed exactly once at creation — inside the detail panel, never a modal." },
+      { kind: "row", label: "STATUS", text: "One pill vocabulary: green = live (active, resolved, verified), neutral = off (revoked, archived). Numbers beside them stay tabular mono." },
+      { kind: "row", label: "BANNERS", text: "Success and warning banners render inside the panel that caused them, dismissible, above the content — never as toasts stacked over the whole app." },
+    ],
+    footActions: [{ label: "Security — the empty state", kind: "primary", drill: "pf:security" }],
+  },
+
+  "sec:pf-console": {
+    panelType: "section", title: "The Console.", eyebrow: "Console · Platform",
+    subtitle: "An organization console rebuilt panel-first — every row below is a live, functional surface; every 'page' of the original is a sibling panel here.",
+    kpis: [{ v: "9", l: "surfaces" }, { v: "4", l: "live tables" }, { v: "100%", l: "functional" }],
+    children: ["pf:keys", "pf:people", "pf:projects", "pf:billing", "pf:limits", "pf:usage", "pf:health", "pf:controls", "pf:security"],
+  },
+  "pf:keys": {
+    panelType: "pfkeys", title: "API keys", eyebrow: "console · keys",
+    subtitle: "Search, filter, roll and revoke — a row opens its key beside the table, and a fresh secret is visible exactly once.",
+    meta: "table",
+  },
+  "pf:people": {
+    panelType: "pfpeople", title: "People & permissions", eyebrow: "console · people",
+    subtitle: "Members and invitations as one segmented collection — a member opens as the next panel.",
+    meta: "list",
+  },
+  "pf:projects": {
+    panelType: "pfprojects", title: "Projects", eyebrow: "console · projects",
+    subtitle: "Geography, retention and spend per project; create in the foot, archive from the detail.",
+    meta: "table",
+  },
+  "pf:billing": {
+    panelType: "pfbilling", title: "Billing", eyebrow: "console · billing",
+    subtitle: "Credit balance, auto-recharge and the sub-pages as drills — the hub pattern.",
+    meta: "hub",
+  },
+  "pf:limits": {
+    panelType: "pflimits", title: "Spend limits", eyebrow: "console · limits",
+    subtitle: "The cap, its progress, alert thresholds and the usage-tier rail.",
+  },
+  "pf:usage": {
+    panelType: "pfusage", title: "Usage", eyebrow: "console · usage",
+    subtitle: "Daily spend chart, KPI stats and the by-model breakdown — Export downloads a real CSV.",
+    meta: "chart",
+  },
+  "pf:health": {
+    panelType: "pfhealth", title: "Service health", eyebrow: "console · health",
+    subtitle: "Per-service uptime with inline disclosure; every incident drills to its write-up.",
+  },
+  "pf:controls": {
+    panelType: "pfcontrols", title: "Data controls", eyebrow: "console · controls",
+    subtitle: "Visibility radio groups with a drafts-then-Save flow — Save is the foot's primary.",
+    meta: "form",
+  },
+  "pf:security": {
+    panelType: "pfsecurity", title: "Security", eyebrow: "console · security",
+    subtitle: "Identity provider, IP allowlist and domains — three segments, honest empty states.",
+  },
+  "pf:payments": {
+    panelType: "doc", title: "Payment methods", eyebrow: "console · billing",
+    blocks: [
+      { kind: "row", label: "DEFAULT", text: "Visa •••• 4242 — exp 08/29 · billing address on file" },
+      { kind: "row", label: "BACKUP", text: "Mastercard •••• 8010 — exp 11/27" },
+    ],
+    body: "Cards are charged in order; the backup is used only if the default fails. Managed by your payment provider — this panel is the read model.",
+  },
+  "pf:history": {
+    panelType: "doc", title: "Billing history", eyebrow: "console · billing",
+    blocks: [
+      { kind: "row", label: "JUL 2026", text: "$25.00 — credit purchase · receipt #1284" },
+      { kind: "row", label: "JUN 2026", text: "$50.00 — credit purchase · receipt #1201" },
+      { kind: "row", label: "MAY 2026", text: "$25.00 — credit purchase · receipt #1146" },
+    ],
+    body: "Every receipt is a row; in production each would drill to its PDF panel.",
+  },
+
+  "sec:pf-studio": {
+    panelType: "section", title: "The Studio.", eyebrow: "Studio · Platform",
+    subtitle: "The creative surfaces — a prompt composer, a realtime voice creator, an image grid and the prompt-card hub — each with its composer anchored where the grammar puts verbs: the foot.",
+    kpis: [{ v: "4", l: "surfaces" }, { v: "2", l: "foot composers" }, { v: "6", l: "ready prompts" }],
+    children: ["pf:prompt", "pf:realtime", "pf:images", "pf:hub"],
+  },
+  "pf:prompt": {
+    panelType: "pfprompt", title: "Prompt composer", eyebrow: "studio · prompts",
+    subtitle: "Model, reasoning and verbosity as segments; variables as chips; 'Ask anything' anchored in the foot.",
+    meta: "composer",
+  },
+  "pf:realtime": {
+    panelType: "pfrealtime", title: "Realtime creator", eyebrow: "studio · voice",
+    subtitle: "The centered creator: suggestion chips fill the draft, Create lives in the foot.",
+  },
+  "pf:images": {
+    panelType: "pfimages", title: "Images", eyebrow: "studio · images",
+    subtitle: "A generation grid with the describe-composer in the foot — every tile token-painted.",
+    meta: "grid",
+  },
+  "pf:hub": {
+    panelType: "pfhub", title: "Build hub", eyebrow: "studio · hub",
+    subtitle: "Six ready-to-paste agent missions — copy a prompt, or open it prefilled in the composer beside this panel.",
+    meta: "prompts",
   },
 };
 

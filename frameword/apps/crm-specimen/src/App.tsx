@@ -16,6 +16,7 @@ import { BlockLive } from "./BlockLive";
 import { ProfileBody, AvatarBubble, useProfile } from "./Profile";
 import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, FolderPanel, notesApp, useNotesApp } from "./NotesApp";
 import { DataHome, DataTable, DataRow, dataApp, useDataApp } from "./DataApp";
+import { PlatformBody, PlatformFoot, pfApp, usePfApp } from "./PlatformApp";
 import { NotifBell } from "./Notifications";
 import "flag-icons/css/flag-icons.min.css";
 
@@ -48,6 +49,23 @@ const REGISTRY: PanelRegistry = {
   tasks: { size: "XL" },
   note: { size: "M" },
   task: { size: "S" },
+  pfkeys: { size: "XL" },
+  pfkey: { size: "S" },
+  pfpeople: { size: "L" },
+  pfmember: { size: "S" },
+  pfprojects: { size: "L" },
+  pfproject: { size: "S" },
+  pfbilling: { size: "M" },
+  pflimits: { size: "M" },
+  pfusage: { size: "L" },
+  pfhealth: { size: "M" },
+  pfincident: { size: "S" },
+  pfcontrols: { size: "M" },
+  pfsecurity: { size: "M" },
+  pfprompt: { size: "L" },
+  pfrealtime: { size: "M" },
+  pfimages: { size: "L" },
+  pfhub: { size: "L" },
 };
 
 /* ── device-local preferences (the zip's Settings panel, and then some) ─ */
@@ -145,6 +163,10 @@ const titleOfKey = (key: string): string =>
         return String((ft && r?.v[ft.id]) || "Row");
       })()
     : key.startsWith("tsk:") ? (notesApp.task(key.slice(4))?.label || "Task")
+    : key.startsWith("pfk:") ? (pfApp.key(key.slice(4))?.name || "API key")
+    : key.startsWith("pfm:") ? (pfApp.member(key.slice(4))?.name || "Member")
+    : key.startsWith("pfp:") ? (pfApp.project(key.slice(4))?.name || "Project")
+    : key.startsWith("pfi:") ? (pfApp.get().incidents.find((i) => i.id === key.slice(4))?.title || "Incident")
     : key);
 
 export function App() {
@@ -170,6 +192,9 @@ function SpaceIcon({ id }: { id: string }) {
     case "reports": return (<svg {...c}><rect x="8" y="2" width="8" height="4" rx="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /></svg>);
     case "ana-overview": return (<svg {...c}><path d="m12 14 4-4" /><path d="M3.34 19a10 10 0 1 1 17.32 0" /></svg>);
     case "ana-revenue": return (<svg {...c}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>);
+    case "pf-tour": return (<svg {...c}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6" /><line x1="9" y1="3" x2="9" y2="18" /><line x1="15" y1="6" x2="15" y2="21" /></svg>);
+    case "pf-console": return (<svg {...c}><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>);
+    case "pf-studio": return (<svg {...c}><path d="M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M18.4 18.4l-2.1-2.1M12 18v3M7.7 16.3l-2.1 2.1M6 12H3M7.7 7.7 5.6 5.6" /><circle cx="12" cy="12" r="3.2" /></svg>);
     default: return (<svg {...c}><circle cx="12" cy="12" r="9" /></svg>);
   }
 }
@@ -181,6 +206,8 @@ function DashIcon({ id }: { id: string }) {
     return (<svg {...common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>);
   if (id === "analytics")
     return (<svg {...common}><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>);
+  if (id === "platform")
+    return (<svg {...common}><rect x="2" y="4" width="20" height="16" rx="2" /><polyline points="6 9 9 12 6 15" /><line x1="12" y1="15" x2="17" y2="15" /></svg>);
   return (<svg {...common}><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></svg>);
 }
 
@@ -315,6 +342,13 @@ function Shell() {
       }
       if (e.key !== "Escape") return;
       if (document.querySelector(".nf-menu")) return; // the notification bell closes itself
+      // an open in-panel popover (table menus, date pickers, cell flys…) always
+      // mounts a .pop-bg backdrop — Escape closes IT, never the panel behind it
+      const popBg = document.querySelector(".pop-bg");
+      if (popBg) {
+        popBg.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        return;
+      }
       if (palette) return setPalette(false);
       if (drawer) return setDrawer(false);
       if (navOpen || themeMenu || acctMenu || orgMenu) {
@@ -682,6 +716,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   if (!p) return null;
   useNotesApp(); // foot actions (pin state, counts) re-render with the notes store
   useDataApp(); // crumb/foot re-render with the data store
+  usePfApp(); // platform titles & foot state re-render with the platform store
   const bn = p.target.panelType === "canvasnode" ? board.node(p.target.resourceKey.slice(4)) : null;
   const be = p.target.panelType === "canvasedge" ? board.edge(p.target.resourceKey.slice(4)) : null;
   const nt = p.target.panelType === "note" ? notesApp.note(p.target.resourceKey.slice(4)) : null;
@@ -689,12 +724,17 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   const fd = p.target.panelType === "notefolder" ? notesApp.folder(p.target.resourceKey.slice(4)) : null;
   const dc = p.target.panelType === "datatable" ? dataApp.col(p.target.resourceKey.slice(4)) : null;
   const isDataRow = p.target.panelType === "datarow";
-  const n = DOMAIN[p.target.resourceKey] ?? {
+  const pfDyn = /^pf[kmpi]:/.test(p.target.resourceKey);
+  const n = DOMAIN[p.target.resourceKey] ?? (pfDyn ? {
+    panelType: p.target.panelType,
+    title: titleOfKey(p.target.resourceKey),
+    eyebrow: { pfkey: "console · key", pfmember: "console · member", pfproject: "console · project", pfincident: "console · incident" }[p.target.panelType],
+  } : {
     panelType: p.target.panelType,
     title: nt || tk || isDataRow ? "" : dc ? dc.name : fd ? fd.name : be ? (be.label || "Connection") : bn?.label ?? "Node",
     eyebrow: bn ? "canvas · " + bn.kind : be ? "canvas · link" : nt ? "note" : fd ? "folder" : tk ? "task" : dc ? "table" : isDataRow ? "page" : undefined,
     subtitle: dc ? dc.rows.length + " rows · filters, sort and search live in the toolbar." : bn?.sub,
-  };
+  });
   const isCanvas = p.target.panelType === "canvas";
   const isRef = p.placement === "reference";
   const isRoot = p.role === "root";
@@ -774,6 +814,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
             {p.target.panelType === "tasks" && <TasksRoot panelId={id} />}
             {p.target.panelType === "note" && <NoteEditor noteKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "notefolder" && <FolderPanel folderKey={p.target.resourceKey} panelId={id} />}
+            {p.target.panelType.startsWith("pf") && <PlatformBody panelType={p.target.panelType} resourceKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "datahome" && <DataHome panelId={id} />}
             {p.target.panelType === "datatable" && <DataTable colKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "datarow" && <DataRow rowKey={p.target.resourceKey} panelId={id} />}
@@ -880,6 +921,8 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
               {a.label}
             </button>
           ))
+        ) : p.target.panelType.startsWith("pf") ? (
+          <PlatformFoot panelType={p.target.panelType} resourceKey={p.target.resourceKey} panelId={id} closePanel={() => ws.closePanel(id)} />
         ) : isCanvas ? (
           <span className="foot-note">Canvas — click a node to inspect · drag a handle to connect</span>
         ) : p.target.panelType === "canvasnode" ? (
