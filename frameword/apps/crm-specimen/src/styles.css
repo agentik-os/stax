@@ -1035,13 +1035,10 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .sb-dash button.on { background: var(--accent-soft); border-color: color-mix(in oklab, var(--accent) 40%, var(--border)); color: var(--accent); }
 
 /* ── dedicated space menu — the sidebar mirrors the OPEN Space ── */
-.sb-back { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px 4px 6px; margin: 0 0 8px -2px; border-radius: 7px; font-size: calc(var(--fz-body, 13.5px) - 2px); font-weight: 500; color: var(--muted-foreground); }
-.sb-back:hover { background: var(--secondary); color: var(--foreground); }
-.sb-back svg { flex: none; }
-.sb-space-head { display: flex; align-items: center; gap: 4px; padding: 0 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
-.sb-space-head .sb-item.head { flex: 1; min-width: 0; font-weight: 600; color: var(--foreground); overflow: hidden; text-overflow: ellipsis; }
-.sb-space-head .sb-item.head svg { color: var(--ink-2); }
-.sb-space-head .sb-item.head:hover svg { color: var(--accent); }
+.sb-space-head { display: flex; align-items: center; gap: 2px; padding: 0 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.sb-backarrow { flex: none; width: 26px; height: 26px; border-radius: 7px; color: var(--muted-foreground); display: grid; place-items: center; }
+.sb-backarrow:hover { background: var(--secondary); color: var(--foreground); }
+.sb-space-head .sb-item.head { flex: 1; min-width: 0; font-weight: 600; color: var(--foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 6px; }
 .sb-collapse { flex: none; width: 28px; height: 28px; border-radius: 7px; color: var(--muted-foreground); display: grid; place-items: center; }
 .sb-collapse:hover { background: var(--secondary); color: var(--foreground); }
 .sb-collapse.on { color: var(--accent); background: var(--accent-soft); }

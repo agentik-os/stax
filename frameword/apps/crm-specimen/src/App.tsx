@@ -590,29 +590,30 @@ function Shell() {
              *    pattern): ‹ back to the dashboard, then this Space's own
              *    tree, deep-linkable, following the active thread. ── */
             <div className="sb-space">
-              <button className="sb-back" onClick={() => setSbView("dash")}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-                {activeDash.label}
-              </button>
               <div className="sb-space-head">
+                <button className="sb-backarrow" title={activeDash.label} aria-label={"Back — " + activeDash.label}
+                  onClick={() => setSbView("dash")}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
                 <button className="sb-item head" title="Focus the main panel"
                   onClick={() => {
                     setRootCollapsed(false);
                     if (ws.state.rootInstanceId) ws.focusPanel(ws.state.rootInstanceId);
                     document.querySelector(".stage")?.scrollTo({ left: 0, behavior: "smooth" });
                   }}>
-                  <SpaceIcon id={sbSpace.spaceId} />
                   {sbSpace.label}
                 </button>
-                <button className={"sb-collapse" + (rootCollapsed ? " on" : "")} aria-pressed={rootCollapsed}
-                  title={rootCollapsed ? "Show the main panel" : "Hide the main panel"}
-                  onClick={() => setRootCollapsed((v) => !v)}>
-                  {rootCollapsed ? (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /><path d="m14 9 3 3-3 3" /></svg>
-                  ) : (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /><path d="m16 15-3-3 3-3" /></svg>
-                  )}
-                </button>
+                {ws.path.length > 1 && (
+                  <button className={"sb-collapse" + (rootCollapsed ? " on" : "")} aria-pressed={rootCollapsed}
+                    title={rootCollapsed ? "Show the main panel" : "Hide the main panel"}
+                    onClick={() => setRootCollapsed((v) => !v)}>
+                    {rootCollapsed ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /><path d="m14 9 3 3-3 3" /></svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /><path d="m16 15-3-3 3-3" /></svg>
+                    )}
+                  </button>
+                )}
               </div>
               <nav className="sb-nav">
                 {(DOMAIN[sbSpace.rootKey]?.children ?? []).map((key, i) => {
