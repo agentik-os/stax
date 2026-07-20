@@ -18,7 +18,7 @@ export interface PfMember { id: string; name: string; email: string; role: "Owne
 export interface PfInvite { id: string; email: string; role: string; sent: string }
 export interface PfProject { id: string; name: string; pid: string; geo: string; retention: string; members: number; created: string; spend: number; archived?: boolean }
 export interface PfIncident { id: string; date: string; title: string; service: string; note: string }
-export interface PfRun { id: string; ts: string; model: string; text: string }
+export interface PfRun { id: string; ts: string; model: string; text: string; status: number; ms: number; tokens: number }
 export interface PfImage { id: string; hue: number; prompt: string }
 
 interface PfState {
@@ -36,6 +36,7 @@ interface PfState {
   runs: PfRun[];
   rtDraft: string; rtSaved: { id: string; text: string }[];
   images: PfImage[];
+  usageRange: "7d" | "30d";
   seq: number;
 }
 
@@ -80,7 +81,13 @@ const SEED: PfState = {
   controls: { ...CTRL_DEF }, controlsDraft: { ...CTRL_DEF },
   provider: null, ips: [], domains: ["stax.dev"],
   prompt: { model: "gpt-5.4-mini", reasoning: "standard", verbosity: "medium", store: true, text: "", vars: ["customer_name"] },
-  runs: [],
+  runs: [
+    { id: "r5", ts: "11:42", model: "gpt-5.4-mini", text: "Summarize the churn cohort for June and cite the three biggest drivers.", status: 200, ms: 1840, tokens: 412 },
+    { id: "r4", ts: "11:38", model: "gpt-5.4", text: "Draft the renewal email for Acme Industries in Jo's tone.", status: 200, ms: 2610, tokens: 388 },
+    { id: "r3", ts: "10:55", model: "gpt-5.4-mini", text: "Classify these 40 support tickets by product area.", status: 200, ms: 1190, tokens: 951 },
+    { id: "r2", ts: "10:12", model: "o4-mini", text: "Explain the spike in realtime-audio spend on Jul 15.", status: 429, ms: 240, tokens: 0 },
+    { id: "r1", ts: "09:30", model: "gpt-5.4-mini", text: "Generate the weekly pipeline digest.", status: 200, ms: 1505, tokens: 267 },
+  ],
   rtDraft: "", rtSaved: [],
   images: [
     { id: "g1", hue: 18, prompt: "Terracotta studio, morning light" },
@@ -90,21 +97,27 @@ const SEED: PfState = {
     { id: "g5", hue: 84, prompt: "Moss terrace, drone view" },
     { id: "g6", hue: 330, prompt: "Rose quartz still life" },
   ],
+  usageRange: "30d",
   seq: 9,
 };
 
 /* ── store (module pattern — let + Set + useSyncExternalStore) ───────── */
+const VER = 2; // bump when SEED's shape changes — stale snapshots are purged, never shallow-merged over
 function load(): PfState {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...SEED, ...JSON.parse(raw) };
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // freshKey never persists — "visible once" means once, not once per reload
+      if (parsed && parsed.v === VER) return { ...SEED, ...parsed.s, freshKey: null };
+    }
   } catch { /* fresh */ }
   return SEED;
 }
 let state: PfState = load();
 const subs = new Set<() => void>();
 const emit = () => {
-  localStorage.setItem(KEY, JSON.stringify(state));
+  localStorage.setItem(KEY, JSON.stringify({ v: VER, s: { ...state, freshKey: null } }));
   subs.forEach((f) => f());
 };
 const update = (fn: (s: PfState) => PfState) => { state = fn(state); emit(); };
@@ -133,12 +146,22 @@ export const pfApp = {
   revokeKey(id: string) { update((s) => ({ ...s, freshKey: s.freshKey === id ? null : s.freshKey, keys: s.keys.map((k) => (k.id === id ? { ...k, status: "revoked" as const } : k)) })); },
   removeKey(id: string) { update((s) => ({ ...s, keys: s.keys.filter((k) => k.id !== id) })); },
   renameKey(id: string, name: string) { update((s) => ({ ...s, keys: s.keys.map((k) => (k.id === id ? { ...k, name } : k)) })); },
-  invite() {
-    update((s) => ({ ...s, seq: s.seq + 1, invites: [...s.invites, { id: "i" + (s.seq + 1), email: "teammate" + (s.seq + 1) + "@stax.dev", role: "Member", sent: "today" }] }));
+  invite(email: string) {
+    const e = email.trim().toLowerCase();
+    if (!e.includes("@") || e.length < 5) return;
+    update((s) => (s.invites.some((i) => i.email === e) ? s : { ...s, seq: s.seq + 1, invites: [...s.invites, { id: "i" + (s.seq + 1), email: e, role: "Member", sent: "today" }] }));
   },
   cancelInvite(id: string) { update((s) => ({ ...s, invites: s.invites.filter((i) => i.id !== id) })); },
-  setRole(id: string, role: PfMember["role"]) { update((s) => ({ ...s, members: s.members.map((m) => (m.id === id ? { ...m, role } : m)) })); },
-  removeMember(id: string) { update((s) => ({ ...s, members: s.members.filter((m) => m.id !== id) })); },
+  soleOwner: (id: string) => state.members.filter((m) => m.role === "Owner").length === 1 && state.members.find((m) => m.id === id)?.role === "Owner",
+  setRole(id: string, role: PfMember["role"]) {
+    // the last Owner can never demote themself — the org would be ownerless
+    if (role !== "Owner" && pfApp.soleOwner(id)) return;
+    update((s) => ({ ...s, members: s.members.map((m) => (m.id === id ? { ...m, role } : m)) }));
+  },
+  removeMember(id: string) {
+    if (pfApp.soleOwner(id)) return;
+    update((s) => ({ ...s, members: s.members.filter((m) => m.id !== id) }));
+  },
   addProject(): string {
     const id = "p" + (state.seq + 1);
     update((s) => ({
@@ -172,8 +195,13 @@ export const pfApp = {
   addVar() { update((s) => ({ ...s, seq: s.seq + 1, prompt: { ...s.prompt, vars: [...s.prompt.vars, "var_" + (s.seq + 1)] } })); },
   removeVar(v: string) { update((s) => ({ ...s, prompt: { ...s.prompt, vars: s.prompt.vars.filter((x) => x !== v) } })); },
   run(text: string) {
-    update((s) => ({ ...s, seq: s.seq + 1, runs: [{ id: "r" + (s.seq + 1), ts: timeStamp(), model: s.prompt.model, text }, ...s.runs].slice(0, 8) }));
+    // deterministic telemetry — a run is a LOG ROW: it streams into the
+    // Console's Logs panel the moment it happens (cross-dashboard live store)
+    const ms = 400 + ((text.length * 37) % 2200);
+    const tokens = 60 + text.length * 3;
+    update((s) => ({ ...s, seq: s.seq + 1, runs: [{ id: "r" + (s.seq + 1), ts: timeStamp(), model: s.prompt.model, text, status: 200, ms, tokens }, ...s.runs].slice(0, 40) }));
   },
+  setUsageRange(r: "7d" | "30d") { update((s) => ({ ...s, usageRange: r })); },
   setRtDraft(t: string) { update((s) => ({ ...s, rtDraft: t })); },
   createRt() {
     if (!state.rtDraft.trim()) return;
@@ -265,7 +293,7 @@ function KeysTable({ panelId }: { panelId: string }) {
       {menu && (
         <div className="tt-menu" style={{ ...menu.pos, zIndex: 40 }}>
           <button className="tp-slot" onClick={() => { ws.openDetail(panelId, { panelType: "pfkey", resourceKey: "pfk:" + menu.id }); setMenu(null); }}>Open detail →</button>
-          <button className="tp-slot" onClick={() => { pfApp.rollKey(menu.id); setMenu(null); }}>Roll secret</button>
+          <button className="tp-slot" onClick={() => { pfApp.rollKey(menu.id); ws.openDetail(panelId, { panelType: "pfkey", resourceKey: "pfk:" + menu.id }); setMenu(null); }}>Roll secret</button>
           {pfApp.key(menu.id)?.status === "active"
             ? <button className="tp-slot danger" onClick={() => { pfApp.revokeKey(menu.id); setMenu(null); }}>Revoke key</button>
             : <button className="tp-slot danger" onClick={() => { pfApp.removeKey(menu.id); setMenu(null); }}>Delete key</button>}
@@ -363,6 +391,7 @@ function MemberDetail({ id }: { id: string }) {
       </div>
       <div className="pop-sub" style={{ marginTop: 14 }}>Role</div>
       <Seg items={["Owner", "Member", "Reader"]} value={m.role} onPick={(r) => pfApp.setRole(id, r as PfMember["role"])} />
+      {pfApp.soleOwner(id) && <div className="pf-hint" style={{ marginTop: 6 }}>The last Owner cannot be demoted or removed — promote someone else first.</div>}
       <div className="anat-row" style={{ marginTop: 12 }}><span className="k">JOINED</span><span className="t">{m.joined}</span></div>
       <div className="anat-row"><span className="k">ACCESS</span><span className="t">{m.role === "Owner" ? "Full — billing, keys, members" : m.role === "Member" ? "Build — keys and usage" : "Read — usage only"}</span></div>
       <Grammar text="pfmember · S 380. Role is a segmented choice, not a dropdown; removing the member is a foot action. The people list stays mounted on the left the whole time (Law 3)." />
@@ -526,26 +555,39 @@ const MODELS = [
   { name: "realtime-audio", v: 2.19, pct: 12 },
   { name: "embeddings-4", v: 1.25, pct: 7 },
 ];
-export function usageCsv(): string {
-  return "day,usd\n" + DAILY.map((v, i) => `${i + 1},${v.toFixed(2)}`).join("\n");
+const rangeSlice = (range: string) => (range === "7d" ? DAILY.slice(-7) : DAILY);
+// per-day derived telemetry — the KPI stats and the CSV follow the range, always
+const dayStats = (range: string) => {
+  const data = rangeSlice(range);
+  const sum = data.reduce((a, b) => a + b, 0);
+  return {
+    data, sum,
+    requests: Math.round(sum * 1780).toLocaleString("en-US"),
+    tokens: (sum * 0.79).toFixed(1) + "M",
+    images: Math.round(sum * 13.4),
+  };
+};
+export function usageCsv(range: string): string {
+  const data = rangeSlice(range);
+  return "day,usd\n" + data.map((v, i) => `${i + 1},${v.toFixed(2)}`).join("\n");
 }
 function UsageBody() {
-  const [range, setRange] = useState("30d");
-  const data = range === "7d" ? DAILY.slice(-7) : DAILY;
-  const total = data.reduce((a, b) => a + b, 0);
+  const s = usePfApp();
+  const range = s.usageRange;
+  const { data, sum: total, requests, tokens, images } = dayStats(range);
   const max = Math.max(...data);
   const W = 560, H = 120, gap = 3;
   const bw = (W - gap * (data.length - 1)) / data.length;
   return (
     <div>
       <div className="pf-toolbar">
-        <Seg items={["7d", "30d"]} value={range} onPick={setRange} />
+        <Seg items={["7d", "30d"]} value={range} onPick={(r) => pfApp.setUsageRange(r as "7d" | "30d")} />
         <span className="pf-count mono">{usd(total)} total</span>
       </div>
       <div className="stats">
-        <div className="stat"><div className="lab">requests</div><div className="val">41,218</div></div>
-        <div className="stat"><div className="lab">tokens</div><div className="val">18.4M</div></div>
-        <div className="stat"><div className="lab">images</div><div className="val">312</div></div>
+        <div className="stat"><div className="lab">requests</div><div className="val">{requests}</div></div>
+        <div className="stat"><div className="lab">tokens</div><div className="val">{tokens}</div></div>
+        <div className="stat"><div className="lab">images</div><div className="val">{images}</div></div>
       </div>
       <div className="pf-chart">
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-label="Daily spend">
@@ -795,7 +837,7 @@ function RealtimeBody() {
 /* ── Studio · Images (L grid + foot composer) ────────────────────────── */
 function ImagesBody() {
   const s = usePfApp();
-  const [size, setSize] = useState("1x");
+  const [size, setSize] = useState("1x"); // 1x/2x/4x = tile density
   return (
     <div>
       <div className="pf-toolbar">
@@ -803,7 +845,7 @@ function ImagesBody() {
         <Seg items={["1x", "2x", "4x"]} value={size} onPick={setSize} />
         <span className="pf-count">{s.images.length} generations</span>
       </div>
-      <div className="pf-grid">
+      <div className={"pf-grid d" + size.replace("x", "")}>
         {s.images.map((im) => (
           <figure key={im.id} className="pf-tile">
             <svg viewBox="0 0 100 76" preserveAspectRatio="none" aria-label={im.prompt}>
@@ -887,6 +929,65 @@ function HubBody({ panelId }: { panelId: string }) {
   );
 }
 
+/* ── Console · Logs (XL) — fed live by the Studio composer's runs ────── */
+function LogsBody({ panelId }: { panelId: string }) {
+  const s = usePfApp();
+  const ws = useWorkspace();
+  const [flt, setFlt] = useState("All");
+  const rows = s.runs.filter((r) => flt === "All" || (flt === "OK") === (r.status < 400));
+  return (
+    <div>
+      <div className="pf-toolbar">
+        <Seg items={["All", "OK", "Errors"]} value={flt} onPick={setFlt} />
+        <span className="pf-count">{rows.length} {rows.length === 1 ? "request" : "requests"}</span>
+      </div>
+      {rows.length === 0 ? (
+        <EmptyState glyph={<><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /><path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2" /><line x1="4" y1="12" x2="20" y2="12" /></>}
+          title="No requests match" text="Run something in the Studio composer — it lands here the moment it returns." cta="Show all" onCta={() => setFlt("All")} />
+      ) : (
+        <div className="pf-scroll">
+          <table className="pf-tbl">
+            <thead><tr><th>Time</th><th>Model</th><th>Status</th><th className="num">Tokens</th><th className="num">Latency</th><th>Prompt</th></tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} onClick={() => ws.openDetail(panelId, { panelType: "pflog", resourceKey: "pfl:" + r.id })}>
+                  <td className="mono">{r.ts}</td>
+                  <td className="mono">{r.model}</td>
+                  <td><Pill on={r.status < 400}>{r.status}</Pill></td>
+                  <td className="num mono">{r.tokens.toLocaleString("en-US")}</td>
+                  <td className="num mono">{(r.ms / 1000).toFixed(2)}s</td>
+                  <td className="pf-trunc">{r.text}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <Grammar text="pflogs · XL 800. The Logs page the console copy promised — fed LIVE by the Studio composer's runs store: fire a prompt in the other dashboard and the row appears here. One store, two dashboards, zero sync code — that is the module-store pattern." />
+    </div>
+  );
+}
+
+function LogDetail({ id }: { id: string }) {
+  const s = usePfApp();
+  const r = s.runs.find((x) => x.id === id);
+  if (!r) return <div className="leaf-note">This request rotated out of the log window.</div>;
+  return (
+    <div>
+      <div className="anat-row"><span className="k">TIME</span><span className="t mono">{r.ts}</span></div>
+      <div className="anat-row"><span className="k">MODEL</span><span className="t mono">{r.model}</span></div>
+      <div className="anat-row"><span className="k">STATUS</span><span className="t"><Pill on={r.status < 400}>{r.status}</Pill></span></div>
+      <div className="anat-row"><span className="k">TOKENS</span><span className="t mono">{r.tokens.toLocaleString("en-US")}</span></div>
+      <div className="anat-row"><span className="k">LATENCY</span><span className="t mono">{(r.ms / 1000).toFixed(2)}s</span></div>
+      <div className="section">
+        <div className="lab">Prompt</div>
+        <div className="leaf-note">{r.text}</div>
+      </div>
+      <Grammar text="pflog · S 380 — the request inspector. A log row opened beside its table; in production this panel would carry the full request/response pair and a re-run foot action." />
+    </div>
+  );
+}
+
 /* ── entry points for the Panel shell ────────────────────────────────── */
 export function PlatformBody({ panelType, resourceKey, panelId }: { panelType: string; resourceKey: string; panelId: string }) {
   usePfApp();
@@ -903,6 +1004,8 @@ export function PlatformBody({ panelType, resourceKey, panelId }: { panelType: s
     case "pfusage": return <UsageBody />;
     case "pfhealth": return <HealthBody panelId={panelId} />;
     case "pfincident": return <IncidentDetail id={id} />;
+    case "pflogs": return <LogsBody panelId={panelId} />;
+    case "pflog": return <LogDetail id={id} />;
     case "pfcontrols": return <ControlsBody />;
     case "pfsecurity": return <SecurityBody />;
     case "pfprompt": return <PromptBody />;
@@ -945,7 +1048,7 @@ export function PlatformFoot({ panelType, resourceKey, panelId, closePanel }: { 
         : <button className="d-btn destructive sm" onClick={() => { pfApp.removeKey(id); closePanel(); }}>{trash} Delete key</button>;
     }
     case "pfpeople":
-      return <button className="foot-cta" onClick={() => pfApp.invite()}>{plus} Invite member</button>;
+      return <ComposerFoot placeholder="teammate@company.com" cta="Invite" onRun={(t) => pfApp.invite(t)} />;
     case "pfmember": {
       const m = s.members.find((x) => x.id === id);
       if (!m) return <span className="foot-note">Member removed</span>;
@@ -968,8 +1071,8 @@ export function PlatformFoot({ panelType, resourceKey, panelId, closePanel }: { 
       return (
         <button className="d-btn outline sm" onClick={() => {
           const a = document.createElement("a");
-          a.href = URL.createObjectURL(new Blob([usageCsv()], { type: "text/csv" }));
-          a.download = "stax-usage.csv";
+          a.href = URL.createObjectURL(new Blob([usageCsv(pfApp.get().usageRange)], { type: "text/csv" }));
+          a.download = "stax-usage-" + pfApp.get().usageRange + ".csv";
           a.click();
           URL.revokeObjectURL(a.href);
         }}>
@@ -979,6 +1082,12 @@ export function PlatformFoot({ panelType, resourceKey, panelId, closePanel }: { 
     case "pfhealth":
       return <span className="foot-note">Live status — read-only</span>;
     case "pfincident":
+      return <span className="foot-note">Read-only</span>;
+    case "pflogs":
+      return <button className="d-btn outline sm" onClick={() => ws.openDetail(panelId, { panelType: "pfprompt", resourceKey: "pf:prompt" })}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg> Open the composer
+      </button>;
+    case "pflog":
       return <span className="foot-note">Read-only</span>;
     case "pfcontrols":
       return <button className="foot-cta" disabled={!pfApp.controlsDirty()} onClick={() => pfApp.saveControls()}>

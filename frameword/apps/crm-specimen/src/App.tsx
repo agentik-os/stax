@@ -60,6 +60,8 @@ const REGISTRY: PanelRegistry = {
   pfusage: { size: "L" },
   pfhealth: { size: "M" },
   pfincident: { size: "S" },
+  pflogs: { size: "XL" },
+  pflog: { size: "S" },
   pfcontrols: { size: "M" },
   pfsecurity: { size: "M" },
   pfprompt: { size: "L" },
@@ -167,6 +169,7 @@ const titleOfKey = (key: string): string =>
     : key.startsWith("pfm:") ? (pfApp.member(key.slice(4))?.name || "Member")
     : key.startsWith("pfp:") ? (pfApp.project(key.slice(4))?.name || "Project")
     : key.startsWith("pfi:") ? (pfApp.get().incidents.find((i) => i.id === key.slice(4))?.title || "Incident")
+    : key.startsWith("pfl:") ? (() => { const r = pfApp.get().runs.find((x) => x.id === key.slice(4)); return r ? r.model + " · " + r.ts : "Request"; })()
     : key);
 
 export function App() {
@@ -320,6 +323,7 @@ function Shell() {
     if (key.startsWith("pfm:")) return pfApp.member(key.slice(4)) ? { spaceId: "pf-console", targets: [t("section", "sec:pf-console"), t("pfpeople", "pf:people"), t("pfmember", key)] } : null;
     if (key.startsWith("pfp:")) return pfApp.project(key.slice(4)) ? { spaceId: "pf-console", targets: [t("section", "sec:pf-console"), t("pfprojects", "pf:projects"), t("pfproject", key)] } : null;
     if (key.startsWith("pfi:")) return pfApp.get().incidents.some((i) => i.id === key.slice(4)) ? { spaceId: "pf-console", targets: [t("section", "sec:pf-console"), t("pfhealth", "pf:health"), t("pfincident", key)] } : null;
+    if (key.startsWith("pfl:")) return pfApp.get().runs.some((r) => r.id === key.slice(4)) ? { spaceId: "pf-console", targets: [t("section", "sec:pf-console"), t("pflogs", "pf:logs"), t("pflog", key)] } : null;
     return null;
   };
 
@@ -782,12 +786,12 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string, fr
   const fd = p.target.panelType === "notefolder" ? notesApp.folder(p.target.resourceKey.slice(4)) : null;
   const dc = p.target.panelType === "datatable" ? dataApp.col(p.target.resourceKey.slice(4)) : null;
   const isDataRow = p.target.panelType === "datarow";
-  const pfDyn = /^pf[kmpi]:/.test(p.target.resourceKey);
+  const pfDyn = /^pf[kmpil]:/.test(p.target.resourceKey);
   const n = DOMAIN[p.target.resourceKey] ?? (pfDyn ? {
     panelType: p.target.panelType,
     // pfkey/pfproject render their own inline-edit name, pfmember its id card — no double title
-    title: p.target.panelType === "pfincident" ? titleOfKey(p.target.resourceKey) : "",
-    eyebrow: { pfkey: "console · key", pfmember: "console · member", pfproject: "console · project", pfincident: "console · incident" }[p.target.panelType],
+    title: ["pfincident", "pflog"].includes(p.target.panelType) ? titleOfKey(p.target.resourceKey) : "",
+    eyebrow: { pfkey: "console · key", pfmember: "console · member", pfproject: "console · project", pfincident: "console · incident", pflog: "console · request" }[p.target.panelType],
   } : {
     panelType: p.target.panelType,
     title: nt || tk || isDataRow ? "" : dc ? dc.name : fd ? fd.name : be ? (be.label || "Connection") : bn?.label ?? "Node",

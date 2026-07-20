@@ -1000,6 +1000,9 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .pf-sugg.on { background: var(--accent-soft); border-color: color-mix(in oklab, var(--accent) 45%, var(--border)); color: var(--accent); }
 .pf-modelchip { border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px; font-size: calc(var(--fz-mono, 10px) * 1.05); color: var(--ink-2); background: var(--secondary); }
 .pf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.pf-grid.d2 { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.pf-grid.d4 { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+.pf-trunc { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
 .pf-tile { margin: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--card); }
 .pf-tile svg { width: 100%; aspect-ratio: 4 / 3; display: block; }
 .pf-tile figcaption { padding: 7px 9px; font-size: calc(var(--fz-body, 13.5px) - 2.5px); color: var(--muted-foreground); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

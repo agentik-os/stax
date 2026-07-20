@@ -646,8 +646,8 @@ export const DOMAIN: Record<string, DomainNode> = {
   "sec:pf-console": {
     panelType: "section", title: "The Console.", eyebrow: "Console · Platform",
     subtitle: "An organization console rebuilt panel-first — every row below is a live, functional surface; every 'page' of the original is a sibling panel here.",
-    kpis: [{ v: "9", l: "surfaces" }, { v: "4", l: "live tables" }, { v: "100%", l: "functional" }],
-    children: ["pf:keys", "pf:people", "pf:projects", "pf:billing", "pf:limits", "pf:usage", "pf:health", "pf:controls", "pf:security"],
+    kpis: [{ v: "10", l: "surfaces" }, { v: "5", l: "live tables" }, { v: "100%", l: "functional" }],
+    children: ["pf:keys", "pf:people", "pf:projects", "pf:billing", "pf:limits", "pf:usage", "pf:logs", "pf:health", "pf:controls", "pf:security"],
   },
   "pf:keys": {
     panelType: "pfkeys", title: "API keys", eyebrow: "console · keys",
@@ -677,6 +677,11 @@ export const DOMAIN: Record<string, DomainNode> = {
     panelType: "pfusage", title: "Usage", eyebrow: "console · usage",
     subtitle: "Daily spend chart, KPI stats and the by-model breakdown — Export downloads a real CSV.",
     meta: "chart",
+  },
+  "pf:logs": {
+    panelType: "pflogs", title: "Logs", eyebrow: "console · logs",
+    subtitle: "Every request the Studio composer fires, streamed live from the shared store — a row opens its inspector.",
+    meta: "live",
   },
   "pf:health": {
     panelType: "pfhealth", title: "Service health", eyebrow: "console · health",
