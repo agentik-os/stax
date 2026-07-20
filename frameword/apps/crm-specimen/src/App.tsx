@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, lazy, Suspense, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { PanelInstance, PanelTarget } from "@frameword/panels-core";
 import {
   WorkspaceProvider,
@@ -11,14 +11,19 @@ import {
 import { DOMAIN, SPACES, DASHBOARDS, dashboardOfSpace, chainOf, spaceOf } from "./domain";
 import { ComponentDemo } from "./ComponentDemo";
 import { BlockDemo } from "./BlockDemo";
-import { CanvasBoard, NodeInspector, EdgeInspector, board, boardFromPrompt } from "./CanvasBoard";
+import { board, boardFromPrompt } from "./boardStore";
+// the canvas renderer (React Flow + dagre) loads lazily — it is the heaviest
+// module in the app and only two panel types ever need it
+const CanvasBoard = lazy(() => import("./CanvasBoard").then((m) => ({ default: m.CanvasBoard })));
+const NodeInspector = lazy(() => import("./CanvasBoard").then((m) => ({ default: m.NodeInspector })));
+const EdgeInspector = lazy(() => import("./CanvasBoard").then((m) => ({ default: m.EdgeInspector })));
 import { BlockLive } from "./BlockLive";
 import { ProfileBody, AvatarBubble, useProfile } from "./Profile";
 import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, FolderPanel, notesApp, useNotesApp } from "./NotesApp";
 import { DataHome, DataTable, DataRow, dataApp, useDataApp } from "./DataApp";
 import { PlatformBody, PlatformFoot, pfApp, usePfApp } from "./PlatformApp";
 import { NotifBell } from "./Notifications";
-import "flag-icons/css/flag-icons.min.css";
+import { Flag } from "./Flags";
 
 /* ── registry : width belongs to the KIND, not the user ──────────────── */
 const REGISTRY: PanelRegistry = {
@@ -243,6 +248,14 @@ function Shell() {
   const [palette, setPalette] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [theme, setThemeState] = useState<string>(() => localStorage.getItem("frameword-theme") ?? "system");
+
+  // FIRST RUN — a brand-new visitor (no snapshot, no deep link) should see the
+  // mechanic immediately, not an empty stage
+  useEffect(() => {
+    if (!ws.state.rootInstanceId && !location.hash && localStorage.getItem("frameword-crm") === null)
+      ws.openSpace("overview", targetOf("sec:overview"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const say = (msg: string) => {
     setToast(msg);
@@ -502,6 +515,21 @@ function Shell() {
       <div className="mid">
         {compact && sbOpen && <div className="sb-backdrop" onClick={() => setSbOpen(false)} />}
         <aside className={"sidebar" + (sbOpen ? "" : " closed") + (compact ? " overlay" : "")} aria-label="Spaces">
+          {compact && (
+            <div className="sb-dash" role="tablist" aria-label="Dashboards">
+              {DASHBOARDS.map((d) => (
+                <button key={d.id} className={dash === d.id ? "on" : ""} title={d.label} role="tab" aria-selected={dash === d.id}
+                  onClick={() => {
+                    setDash(d.id);
+                    const first = d.groups[0].spaces[0];
+                    ws.openSpace(first.spaceId, targetOf(first.rootKey));
+                  }}>
+                  <DashIcon id={d.id} />
+                  <span>{d.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
           <div style={{ position: "relative" }}>
             <button className="sb-head" onClick={() => setOrgMenu((v) => !v)} aria-expanded={orgMenu}>
               <span className="sb-logo"><OrgIcon id={org.id} inverted /></span>
@@ -608,13 +636,13 @@ function Shell() {
                     <button className="menu-item" onClick={() => { setAcctMenu(false); say("Docs — see PROMPT-KIT.md"); }}>Documentation</button>
                     <div className="menu-sep" />
                     <button className="menu-item" onClick={() => setLangMenu((v) => !v)} aria-expanded={langMenu}>
-                      <span className={"fi fi-" + (LANGS.find((l) => l.id === prefs.lang)?.flag ?? "gb")} style={{ borderRadius: 3, fontSize: 13 }} />
+                      <span className="flag"><Flag id={LANGS.find((l) => l.id === prefs.lang)?.flag ?? "gb"} /></span>
                       <span style={{ flex: 1 }}>Language</span>
                     </button>
                     {langMenu && LANGS.map((l) => (
                       <button key={l.id} className={"menu-item lang-item" + (prefs.lang === l.id ? " on" : "")}
                         onClick={() => { setPrefs({ lang: l.id }); setLangMenu(false); say("Language — " + l.label); }}>
-                        <span className={"fi fi-" + l.flag} style={{ borderRadius: 3, fontSize: 13 }} />
+                        <span className="flag"><Flag id={l.flag} /></span>
                         <span style={{ flex: 1 }}>{l.label}</span>
                         {prefs.lang === l.id && <span style={{ color: "var(--accent)", fontSize: 11 }}>✓</span>}
                       </button>
@@ -751,6 +779,8 @@ function PushHost({ deepLink }: { deepLink: (k: string, fromRefId?: string) => v
           <div className="stage-empty" style={{ margin: "auto" }}>
             <div className="glyph"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="8" height="16" rx="2" /><rect x="14" y="4" width="7" height="16" rx="2" opacity="0.45" /></svg></div>
             <b>Open a space to begin.</b>
+            <br />
+            Pick a space from the sidebar — or search everything with GO TO.
           </div>
         </div>
       </div>
@@ -850,7 +880,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string, fr
       </div>
 
       <div className="panel-body" style={isCanvas ? { padding: 0, overflow: "hidden" } : undefined}>
-        {isCanvas && <CanvasBoard panelId={id} />}
+        {isCanvas && <Suspense fallback={<div className="leaf-note">Loading the canvas…</div>}><CanvasBoard panelId={id} /></Suspense>}
         {!isCanvas && (n.title !== "" || isRef) && <h2 className="panel-title" onClick={isRef ? () => deepLink(p.target.resourceKey, id) : undefined}
           style={isRef ? { cursor: "pointer" } : undefined}
           title={isRef ? "Reopen this thread" : undefined}>{n.title || titleOfKey(p.target.resourceKey)}</h2>}
@@ -872,8 +902,8 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string, fr
             {p.target.panelType === "component" && <ComponentDemo name={n.title} />}
             {p.target.panelType === "settings" && <SettingsBody />}
             {p.target.panelType === "block" && <BlockDemo name={p.target.resourceKey} />}
-            {p.target.panelType === "canvasnode" && <NodeInspector nodeKey={p.target.resourceKey} panelId={id} />}
-            {p.target.panelType === "canvasedge" && <EdgeInspector edgeKey={p.target.resourceKey} panelId={id} />}
+            {p.target.panelType === "canvasnode" && <Suspense fallback={<div className="leaf-note">Loading…</div>}><NodeInspector nodeKey={p.target.resourceKey} panelId={id} /></Suspense>}
+            {p.target.panelType === "canvasedge" && <Suspense fallback={<div className="leaf-note">Loading…</div>}><EdgeInspector edgeKey={p.target.resourceKey} panelId={id} /></Suspense>}
             {p.target.panelType === "blocklive" && <BlockLive name={p.target.resourceKey} />}
             {p.target.panelType === "profile" && <ProfileBody />}
             {p.target.panelType === "notes" && <NotesRoot panelId={id} />}
@@ -1271,6 +1301,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
   setTheme: (m: string) => void;
 }) {
   const ws = useWorkspace();
+  useNotesApp(); useDataApp(); usePfApp(); // live rows/notes/keys stay searchable
   const [q, setQ] = useState("");
   const [sel, setSel] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -1283,6 +1314,27 @@ function Palette({ onClose, deepLink, say, setTheme }: {
     for (const [key, n] of Object.entries(DOMAIN))
       if (n.panelType !== "space")
         out.push({ tag: n.panelType, label: n.title, run: () => deepLink(key) });
+    // LIVE content — the palette searches the stores, not just the docs
+    for (const nt of notesApp.get().notes)
+      out.push({ tag: "note", label: nt.title || "Untitled note", run: () => deepLink("nte:" + nt.id) });
+    for (const fd of notesApp.get().folders ?? [])
+      out.push({ tag: "folder", label: fd.name, run: () => deepLink("nfd:" + fd.id) });
+    for (const tk of notesApp.get().tasks)
+      out.push({ tag: "task", label: tk.label, run: () => deepLink("tsk:" + tk.id) });
+    for (const c of dataApp.get().collections) {
+      out.push({ tag: "table", label: c.name, run: () => deepLink("dtc:" + c.id) });
+      const ft = c.fields.find((f) => f.type === "text");
+      for (const r of c.rows) {
+        const label = String((ft && r.v[ft.id]) || "").trim();
+        if (label) out.push({ tag: "row", label: label + " — " + c.name, run: () => deepLink("dtr:" + c.id + ":" + r.id) });
+      }
+    }
+    for (const k of pfApp.get().keys)
+      out.push({ tag: "api key", label: k.name, run: () => deepLink("pfk:" + k.id) });
+    for (const pj of pfApp.get().projects)
+      out.push({ tag: "project", label: pj.name, run: () => deepLink("pfp:" + pj.id) });
+    for (const m of pfApp.get().members)
+      out.push({ tag: "member", label: m.name, run: () => deepLink("pfm:" + m.id) });
     out.push({ tag: "action", label: "Copy stack link", run: () => { navigator.clipboard?.writeText(location.href); say("Stack link copied"); } });
     out.push({ tag: "action", label: "Toggle sidebar — ⌘B", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true })) });
     out.push({ tag: "action", label: "Open Settings", run: () => ws.openSpace("settings", targetOf("sys:settings")) });

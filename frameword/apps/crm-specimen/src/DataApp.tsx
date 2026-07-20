@@ -7,7 +7,7 @@
  */
 import { useState, useSyncExternalStore } from "react";
 import { useWorkspace } from "@frameword/panels-react";
-import { RichNotes } from "./CanvasBoard";
+import { RichNotes } from "./RichNotes";
 import { DatePicker, popPos } from "./NotesApp";
 
 /* ── model ───────────────────────────────────────────────────────────── */

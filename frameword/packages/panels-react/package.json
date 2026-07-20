@@ -1,12 +1,23 @@
 {
   "name": "@frameword/panels-react",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "description": "React bindings for the Stax panel workspace — provider, intent hooks, registry widths, URL/history/storage sync. Bindings only; the rendering layer lives in your app.",
+  "license": "MIT",
   "type": "module",
-  "main": "src/index.tsx",
-  "types": "src/index.tsx",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.tsx"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
+  "files": ["dist", "src", "LICENSE"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "repository": { "type": "git", "url": "git+https://github.com/agentik-os/stax.git", "directory": "frameword/packages/panels-react" },
+  "keywords": ["react", "panels", "miller-columns", "workspace", "ux", "stax"],
   "dependencies": {
     "@frameword/panels-core": "workspace:*"
   },
@@ -15,6 +26,7 @@
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
-    "react": "^18.3.1"
+    "react": "^18.3.1",
+    "typescript": "^5.6.0"
   }
 }

@@ -1,0 +1,16 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frameword } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run build:packages
+      - run: bun test packages/panels-core packages/stax-migrate
+      - run: cd apps/crm-specimen && bunx tsc --noEmit
+      - run: bun run build

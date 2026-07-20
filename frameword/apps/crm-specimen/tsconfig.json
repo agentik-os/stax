@@ -1,14 +1,30 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@frameword/panels-core": [
+        "../../packages/panels-core/src/index.ts"
+      ],
+      "@frameword/panels-react": [
+        "../../packages/panels-react/src/index.tsx"
+      ]
+    }
   },
-  "include": ["src", "../../packages/panels-core/src", "../../packages/panels-react/src"]
+  "include": [
+    "src",
+    "../../packages/panels-core/src",
+    "../../packages/panels-react/src"
+  ]
 }

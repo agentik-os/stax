@@ -4,7 +4,7 @@
  * explains how it plugs into the panel framework (lives / drill / state / size).
  */
 import { useRef, useState, type ReactNode } from "react";
-import { RichNotes } from "./CanvasBoard";
+import { RichNotes } from "./RichNotes";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TTImage from "@tiptap/extension-image";

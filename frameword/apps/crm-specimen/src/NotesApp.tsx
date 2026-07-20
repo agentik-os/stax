@@ -10,7 +10,7 @@ import { useWorkspace } from "@frameword/panels-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import { RichNotes } from "./CanvasBoard";
+import { RichNotes } from "./RichNotes";
 
 /* ── shared store ────────────────────────────────────────────────────── */
 export type Prio = "low" | "med" | "high";
