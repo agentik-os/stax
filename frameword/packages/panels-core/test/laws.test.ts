@@ -203,6 +203,19 @@ describe("pinned ROOT — a pin outlives its Space, the root included", () => {
     expect(refKeys(s).sort()).toEqual(["accounts", "jo"]);
     expect(validate(s)).toEqual([]);
   });
+  test("RELOAD CONTRACT: reconciling a URL location on top of a snapshot keeps the rail", () => {
+    // the URL encodes only the ContextPath — restoring must never rebuild from
+    // empty, or every pin dies on reload and the persist clobbers the snapshot
+    let s = crmChain();
+    s = pinPanel(s, s.contextLeafId!);
+    s = openDetail(s, getContextPath(s)[1], T("contact", "max")); // jo → rail
+    const loc = decodeLocation(encodeLocation(s));
+    const restored = reconcileLocation(s, loc!);
+    expect(refKeys(restored)).toEqual(["jo"]);                    // pins survive
+    expect(keys(restored)).toEqual(keys(s));                      // path identical
+    expect(Object.keys(restored.panelsById).length).toBe(Object.keys(s.panelsById).length); // reveal, never duplicate
+    expect(validate(restored)).toEqual([]);
+  });
   test("duplicate guard: a rail reference for the same target wins over a detaching root", () => {
     let s = openSpace(emptyWorkspace(), "crm", T("space", "accounts"));
     s = pinPanel(s, s.rootInstanceId!);

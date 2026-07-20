@@ -820,6 +820,11 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .crumb-theme { flex: none; width: 24px; height: 24px; margin-right: -8px; border: none; background: transparent; border-radius: 6px; color: var(--muted-foreground); display: grid; place-items: center; align-self: center; }
 .crumb-theme:hover { color: var(--foreground); background: var(--secondary); }
 
+/* compact ref-chip remove button */
+.ref-chip { display: inline-flex; align-items: center; gap: 6px; }
+.ref-x { flex: none; width: 16px; height: 16px; border-radius: 4px; color: inherit; opacity: 0.65; font-size: 13px; line-height: 1; display: inline-grid; place-items: center; }
+.ref-x:hover { opacity: 1; background: color-mix(in oklab, currentColor 14%, transparent); }
+
 /* transient notices live IN the crumbbar (right, beside the theme icon) — never a floating pill over the UI */
 .crumb-toast { flex: none; align-self: center; margin-right: 6px; padding: 3px 10px 2.5px; border-radius: 6px; background: var(--secondary); color: var(--foreground); font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.0); letter-spacing: 0.05em; line-height: 1.4; white-space: nowrap; animation: fadeIn 140ms var(--ease); }
 

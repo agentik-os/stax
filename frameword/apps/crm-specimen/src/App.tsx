@@ -171,7 +171,7 @@ const titleOfKey = (key: string): string =>
 
 export function App() {
   return (
-    <WorkspaceProvider registry={REGISTRY} urlSync storageKey="frameword-crm">
+    <WorkspaceProvider registry={REGISTRY} urlSync="push" storageKey="frameword-crm">
       <Shell />
     </WorkspaceProvider>
   );
@@ -297,11 +297,45 @@ function Shell() {
     return () => sys.removeEventListener("change", apply);
   }, [theme]);
 
-  const deepLink = (key: string) => {
+  /* dynamic (store-owned) resources live outside DOMAIN — resolve their opening
+   * path here: owning system space root → container → the resource itself */
+  const dynamicPath = (key: string): { spaceId: string; targets: PanelTarget[] } | null => {
+    const t = (panelType: string, resourceKey: string): PanelTarget => ({ panelType, resourceKey });
+    if (key.startsWith("nte:")) {
+      const note = notesApp.note(key.slice(4));
+      if (!note) return null;
+      const targets = [t("notes", "sec:notes")];
+      if (note.folder) targets.push(t("notefolder", "nfd:" + note.folder));
+      targets.push(t("note", key));
+      return { spaceId: "notes", targets };
+    }
+    if (key.startsWith("nfd:")) return notesApp.folder(key.slice(4)) ? { spaceId: "notes", targets: [t("notes", "sec:notes"), t("notefolder", key)] } : null;
+    if (key.startsWith("tsk:")) return notesApp.task(key.slice(4)) ? { spaceId: "tasks", targets: [t("tasks", "sec:tasks"), t("task", key)] } : null;
+    if (key.startsWith("dtc:")) return dataApp.col(key.slice(4)) ? { spaceId: "data", targets: [t("datahome", "sec:data"), t("datatable", key)] } : null;
+    if (key.startsWith("dtr:")) {
+      const [, cid] = key.split(":");
+      return dataApp.col(cid) ? { spaceId: "data", targets: [t("datahome", "sec:data"), t("datatable", "dtc:" + cid), t("datarow", key)] } : null;
+    }
+    if (key.startsWith("pfk:")) return pfApp.key(key.slice(4)) ? { spaceId: "pf-console", targets: [t("section", "sec:pf-console"), t("pfkeys", "pf:keys"), t("pfkey", key)] } : null;
+    if (key.startsWith("pfm:")) return pfApp.member(key.slice(4)) ? { spaceId: "pf-console", targets: [t("section", "sec:pf-console"), t("pfpeople", "pf:people"), t("pfmember", key)] } : null;
+    if (key.startsWith("pfp:")) return pfApp.project(key.slice(4)) ? { spaceId: "pf-console", targets: [t("section", "sec:pf-console"), t("pfprojects", "pf:projects"), t("pfproject", key)] } : null;
+    if (key.startsWith("pfi:")) return pfApp.get().incidents.some((i) => i.id === key.slice(4)) ? { spaceId: "pf-console", targets: [t("section", "sec:pf-console"), t("pfhealth", "pf:health"), t("pfincident", key)] } : null;
+    return null;
+  };
+
+  const SYS_ROOTS = ["sec:canvas", "sec:data", "sec:notes", "sec:tasks", "sys:profile", "sys:settings"];
+  const deepLink = (key: string, fromRefId?: string) => {
     const sp = spaceOf(key);
+    const dyn = !sp && !DOMAIN[key] ? dynamicPath(key) : null;
     if (sp) ws.openPath(sp.spaceId, chainOf(key).map(targetOf));
     /* nodes living outside every dashboard (sys:settings, sec:canvas) open as their own space */
     else if (DOMAIN[key]) ws.openSpace(key.replace(/^\w+:/, ""), targetOf(key));
+    else if (dyn) ws.openPath(dyn.spaceId, dyn.targets);
+    else return;
+    // resuming a SPACE-ROOT reference consumes it — the reopened Space IS the
+    // reference; keeping both would show the same Space twice side-by-side.
+    // Detail references keep their stay-in-rail semantics.
+    if (fromRefId && (sp?.rootKey === key || SYS_ROOTS.includes(key))) ws.closePanel(fromRefId);
   };
 
   /* Escape precedence : palette → drawer → menus → active panel */
@@ -327,6 +361,16 @@ function Shell() {
         if (o) { e.preventDefault(); setOrg(o); say(`Switched to ${o.name}`); }
         return;
       }
+      // [ / ] move panel focus along the thread — the ‹ › bar buttons, on keys
+      if (!e.metaKey && !e.ctrlKey && !e.altKey && (e.key === "[" || e.key === "]")) {
+        const t = e.target as HTMLElement | null;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+        const cur = ws.state.focusedPanelId ?? ws.state.contextLeafId ?? "";
+        const i = ws.path.indexOf(cur);
+        const j = e.key === "[" ? i - 1 : i + 1;
+        if (i !== -1 && j >= 0 && j < ws.path.length) { e.preventDefault(); ws.focusPanel(ws.path[j]); }
+        return;
+      }
       // P pins the focused panel — keep it across pages (skip while typing)
       if (!e.metaKey && !e.ctrlKey && !e.altKey && e.key.toLowerCase() === "p") {
         const t = e.target as HTMLElement | null;
@@ -337,7 +381,7 @@ function Shell() {
           e.preventDefault();
           const on = fp.role === "root" ? !!fp.pinned : fp.retention === "retained";
           if (on) { ws.unpinPanel(fid!); say("Unpinned"); }
-          else { ws.pinPanel(fid!); say(fp.role === "root" ? "Pinned — this Space survives switches" : "Pinned — survives every page"); }
+          else { ws.pinPanel(fid!); say(fp.role === "root" ? "Pinned — this root rides the rail across switches" : "Pinned — survives every page"); }
         }
         return;
       }
@@ -623,7 +667,7 @@ function Shell() {
 
 /* ═══ ColumnHost — the stage ══════════════════════════════════════════ */
 
-function ColumnHost({ deepLink }: { deepLink: (k: string) => void }) {
+function ColumnHost({ deepLink }: { deepLink: (k: string, fromRefId?: string) => void }) {
   const ws = useWorkspace();
   const stageRef = useRef<HTMLDivElement>(null);
   const count = ws.path.length + ws.state.referenceRailOrder.length;
@@ -632,8 +676,18 @@ function ColumnHost({ deepLink }: { deepLink: (k: string) => void }) {
     if (!el) return;
     // switching Space (path back to the root alone) rewinds the stage —
     // the root panel is always fully visible, never hidden behind the sidebar edge
-    if (ws.path.length <= 1) el.scrollTo({ left: 0 });
-    else el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+    if (ws.path.length <= 1) { el.scrollTo({ left: 0 }); return; }
+    // scroll the context LEAF into view — never the rail: references render
+    // after the path, so scrollWidth would park the viewport on the pins and
+    // hide the panel the user just opened.
+    const leafEl = el.querySelector<HTMLElement>("[data-leaf]");
+    if (!leafEl) { el.scrollTo({ left: el.scrollWidth, behavior: "smooth" }); return; }
+    const sr = el.getBoundingClientRect();
+    const lr = leafEl.getBoundingClientRect();
+    let left = el.scrollLeft;
+    if (lr.right > sr.right - 8) left = el.scrollLeft + (lr.right - sr.right) + 16;
+    if (lr.left < sr.left + 8) left = el.scrollLeft + (lr.left - sr.left) - 16;
+    if (left !== el.scrollLeft) el.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
   }, [count, ws.state.contextLeafId, ws.state.rootInstanceId, ws.path.length]);
 
   if (!ws.state.rootInstanceId)
@@ -669,17 +723,19 @@ function ColumnHost({ deepLink }: { deepLink: (k: string) => void }) {
 
 /* ═══ PushHost — compact, one card + back ═════════════════════════════ */
 
-function PushHost({ deepLink }: { deepLink: (k: string) => void }) {
+function PushHost({ deepLink }: { deepLink: (k: string, fromRefId?: string) => void }) {
   const ws = useWorkspace();
   const leaf = ws.state.contextLeafId;
   const refTray = ws.state.referenceRailOrder.length > 0 && (
     <div className="ref-tray">
       {ws.state.referenceRailOrder.map((id) => (
-        <button key={id} className="ref-chip"
+        <span key={id} className="ref-chip" role="button" tabIndex={0}
           title="Reopen this thread"
-          onClick={() => deepLink(ws.state.panelsById[id].target.resourceKey)}>
-          📌 {titleOfKey(ws.state.panelsById[id].target.resourceKey)}
-        </button>
+          onClick={() => deepLink(ws.state.panelsById[id].target.resourceKey, id)}>
+          ✶ {titleOfKey(ws.state.panelsById[id].target.resourceKey)}
+          <button className="ref-x" title="Remove reference"
+            onClick={(e) => { e.stopPropagation(); ws.closePanel(id); }}>×</button>
+        </span>
       ))}
     </div>
   );
@@ -708,7 +764,7 @@ function PushHost({ deepLink }: { deepLink: (k: string) => void }) {
 
 /* ═══ Panel — bar 56 · body · foot ════════════════════════════════════ */
 
-function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) => void; compact?: boolean }) {
+function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string, fromRefId?: string) => void; compact?: boolean }) {
   const ws = useWorkspace();
   const [gear, setGear] = useState(false);
   const [wOverride, setWOverride] = useState<PanelSize | undefined>(undefined);
@@ -743,7 +799,8 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
   const isRoot = p.role === "root";
   // a root is always retention:"retained" — its pin state lives in `pinned`
   const retained = isRoot ? !!p.pinned : p.retention === "retained";
-  const width = panelWidth(ws.registry, p, wOverride);
+  // references are peripheral — cap them at S so L/XL root-refs never eat the stage
+  const width = panelWidth(ws.registry, p, isRef ? "S" : wOverride);
   const refIndex = ws.state.referenceRailOrder.indexOf(id);
   // per-panel search (the zip's foot search) — panels with a real list get it
   const searchable = !isRef && (n.children?.length ?? 0) >= 4;
@@ -753,8 +810,9 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
 
   return (
     <section className={"panel" + (isRef ? " ref" : "") + (retained && !isRef ? " pinned" : "") + (id === ws.state.focusedPanelId ? " focused" : "")} aria-label={n.title || titleOfKey(p.target.resourceKey)}
+      data-leaf={id === ws.state.contextLeafId || undefined}
       onMouseDown={() => { if (!isRef && ws.state.focusedPanelId !== id) ws.focusPanel(id); }}
-      style={compact ? undefined : isCanvas ? { width, flex: "1 1 auto", minWidth: 520 } : { width }}>
+      style={compact ? undefined : isCanvas && !isRef ? { width, flex: "1 1 auto", minWidth: 520 } : { width }}>
       <div className="panel-bar">
         {compact && !isRoot && (
           <button className="bar-btn back" title="Back" onClick={() => ws.closePanel(id)}>‹</button>
@@ -789,9 +847,9 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
 
       <div className="panel-body" style={isCanvas ? { padding: 0, overflow: "hidden" } : undefined}>
         {isCanvas && <CanvasBoard panelId={id} />}
-        {!isCanvas && n.title !== "" && <h2 className="panel-title" onClick={isRef ? () => deepLink(p.target.resourceKey) : undefined}
+        {!isCanvas && (n.title !== "" || isRef) && <h2 className="panel-title" onClick={isRef ? () => deepLink(p.target.resourceKey, id) : undefined}
           style={isRef ? { cursor: "pointer" } : undefined}
-          title={isRef ? "Reopen this thread" : undefined}>{n.title}</h2>}
+          title={isRef ? "Reopen this thread" : undefined}>{n.title || titleOfKey(p.target.resourceKey)}</h2>}
         {!isCanvas && n.subtitle && <p className="panel-sub">{n.subtitle}</p>}
 
         {n.kpis && (
@@ -912,7 +970,7 @@ function Panel({ id, deepLink, compact }: { id: string; deepLink: (k: string) =>
             onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setSOpen(false); setQ(""); } }}
             placeholder="Search this panel…" />
         ) : isRef ? (
-          <span className="foot-note">📌 Pinned — click the title or a drill to reopen</span>
+          <span className="foot-note"><span className="sig">✶</span> Pinned — click the title or a drill to reopen</span>
         ) : n.footActions ? (
           n.footActions.map((a) => (
             <button key={a.label} className={"foot-cta" + (a.kind === "outline" ? " ghost" : "")}

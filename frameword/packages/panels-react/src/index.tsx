@@ -9,6 +9,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -80,8 +81,11 @@ export function useWorkspace(): WorkspaceApi {
 
 export interface WorkspaceProviderProps {
   registry: PanelRegistry;
-  /** sync the ContextPath into location.hash and restore from it (URL wins) */
-  urlSync?: boolean;
+  /** sync the ContextPath into location.hash and restore from it.
+   *  true | "replace" — replaceState only (no history entries);
+   *  "push" — every leaf change is a history entry and Back/Forward
+   *  rewind the workspace via popstate (never exiting the app). */
+  urlSync?: boolean | "replace" | "push";
   /** persist the whole workspace to localStorage under this key (used when no URL) */
   storageKey?: string;
   children: ReactNode;
@@ -93,30 +97,46 @@ export function WorkspaceProvider({
   storageKey,
   children,
 }: WorkspaceProviderProps) {
+  const urlMode = urlSync === true ? "replace" : urlSync; // false | "replace" | "push"
   const [state, setState] = useState<WorkspaceState>(() => {
-    // precedence: URL ContextPath → device-local snapshot → empty (brief §persistence)
-    if (urlSync && typeof location !== "undefined" && location.hash.length > 1) {
-      const loc = decodeLocation(location.hash.slice(1));
-      if (loc) return reconcileLocation(emptyWorkspace(), loc);
-    }
+    // Restore the device-local snapshot FIRST — it is the only carrier of the
+    // reference rail (the URL encodes just the ContextPath). Then reconcile the
+    // URL ON TOP of it: openPath reveals-never-duplicates, so pins survive a
+    // reload instead of being rebuilt away and then clobbered by the persist.
+    let base = emptyWorkspace();
     if (storageKey && typeof localStorage !== "undefined") {
       try {
         const raw = localStorage.getItem(storageKey);
         if (raw) {
           const snap = JSON.parse(raw) as WorkspaceState;
-          if (snap && snap.schemaVersion === 1 && validate(snap).length === 0) return snap;
+          if (snap && snap.schemaVersion === 1 && validate(snap).length === 0) base = snap;
         }
       } catch {
         /* malformed snapshot degrades to empty — never throws */
       }
     }
-    return emptyWorkspace();
+    if (urlMode && typeof location !== "undefined" && location.hash.length > 1) {
+      const loc = decodeLocation(location.hash.slice(1));
+      if (loc) return reconcileLocation(base, loc);
+    }
+    return base;
   });
 
+  // set while applying a popstate — that state change must not push again
+  const popApply = useRef(false);
+
   useEffect(() => {
-    if (urlSync && typeof location !== "undefined") {
+    if (urlMode && typeof location !== "undefined") {
       const encoded = encodeLocation(state);
-      history.replaceState(null, "", encoded ? "#" + encoded : location.pathname);
+      const current = location.hash.slice(1);
+      if (encoded !== current) {
+        if (urlMode === "push" && !popApply.current && current !== "" && encoded !== "") {
+          history.pushState(null, "", "#" + encoded);
+        } else {
+          history.replaceState(null, "", encoded ? "#" + encoded : location.pathname);
+        }
+      }
+      popApply.current = false;
     }
     if (storageKey && typeof localStorage !== "undefined") {
       try {
@@ -125,7 +145,22 @@ export function WorkspaceProvider({
         /* quota errors are non-fatal */
       }
     }
-  }, [state, urlSync, storageKey]);
+  }, [state, urlMode, storageKey]);
+
+  // Back/Forward rewind the workspace instead of exiting the app
+  useEffect(() => {
+    if (urlMode !== "push" || typeof window === "undefined") return;
+    const onPop = () => {
+      const hash = location.hash.slice(1);
+      if (!hash) return; // pre-app entry — let the browser leave naturally
+      const loc = decodeLocation(hash);
+      if (!loc) return;
+      popApply.current = true;
+      setState((s) => reconcileLocation(s, loc));
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [urlMode]);
 
   const wrap = useCallback(
     <A extends unknown[]>(fn: (s: WorkspaceState, ...args: A) => WorkspaceState) =>
