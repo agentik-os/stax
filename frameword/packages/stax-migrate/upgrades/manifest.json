@@ -65,6 +65,12 @@
       "since": "0.4.2",
       "area": "ux",
       "title": "Panel setups remembered, root-respecting deep-links, drill hover polish, no-dash copy"
+    },
+    {
+      "id": "U-012",
+      "since": "0.4.2",
+      "area": "design",
+      "title": "Separator dedup \u00b7 neutral focus ring \u00b7 resizable pinned refs"
     }
   ]
 }

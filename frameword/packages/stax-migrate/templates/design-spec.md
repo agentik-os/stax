@@ -32,7 +32,16 @@ values in this file.
     FLOATING surfaces (menus, popovers, pickers), INPUTS and MEDIA — in-flow content
     is flat, structured by hairlines and rhythm.
   - `.stats` — no tiles: a vertical hairline BETWEEN stats (padding 18 both sides).
-  - `.drills` — hairline top on the list, hairline between rows, hover = secondary fill.
+  - `.drills` — hairline top on the list, hairline between rows; the list bleeds
+    **12px into the gutter** (margin 0 -12px, row padding 12px) so hover breathes while
+    text keeps the flat-block left edge; hover = secondary fill + the row's own 1px
+    hairline turns **accent** (same thickness); index/arrow accent, arrow slides 3px.
+    Row meta tags are flat mono uppercase, never pills.
+  - **Separator law** — ONE hairline between any two stacked blocks, never two:
+    containers absorb their first child's top hairline; lists drop the last row's
+    bottom hairline.
+  - **Focus ring** — neutral (foreground mix), suppressed while hovered/active
+    (Safari fires :focus-visible on click); keyboard keeps it. Never accent.
   - `.anat-row` — hairline top, padding 10/0, mono accent label column 104px.
   - `.stat` (KPI) — padding **12px 14px**, radius 12; stats sit in a flex row, gap 10.
   - `.drills` — column gap **8px**; `.drill` row — padding **12px 14px**, radius 10,

@@ -1,7 +1,7 @@
 {
   "name": "stax-migrate",
-  "version": "0.4.0",
-  "description": "Migration engine: any legacy web app → the Stax panel grammar, at a contracted integration level (full/standard/starter/shell), with feature, element AND data matrices gated mechanically.",
+  "version": "0.4.2",
+  "description": "Migration engine: any legacy web app \u2192 the Stax panel grammar, at a contracted integration level (full/standard/starter/shell), with feature, element AND data matrices gated mechanically.",
   "type": "module",
   "bin": {
     "stax-migrate": "./index.mjs"
