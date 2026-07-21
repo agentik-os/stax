@@ -35,7 +35,14 @@ values in this file.
     **14px 0 15px**; its `.lab` mono label gets margin-bottom 8. Borders belong to
     FLOATING surfaces (menus, popovers, pickers), INPUTS and MEDIA — in-flow content
     is flat, structured by hairlines and rhythm.
-  - `.stats` — no tiles: a vertical hairline BETWEEN stats (padding 18 both sides).
+  - `.stats` — no tiles: a vertical hairline BETWEEN stats (padding 18 both sides);
+    the block is a GRID of equal tracks (`grid-auto-columns: minmax(0, 1fr)`, never
+    flex) so the hairlines land at exact even divisions; margin-bottom 12.
+  - **Vertical rhythm law** — hairline-carrying blocks stack EDGE TO EDGE (gap 0):
+    the air around a hairline comes from the blocks' own paddings (rows 12,
+    cards 14/15, sections 15/16), never from ad-hoc spacer divs or inline margins.
+    Surfaced blocks (code, demos) carry their own margin-bottom 14-16; the head
+    closes with margin-bottom 18.
   - `.drills` — hairline top on the list, hairline between rows; the list bleeds
     **12px into the gutter** (margin 0 -12px, row padding 12px) so hover breathes while
     text keeps the flat-block left edge. Separators are drawn as 12px-INSET pseudo
@@ -52,7 +59,7 @@ values in this file.
     into the gutter draws its lines inset back to those bounds.
   - **Focus ring** — neutral (foreground mix), suppressed while hovered/active
     (Safari fires :focus-visible on click); keyboard keeps it. Never accent.
-  - `.anat-row` — hairline top, padding 10/0, mono accent label column 104px.
+  - `.anat-row` — hairline top, padding 12/0, mono accent label column 104px.
   - Popover labels `.pop-sub` — margin-bottom 6.
 - The foot is the ONLY action zone: primary CTA = accent bg + **accent border** +
   `--accent-hover` on hover; destructive = `--destructive` text. Never object-state

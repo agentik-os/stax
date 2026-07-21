@@ -148,8 +148,10 @@ img.avatar { border: 1px solid var(--border); }
 
 /* stat cards */
 /* stat band — editorial: no tiles, a vertical hairline between stats */
-.stats { display: flex; gap: 0; margin: 2px 0 18px; }
-.stat { flex: 1; border: none; border-radius: 0; padding: 2px 18px 2px 0; }
+/* grid, not flex: equal tracks regardless of each column's own padding/border,
+   so the vertical hairlines land at EXACT even divisions */
+.stats { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; margin: 2px 0 12px; }
+.stat { min-width: 0; border: none; border-radius: 0; padding: 2px 18px 2px 0; }
 .stat + .stat { border-left: 1px solid var(--border); padding-left: 18px; }
 .stat .lab { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); }
 .stat .val { font-family: var(--font-mono); font-size: calc(var(--fz-title, 27px) * 1.0); line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; font-weight: 500; }
@@ -351,7 +353,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .mini-flow .legend .hot { color: var(--accent); }
 
 /* anatomy rows (BAR / BODY / FOOT / PILLS) */
-.anat-row { display: flex; flex-wrap: nowrap; gap: 12px; padding: 10px 0; border: none; border-top: 1px solid var(--border); border-radius: 0; align-items: baseline; margin-bottom: 0; }
+.anat-row { display: flex; flex-wrap: nowrap; gap: 12px; padding: 12px 0; border: none; border-top: 1px solid var(--border); border-radius: 0; align-items: baseline; margin-bottom: 0; }
 .anat-row .k { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); flex: none; width: 104px; }
 .anat-row .t { font-size: calc(var(--fz-body, 13.5px) * 0.93); color: var(--ink-2); }
 /* long labels (IN THE GRAMMAR…) never wrap beside the text — they stack: label line, text under */

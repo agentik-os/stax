@@ -1077,7 +1077,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
                   <div className="legend"><span>Root: fixed</span><span>Child</span><span className="hot">Pinned: stays</span><span>Preview: replaceable</span></div>
                 </div>
               ) : b.kind === "ops" ? (
-                <div key={i} className="card" style={{ marginBottom: 16 }}>
+                <div key={i} className="card">
                   <div className="lab"><span className="sig">✶</span> State: the only thing that exists</div>
                   <pre className="codeblock" style={{ margin: "8px 0 0", border: "none", background: "transparent", padding: 0 }}>{"WorkspaceState = { panelsById, contextLeafId,\n                   focusedPanelId, referenceRailOrder }\nPanelInstance  = { target, parentInstanceId,\n                   retention, placement }"}</pre>
                   <div className="op-pills">
@@ -1093,8 +1093,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
                 <pre key={i} className="codeblock">{b.code}</pre>
               ) : (
                 <div key={i}
-                  className={"card" + (b.kind === "do" ? " tone-do" : b.kind === "dont" ? " tone-dont" : "")}
-                  style={{ marginBottom: 8 }}>
+                  className={"card" + (b.kind === "do" ? " tone-do" : b.kind === "dont" ? " tone-dont" : "")}>
                   {b.label && <div className="lab">{b.label.startsWith("✶")
                     ? <><span className="sig">✶</span>{b.label.slice(1)}</>
                     : b.label}</div>}
@@ -1102,7 +1101,6 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
                 </div>
               ),
             )}
-            {(n.blocks ?? []).length > 0 && (n.children ?? []).length > 0 && <div style={{ height: 8 }} />}
             {(n.children ?? []).length > 0 && (
               <div className="drills">
                 {kids.map((key, i) => (
