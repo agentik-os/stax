@@ -63,6 +63,7 @@ export const DASHBOARDS: Dashboard[] = [
         { spaceId: "prompts", rootKey: "sec:prompts", label: "Prompt pack" },
         { spaceId: "components", rootKey: "sec:components", label: "Components" },
         { spaceId: "blocks", rootKey: "sec:blocks", label: "Blocks" },
+        { spaceId: "glossary", rootKey: "sec:glossary", label: "Glossary" },
       ],
     }],
   },
@@ -805,6 +806,99 @@ for (const c of BLOCK_CATS) {
 for (const [k, m] of Object.entries(BLOCKS)) {
   DOMAIN[k] = { panelType: "block", title: m.title, subtitle: m.sub };
 }
+
+/* ═══ FRAMEWORK · Glossary — the vocabulary, for humans AND coding agents ═══ */
+DOMAIN["sec:glossary"] = {
+  panelType: "section", title: "Glossary.", eyebrow: "Glossary · 09",
+  subtitle: "Every word of the grammar, defined once — so you, your team, and your coding agent all say the same thing. Drill a family; every term is one row.",
+  kpis: [{ v: "8", l: "families" }, { v: "40+", l: "terms" }, { v: "1", l: "vocabulary" }],
+  blocks: [{ kind: "card", label: "Why a glossary", text: "The fastest way to get a good result from Claude Code or Codex on a Stax app is to use the grammar's own words: ask for a DRILL, not 'a subpage'; a PIN, not 'keep it somewhere'; a FOOT action, not 'a button at the bottom'. Each family below defines the terms; the last one turns them into ready-to-say sentences." }],
+  children: ["gl:mechanic", "gl:spaces", "gl:thread", "gl:pins", "gl:state", "gl:anatomy", "gl:design", "gl:agents"],
+  footActions: [{ label: "Open the Prompt pack", kind: "outline", space: "prompts" }],
+};
+DOMAIN["gl:mechanic"] = {
+  panelType: "doc", title: "The mechanic", subtitle: "Five words that ARE the framework.",
+  blocks: [
+    { kind: "row", label: "PANEL", text: "The only surface. Everything — page, form, table, whiteboard, settings — renders as a panel in a horizontal stack. There are no pages, no modals, no tabs." },
+    { kind: "row", label: "DRILL", text: "The move: clicking anything with depth opens a child panel to the RIGHT. The row you clicked is a drill (or DrillTrigger); the child is its detail." },
+    { kind: "row", label: "PARENT STAYS", text: "Opening a drill never unmounts or covers its parent (Law 3). Context is preserved by construction, not by a Back button." },
+    { kind: "row", label: "OPEN RIGHT", text: "The one spatial rule: new content always appears beside its source, reading order left → right, shallow → deep." },
+    { kind: "row", label: "DEPTH", text: "How many panels sit between the root and the leaf. Unlimited by design; the URL carries the whole chain." },
+  ],
+};
+DOMAIN["gl:spaces"] = {
+  panelType: "doc", title: "Spaces & dashboards", subtitle: "The macro structure around the stack.",
+  blocks: [
+    { kind: "row", label: "SPACE", text: "A self-contained working area (Accounts, Console, Notes…). Exactly ONE space is active at a time; opening another replaces the whole thread (Law 5)." },
+    { kind: "row", label: "SPACE ROOT", text: "The first panel of a space — its landing list or overview. It cannot be displaced by drilling (Law 2); its × closes the space." },
+    { kind: "row", label: "DASHBOARD", text: "A named group of spaces with its own sidebar (Framework, CRM, Analytics, Platform). Switching dashboards swaps the space list, never your pins." },
+    { kind: "row", label: "DEDICATED MENU", text: "When a space is open, the sidebar mirrors THAT space: its children as numbered items, ‹ returns to the dashboard's space list." },
+    { kind: "row", label: "SYSTEM SPACE", text: "A space outside every dashboard — Notes, Tasks, Data, Canvas, Profile, Settings — opened from the topbar icons or ⌘K." },
+  ],
+};
+DOMAIN["gl:thread"] = {
+  panelType: "doc", title: "The thread", subtitle: "What is on stage right now.",
+  blocks: [
+    { kind: "row", label: "THREAD / CONTEXTPATH", text: "The chain of open panels from the root to the leaf — what the stage shows and what the URL encodes. One thread at a time." },
+    { kind: "row", label: "LEAF", text: "The deepest panel of the thread (contextLeafId) — the ONE place primary actions live (Law 4)." },
+    { kind: "row", label: "FOCUS", text: "The panel your keyboard talks to. Move it with the ‹ › bar buttons or the [ and ] keys; the crumbbar highlights it." },
+    { kind: "row", label: "CRUMBBAR", text: "The bottom bar. Each segment is a panel of the thread; clicking one rewinds the thread below it (navigateTo)." },
+    { kind: "row", label: "BRANCH POLICY", text: "What happens below a change: preview panels close, retained panels DETACH into the reference rail. Nothing is lost silently." },
+  ],
+};
+DOMAIN["gl:pins"] = {
+  panelType: "doc", title: "Pins & references", subtitle: "What survives navigation.",
+  blocks: [
+    { kind: "row", label: "PREVIEW", text: "The default retention of a drilled panel: transient — opening a sibling replaces it." },
+    { kind: "row", label: "PIN (P)", text: "Promotes a panel to retained. A pinned panel survives branch changes, space switches, dashboard switches, and reloads." },
+    { kind: "row", label: "DETACH", text: "The transition: when its branch changes, a pinned panel leaves the thread and becomes a reference — it never silently dies." },
+    { kind: "row", label: "REFERENCE RAIL", text: "The right-hand rail holding detached panels (S width, Ref badge). Your pins, whatever the page." },
+    { kind: "row", label: "RESUME", text: "Clicking a reference's title reopens its full thread. Resuming a space-root reference CONSUMES it — the space is back, no duplicate." },
+  ],
+};
+DOMAIN["gl:state"] = {
+  panelType: "doc", title: "State & intents", subtitle: "The whole engine is one JSON and seven verbs.",
+  blocks: [
+    { kind: "row", label: "WORKSPACESTATE", text: "The single serializable truth: panelsById, contextLeafId, focusedPanelId, referenceRailOrder, spaceId. What paints the screen IS the URL, the snapshot, and the agent's context." },
+    { kind: "row", label: "PANELINSTANCE", text: "One open panel: its target (panelType + resourceKey), parentInstanceId, role (root|detail), retention, placement, pinned." },
+    { kind: "row", label: "INTENTS", text: "The only API: openSpace · openDetail · pinPanel · unpinPanel · closePanel · navigateTo · openPath. Every click dispatches one; so does an agent." },
+    { kind: "row", label: "DEEP LINK", text: "The URL hash encodes the thread ({spaceId, path}). Share it and the receiver lands on your exact stack; Back/Forward rewind it." },
+    { kind: "row", label: "REGISTRY", text: "panelType → width class. S 380 · M 480 · L 640 · XL 800. Width belongs to the KIND, never to the user or the content (Law 7)." },
+  ],
+};
+DOMAIN["gl:anatomy"] = {
+  panelType: "doc", title: "Panel anatomy", subtitle: "The parts every panel shares.",
+  blocks: [
+    { kind: "row", label: "BAR", text: "The 56px top strip: eyebrow, ‹ › focus moves, PIN, ×. Never actions." },
+    { kind: "row", label: "EYEBROW", text: "The mono uppercase label in the bar — the panel's kind and place (console · keys), not its title." },
+    { kind: "row", label: "BODY", text: "The scrolling content: serif title, subtitle, KPI stats, cards, sections, drills." },
+    { kind: "row", label: "FOOT", text: "The ONE action zone (Law 6): the panel's verbs — one accent CTA family, destructive as red text, search, or the composer. Never metadata." },
+    { kind: "row", label: "COMPOSER", text: "A foot that creates: the input + primary verb pair ('Ask anything…' + Run, 'teammate@… ' + Invite)." },
+    { kind: "row", label: "PANELTYPE / RESOURCEKEY", text: "The target's two halves: WHAT kind of panel renders (pfkeys, note, account) and WHICH resource it shows (pf:keys, nte:abc, acc:acme)." },
+  ],
+};
+DOMAIN["gl:design"] = {
+  panelType: "doc", title: "Design language", subtitle: "The WhitePaper words.",
+  blocks: [
+    { kind: "row", label: "TOKENS", text: "Every color, size and radius is a CSS variable (--accent, --fz-body…). No hex literals in components — Settings retunes the whole app live (Law 8)." },
+    { kind: "row", label: "ACCENT RAMP", text: "ONE accent with derived mixes (--accent-soft/-hover/-2/-3/-4, mixed in OKLCH). Charts, pills and statuses use the ramp — semantic green/amber only for dots." },
+    { kind: "row", label: "TYPE LAWS", text: "Serif = display titles only. Sans = body. Mono = labels, eyebrows and EVERY number (tabular-nums — numbers are never serif)." },
+    { kind: "row", label: "SECTION", text: "The borderless group (mono label + content) that replaces card-in-card. A card never contains another bordered box." },
+    { kind: "row", label: "SIX STATES", text: "Every element ships default · hover · focus · empty · loading · error. An empty state is a sentence with a next action, never blank space." },
+  ],
+};
+DOMAIN["gl:agents"] = {
+  panelType: "doc", title: "Talking to Claude Code", subtitle: "Say it in the grammar — get it right the first time.",
+  blocks: [
+    { kind: "card", label: "The rule of thumb", text: "Name the pattern, not the pixels. Claude Code knows this glossary (agents.md ships it): asking with the grammar's words maps your intent straight onto the engine's API instead of a guess." },
+    { kind: "row", label: "SAY", text: "\"Make each invoice row a DRILL opening an invoice panel (M) beside the table\" — not \"clicking should show details somewhere\"." },
+    { kind: "row", label: "SAY", text: "\"Put Export in the panel FOOT as an outline action\" — not \"add a button under the list\"." },
+    { kind: "row", label: "SAY", text: "\"Register panelType invoice at size M in the REGISTRY\" — not \"make the window a bit smaller\"." },
+    { kind: "row", label: "SAY", text: "\"That summary should be PINNABLE so it survives switching to Reports\" — not \"keep it visible when I change page\"." },
+    { kind: "row", label: "SAY", text: "\"Run the M6 laws audit and show the evidence\" — the nine laws are the review checklist, in the Prompt pack and agents.md." },
+    { kind: "card", label: "Where the words live", text: "agents.md + llms.txt at the repo root carry this vocabulary and the six master prompts; stax-migrate speaks it in its matrices (mapping, panel_binding, write_path). One vocabulary, human to agent to gate." },
+  ],
+};
 
 /* the Canvas board — opened from the topbar whiteboard button, in no dashboard */
 DOMAIN["sec:canvas"] = {

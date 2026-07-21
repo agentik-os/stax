@@ -200,6 +200,7 @@ function SpaceIcon({ id }: { id: string }) {
     case "reports": return (<svg {...c}><rect x="8" y="2" width="8" height="4" rx="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /></svg>);
     case "ana-overview": return (<svg {...c}><path d="m12 14 4-4" /><path d="M3.34 19a10 10 0 1 1 17.32 0" /></svg>);
     case "ana-revenue": return (<svg {...c}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>);
+    case "glossary": return (<svg {...c}><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg>);
     case "pf-tour": return (<svg {...c}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6" /><line x1="9" y1="3" x2="9" y2="18" /><line x1="15" y1="6" x2="15" y2="21" /></svg>);
     case "pf-console": return (<svg {...c}><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>);
     case "pf-studio": return (<svg {...c}><path d="M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M18.4 18.4l-2.1-2.1M12 18v3M7.7 16.3l-2.1 2.1M6 12H3M7.7 7.7 5.6 5.6" /><circle cx="12" cy="12" r="3.2" /></svg>);
@@ -454,7 +455,6 @@ function Shell() {
         <button className="tb-icon" title="Toggle sidebar — ⌘B" onClick={() => setSbOpen((v) => !v)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /></svg>
         </button>
-        <div className="tb-brand">Stax</div>
         <nav className="tb-nav" aria-label="Dashboards">
           {DASHBOARDS.map((d) => (
             <div key={d.id} className="tb-nav-wrap">
