@@ -30,7 +30,7 @@ PROTOCOL: inventory each layer. EVERY row carries a citation (file:line, router-
 7. FILTERS / SEARCH / SORT: where each control lives and what scope it filters.
 8. CHARTS & DASHBOARDS: every visualization, its data source, and whether it drills down on click.
 9. CROSS-CUTTING: chat/assistant surfaces, settings, notifications, global search, onboarding.
-OUTPUT: write `feature-matrix.md`: one table, columns: id | layer | name | current pattern (route/modal/tab/wizard/drawer/...) | entity | has-depth? (does it open something deeper) | size hint S/M/L/XL by content density | citation.
+OUTPUT: write `feature-matrix.md`: one table, columns: id | layer | name | current pattern (route/modal/tab/wizard/drawer/...) | entity | has-depth? (does it open something deeper) | size hint S/M/L/XL/XXL by content density | citation.
 Then a SUMMARY: counts per pattern + the 5 hairiest items (nested modals, modal-inside-tab, wizard-inside-modal, etc.).
 DEFINITION OF DONE: every route and every overlay in the codebase appears in the matrix. Prove coverage: run `grep -riE "modal|dialog|drawer|<Tabs" src | wc -l` (adapt to the stack), show the output, and reconcile the count against your matrix rows. Unreconciled hits = the audit is not done.
 ```
@@ -45,14 +45,14 @@ APPLY THESE RULES DETERMINISTICALLY: never invent a new pattern:
 - Top-level page / app section -> a SPACE. Max 7 spaces; merge cousins by workflow.
 - Nav-section landing view -> the ROOT PANEL of its space.
 - List row click / "view details" -> a DRILL: new panel to the RIGHT, parent list stays mounted.
-- Modal -> a PANEL, sized by content: confirm or 1-3 fields = S; standard form = M; rich detail/editor = L; full workbench = XL. Modals are FORBIDDEN in the output.
+- Modal -> a PANEL, sized by content: confirm or 1-3 fields = S; standard form = M; rich detail/editor = L; full workbench = XL; a stage-filling workbench (board, IDE-like surface) = XXL (fluid). Modals are FORBIDDEN in the output.
 - Tabs faceting the SAME entity -> in-panel sections inside one panel. Tabs switching ENTITIES -> sibling drills from the same parent.
 - Wizard / multi-step flow -> CHAINED DRILLS: step N opens step N+1 to the right; back = close the rightmost panel.
 - Settings / preferences -> a sys panel (panelType `sys:*`), drilled from the space root: never a separate page.
 - Chat / assistant -> full-height drawer panel, pinnable: never a floating bubble.
 - Anything the user must keep visible while working elsewhere -> a PINNED REFERENCE (survives navigation and space switches).
 AMBIGUITY RESOLUTION (apply in order): (1) a view that is both landing and detail = root panel, its detail parts become drills; (2) content overflowing XL = split into a drill chain, never scroll horizontally; (3) two rules match = the deeper-nesting rule wins (drill beats in-panel section); (4) still ambiguous = pick the mapping with the fewest simultaneous panels and log it in a DECISIONS section with one-line rationale.
-OUTPUT: write `mapping.md`: table: matrix id | legacy pattern | Stax mapping (space / root / drill / section / chained-drill / sys / drawer / reference) | panelType (kebab-case) | size S/M/L/XL | parent panelType | citation to the matrix row.
+OUTPUT: write `mapping.md`: table: matrix id | legacy pattern | Stax mapping (space / root / drill / section / chained-drill / sys / drawer / reference) | panelType (kebab-case) | size S/M/L/XL/XXL | parent panelType | citation to the matrix row.
 END with the derived REGISTRY draft as a paste-ready TypeScript object: `{ [panelType]: { size } }` covering every panelType you named. Every matrix row must be traceable into it.
 ```
 
@@ -75,7 +75,7 @@ DEFINITION OF DONE: evidence, not adjectives: (1) element-matrix.csv 100% status
 *Seven gated phases from inventory to law-clean workspace, each with verifiable acceptance criteria.*
 
 ```text
-ROLE: Migration planner for a refonte of this app onto Stax (panels-inside-panels; no modals/tabs/pages; serializable WorkspaceState { panelsById, contextLeafId, referenceRailOrder }; registry maps panelType -> size S/M/L/XL). Produce `migration-plan.md` with EXACTLY these 7 phases. For each: scope, concrete tasks, ACCEPTANCE CRITERIA, and the evidence the implementing model must show. A phase without shown evidence is NOT passed.
+ROLE: Migration planner for a refonte of this app onto Stax (panels-inside-panels; no modals/tabs/pages; serializable WorkspaceState { panelsById, contextLeafId, referenceRailOrder }; registry maps panelType -> size S/M/L/XL/XXL). Produce `migration-plan.md` with EXACTLY these 7 phases. For each: scope, concrete tasks, ACCEPTANCE CRITERIA, and the evidence the implementing model must show. A phase without shown evidence is NOT passed.
 PHASE 1: INVENTORY: run the M1 forensic audit -> feature-matrix.md. Accept only if every route AND every modal is cited file:line and grep counts reconcile.
 PHASE 2: MAPPING: apply the M2 rules -> mapping.md + registry draft. Accept only if zero TBD rows and every modal maps to a panel with a size.
 PHASE 3: REGISTRY: implement the panel registry (panelType -> component, size, title resolver). Accept: it compiles, and a demo/story per panelType renders: show build output + one screenshot grid.
@@ -91,7 +91,7 @@ STANDING DEMANDS ON THE IMPLEMENTING MODEL: cite file:line for every claim; ship
 *From a one-line idea to spaces, panel trees, and a compiling registry: questions first, code second.*
 
 ```text
-ROLE: Product architect building a NEW app directly on the Stax panel grammar. Grammar facts you must obey: Miller columns: anything with depth opens a panel to the RIGHT and the parent STAYS; one Space active at a time; pin -> detached reference that survives navigation; state is a serializable WorkspaceState { panelsById, contextLeafId, referenceRailOrder }; a registry maps panelType -> size S/M/L/XL; modals, tabs, and route-per-page are FORBIDDEN.
+ROLE: Product architect building a NEW app directly on the Stax panel grammar. Grammar facts you must obey: Miller columns: anything with depth opens a panel to the RIGHT and the parent STAYS; one Space active at a time; pin -> detached reference that survives navigation; state is a serializable WorkspaceState { panelsById, contextLeafId, referenceRailOrder }; a registry maps panelType -> size S/M/L/XL/XXL; modals, tabs, and route-per-page are FORBIDDEN.
 STEP 0: ASK ME THESE, THEN STOP AND WAIT: (a) who is the user and the ONE job they hire this app for; (b) the 3-6 core entities and which contains which; (c) the 2-3 workflows run daily vs the ones run rarely; (d) what must stay visible while working on something else (pin candidates); (e) required cross-cutting surfaces (AI chat, settings, billing, search).
 STEP 1: SPACES: derive 2-5 spaces from the workflow clusters (one active at a time). Name each and declare its root panel.
 STEP 2: PANEL TREES: per space, draw the drill tree from root: root -> list -> detail -> sub-detail. Every node = panelType (kebab-case) + size S/M/L/XL by content density. Wizards = chained drills; same-entity facets = in-panel sections; settings = sys panel; chat = full-height pinnable drawer.

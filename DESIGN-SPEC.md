@@ -22,7 +22,7 @@ values in this file.
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- Panel widths come from the registry only: **S 380 · M 480 · L 640 · XL 800** (px).
+- Panel widths come from the registry only: **S 380 · M 480 · L 640 · XL 800 · XXL fluid** (px; XXL flexes to fill the remaining stage, min 720).
   Never a hardcoded width on a panel.
 - Stage: gap `var(--stage-gap, 14px)`, gutter `var(--stage-pad, 18px)` on BOTH sides
   (left padding + end spacer). A flexing panel (canvas/kanban) keeps the right gutter.

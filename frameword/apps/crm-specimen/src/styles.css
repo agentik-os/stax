@@ -1117,3 +1117,7 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 
 /* drill meta: flat mono, never a pill inside the row */
 .drill .tag { background: transparent; border: none; padding: 0; border-radius: 0; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }
+
+/* topbar separator between the sidebar toggle and the dashboard nav */
+.tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 6px; flex: none; }
+.wrow .wbtn { min-width: 0; padding-inline: 0; }

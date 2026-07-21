@@ -38,8 +38,9 @@ import {
 
 /* ── panel-type registry ─────────────────────────────────────────────── */
 
-export type PanelSize = "S" | "M" | "L" | "XL";
-export const PANEL_WIDTHS: Record<PanelSize, number> = { S: 380, M: 480, L: 640, XL: 800 };
+export type PanelSize = "S" | "M" | "L" | "XL" | "XXL";
+/** XXL is fluid: it FILLS the remaining stage (the number is its minimum). */
+export const PANEL_WIDTHS: Record<PanelSize, number> = { S: 380, M: 480, L: 640, XL: 800, XXL: 720 };
 
 export interface PanelTypeDef {
   /** default width class — width belongs to the kind, not the user */

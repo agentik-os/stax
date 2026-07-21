@@ -483,6 +483,7 @@ function Shell() {
         <button className="tb-icon" title="Toggle sidebar: ⌘B" onClick={() => setSbOpen((v) => !v)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /></svg>
         </button>
+        <span className="tb-sep" aria-hidden />
         <nav className="tb-nav" aria-label="Dashboards">
           {DASHBOARDS.map((d) => (
             <div key={d.id} className="tb-nav-wrap">
@@ -937,7 +938,10 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
   const retained = isRoot ? !!p.pinned : p.retention === "retained";
   // references default to S (peripheral) but the user's per-panel size
   // preference applies there too: pin mode is resizable like any panel
+  const effSize: PanelSize = isRef ? (wOverride ?? "S") : (wOverride ?? (ws.registry[p.target.panelType]?.size as PanelSize) ?? "M");
   const width = panelWidth(ws.registry, p, isRef ? (wOverride ?? "S") : wOverride);
+  // XXL is fluid: the panel FLEXES to fill the remaining stage
+  const isFluid = effSize === "XXL" && !isRef;
   const refIndex = ws.state.referenceRailOrder.indexOf(id);
   // per-panel search (the zip's foot search): panels with a real list get it
   const searchable = !isRef && (n.children?.length ?? 0) >= 4;
@@ -961,7 +965,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
     <section className={"panel" + (isRef ? " ref" : "") + (retained && !isRef ? " pinned" : "") + (id === ws.state.focusedPanelId ? " focused" : "")} aria-label={n.title || titleOfKey(p.target.resourceKey)}
       data-leaf={id === ws.state.contextLeafId || undefined}
       onMouseDown={() => { if (!isRef && ws.state.focusedPanelId !== id) ws.focusPanel(id); }}
-      style={compact ? undefined : isCanvas && !isRef ? { width, flex: "1 1 auto", minWidth: 520 } : { width }}>
+      style={compact ? undefined : (isCanvas && !isRef) || isFluid ? { width, flex: "1 1 auto", minWidth: isCanvas ? 520 : 720 } : { width }}>
       <div className="panel-bar">
         {compact && !isRoot && (
           <button className="bar-btn back" title="Back" onClick={() => ws.closePanel(id)}>‹</button>
@@ -1260,7 +1264,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             <button className={"wbtn" + (!wOverride ? " on" : "")} style={{ width: "100%", marginBottom: 4 }}
               onClick={() => setWOverride(undefined)}>DEFAULT</button>
             <div className="wrow">
-              {(["S", "M", "L", "XL"] as PanelSize[]).map((w) => (
+              {(["S", "M", "L", "XL", "XXL"] as PanelSize[]).map((w) => (
                 <button key={w} className={"wbtn" + (wOverride === w ? " on" : "")}
                   onClick={() => setWOverride(w)}>{w}</button>
               ))}
