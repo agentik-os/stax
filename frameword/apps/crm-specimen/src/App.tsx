@@ -280,6 +280,16 @@ function Shell() {
   const [toast, setToast] = useState<string | null>(null);
   const [theme, setThemeState] = useState<string>(() => localStorage.getItem("frameword-theme") ?? "system");
 
+  // input modality: pointer users never see focus rings (Safari fires
+  // :focus-visible on click); the first Tab press restores them
+  useEffect(() => {
+    const pd = () => { document.documentElement.dataset.input = "pointer"; };
+    const kd = (e: KeyboardEvent) => { if (e.key === "Tab") document.documentElement.dataset.input = "kb"; };
+    window.addEventListener("pointerdown", pd, true);
+    window.addEventListener("keydown", kd, true);
+    return () => { window.removeEventListener("pointerdown", pd, true); window.removeEventListener("keydown", kd, true); };
+  }, []);
+
   // FIRST RUN: a brand-new visitor (no snapshot, no deep link) should see the
   // mechanic immediately, not an empty stage
   useEffect(() => {

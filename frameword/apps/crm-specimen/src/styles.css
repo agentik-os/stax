@@ -1121,3 +1121,16 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 /* topbar separator between the sidebar toggle and the dashboard nav */
 .tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 6px; flex: none; }
 .wrow .wbtn { min-width: 0; padding-inline: 0; }
+
+/* table menus are COLUMNS, whatever their container context */
+.dp-pop.dt-selfly { display: flex; flex-direction: column; align-items: stretch; gap: 1px; }
+.dt-selfly > .tp-slot { display: block; width: 100%; text-align: left; }
+.dt-selfly .dt-mrow { display: flex; gap: 3px; }
+.dt-selfly .dt-mrow .tp-slot { flex: 1; width: auto; text-align: center; }
+
+/* compact density (per view) */
+.dt.compact td { padding-top: 3px; padding-bottom: 3px; }
+.dt.compact td .dt-cell, .dt.compact .dt-cell { padding-top: 3px; padding-bottom: 3px; }
+
+/* input modality: pointer sessions never show focus rings; Tab restores them */
+:root[data-input="pointer"] button:focus-visible { outline: none; }

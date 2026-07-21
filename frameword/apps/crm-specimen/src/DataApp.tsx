@@ -19,7 +19,7 @@ export interface Filter { fieldId: string; op: string; value: string }
 export interface View {
   id: string; name: string;
   filters: Filter[]; sort?: { fieldId: string; dir: "asc" | "desc" };
-  hidden: string[]; groupBy?: string; wrap?: boolean;
+  hidden: string[]; groupBy?: string; wrap?: boolean; density?: "cozy" | "compact";
 }
 export interface Collection {
   id: string; name: string;
@@ -127,6 +127,16 @@ export const dataApp = {
     dataApp.patchCol(colId, { views: [...c.views, { ...defView(id), name: "View " + (c.views.length + 1) }], activeView: id });
     return id;
   },
+  duplicateView: (colId: string, viewId: string): string => {
+    const id = uid("v");
+    const c = dataApp.col(colId);
+    const src = c?.views.find((v) => v.id === viewId);
+    if (!c || !src) return id;
+    dataApp.patchCol(colId, { views: [...c.views, { ...src, id, name: src.name + " copy", filters: [...src.filters], hidden: [...src.hidden] }], activeView: id });
+    return id;
+  },
+  resetView: (colId: string) =>
+    dataApp.patchView(colId, { filters: [], sort: undefined, hidden: [], groupBy: undefined, wrap: false, density: "cozy" }),
   removeView: (colId: string, viewId: string) => {
     const c = dataApp.col(colId);
     if (!c || c.views.length <= 1) return;
@@ -149,6 +159,15 @@ export const dataApp = {
   addRow: (colId: string, preset?: Record<string, CellValue>): string => {
     const id = uid("r");
     dataApp.patchCol(colId, { rows: [...(dataApp.col(colId)?.rows ?? []), { id, v: preset ?? {}, ts: Date.now() }] });
+    return id;
+  },
+  insertRowAfter: (colId: string, rowId: string): string => {
+    const id = uid("r");
+    const c = dataApp.col(colId);
+    if (!c) return id;
+    const rows: Row[] = [];
+    for (const r of c.rows) { rows.push(r); if (r.id === rowId) rows.push({ id, v: {}, ts: Date.now() }); }
+    dataApp.patchCol(colId, { rows });
     return id;
   },
   duplicateRow: (colId: string, rowId: string): string => {
@@ -503,6 +522,7 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
           <button className="dt-open" title="Row actions" onClick={(e) => openMenu("r:" + r.id, e, 130, 160)}>⋯</button>
           {menu === "r:" + r.id && (
             <div className="dp-pop dt-selfly" style={pos}>
+              <button className="tp-slot" onClick={() => { dataApp.insertRowAfter(c.id, r.id); setMenu(null); }}>Insert row below</button>
               <button className="tp-slot" onClick={() => { dataApp.duplicateRow(c.id, r.id); setMenu(null); }}>Duplicate row</button>
               <button className="tp-slot" onClick={() => { openRow(r.id); setMenu(null); }}>Open page</button>
               <button className="tp-slot danger" onClick={() => { dataApp.removeRow(c.id, r.id); setMenu(null); }}>Delete row</button>
@@ -533,16 +553,33 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
               onBlur={() => { dataApp.patchCol(c.id, { views: c.views.map((x) => (x.id === v.id ? { ...x, name: renView.v.trim() || x.name } : x)) }); setRenView(null); }} />
           ) : (
             <button key={v.id} className={"dtv-tab" + (v.id === c.activeView ? " on" : "")}
-              onClick={() => dataApp.patchCol(c.id, { activeView: v.id })}
+              onClick={(e) => {
+                if (v.id === c.activeView) openMenu("viewcfg", e, 300, 190);
+                else dataApp.patchCol(c.id, { activeView: v.id });
+              }}
               onDoubleClick={() => setRenView({ id: v.id, v: v.name })}>
               {v.name}
-              {v.id === c.activeView && c.views.length > 1 && (
-                <span className="x" title="Delete view" onClick={(e) => { e.stopPropagation(); dataApp.removeView(c.id, v.id); }}>✕</span>
-              )}
+              {v.id === c.activeView && <span className="caret" style={{ marginLeft: 4, fontSize: 9, color: "var(--muted-foreground)" }}>⌄</span>}
             </button>
           )
         ))}
         <button className="dtv-add" title="New view" onClick={() => dataApp.addView(c.id)}>+</button>
+        {menu === "viewcfg" && (
+          <div className="dp-pop dt-selfly" style={{ ...pos, width: 190 }}>
+            <div className="pop-sub" style={{ margin: "2px 8px 4px" }}>{view.name}</div>
+            <button className="tp-slot" onClick={() => { setRenView({ id: view.id, v: view.name }); setMenu(null); }}>Rename view</button>
+            <button className="tp-slot" onClick={() => { dataApp.duplicateView(c.id, view.id); setMenu(null); }}>Duplicate view</button>
+            <div className="pop-sub" style={{ margin: "6px 8px 2px" }}>Density</div>
+            <div className="dt-mrow">
+              <button className={"tp-slot" + ((view.density ?? "cozy") === "cozy" ? " on" : "")} onClick={() => dataApp.patchView(c.id, { density: "cozy" })}>Cozy</button>
+              <button className={"tp-slot" + (view.density === "compact" ? " on" : "")} onClick={() => dataApp.patchView(c.id, { density: "compact" })}>Compact</button>
+            </div>
+            <button className="tp-slot" onClick={() => { dataApp.resetView(c.id); setMenu(null); }}>Reset view</button>
+            {c.views.length > 1 && (
+              <button className="tp-slot danger" onClick={() => { dataApp.removeView(c.id, view.id); setMenu(null); }}>Delete view</button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="dt-toolbar">
@@ -632,6 +669,17 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
           {menu === "opts" && (
             <div className="dp-pop dt-selfly" style={{ ...pos, width: 170 }}>
               <button className="tp-slot" onClick={() => dataApp.patchView(c.id, { wrap: !view.wrap })}>{view.wrap ? "✓ " : ""}Wrap text lines</button>
+              <button className="tp-slot" onClick={() => {
+                const fields = c.fields.filter((f) => !view.hidden.includes(f.id));
+                const esc = (s: string) => (/[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s);
+                const lines = [fields.map((f) => esc(f.name)).join(",")];
+                for (const r of rows) lines.push(fields.map((f) => esc(Array.isArray(r.v[f.id]) ? (r.v[f.id] as string[]).join(" | ") : String(r.v[f.id] ?? ""))).join(","));
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+                a.download = c.name.toLowerCase().replace(/\s+/g, "-") + ".csv";
+                a.click(); URL.revokeObjectURL(a.href); setMenu(null);
+              }}>Export CSV ({"visible fields"})</button>
+              <button className="tp-slot" onClick={() => { dataApp.resetView(c.id); setMenu(null); }}>Reset view</button>
               <div className="pop-sub" style={{ margin: "6px 8px 2px" }}>Group by</div>
               <button className={"tp-slot" + (!view.groupBy ? " on" : "")} onClick={() => { dataApp.patchView(c.id, { groupBy: undefined }); setMenu(null); }}>None</button>
               {c.fields.filter((f) => f.type === "select").map((f) => (
@@ -647,7 +695,7 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
       </div>
 
       <div className="dt-scroll">
-        <table className="dt">
+        <table className={"dt" + (view.density === "compact" ? " compact" : "")}>
           <thead>
             <tr>
               <th className="dt-openth" />
