@@ -22,7 +22,11 @@ values in this file.
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- Panel widths come from the registry only: **S 380 · M 480 · L 640 · XL 800 · XXL fluid** (px; XXL flexes to fill the remaining stage, min 720).
+- Panel widths come from the registry only: **S 380 · M 480 · L 640 · XL 800 · XXL fluid**. XXL sizes to EXACTLY the
+  stage's visible width (`calc(100% - stage-pad)`) so an aligned XXL panel
+  breathes the same gutter on both sides; a size change re-scrolls the stage to
+  the leaf; double-clicking any panel bar aligns that panel at the pad. Pinned
+  references default to S but every size (XXL included) applies in pin mode.
   Never a hardcoded width on a panel.
 - Stage: gap `var(--stage-gap, 14px)`, gutter `var(--stage-pad, 18px)` on BOTH sides
   (left padding + end spacer). A flexing panel (canvas/kanban) keeps the right gutter.
@@ -105,6 +109,8 @@ pixel font-size that ignores them is a defect.
 | Inline rename / boxed edit-in-place | `.inline-edit` — text-like, zero border, zero ring |
 | Focus ring on inputs | ONE accent-tinted border; outline reserved for buttons (keyboard) |
 | Toolbar of 10+ flat buttons | Grouped smart menus (trigger shows active state) |
+| Menu / dropdown items | Sans 500 rows; MONO uppercase group labels; selected = accent-soft text + right ✓ — never a filled slab; segments keep the soft fill |
+| Record side peek (Notion-style) | Row hover reveals an `Open` chip on the title cell → the ENTITY SHEET: a fixed right drawer (agent-drawer language, 440px) with header (table eyebrow · icon actions ↗/⋯/×), serif editable title, PIPELINE PILLS derived from the first select field (click = set stage, live in the grid), underline facet tabs (Fields · Page · Activity · n) and a per-row note/task stream with a composer. `Open as panel` converts the peek into a thread panel |
 | Toast / snackbar stacks | `.toast` mono pill, bottom-center |
 | Hover affordances | Reveal on row/element hover (edit pencils, open arrows at opacity 0 → 1) |
 | Data grid | `.dt` table — sticky mono headers, hairline `--rule-1` grid, borderless cell

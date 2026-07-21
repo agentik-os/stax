@@ -71,6 +71,18 @@
       "since": "0.4.2",
       "area": "design",
       "title": "Separator dedup \u00b7 neutral focus ring \u00b7 resizable pinned refs"
+    },
+    {
+      "id": "U-013",
+      "since": "0.4.3",
+      "area": "ux",
+      "title": "Tables v3 \u00b7 Notion row peek \u00b7 the entity sheet (pipeline pills, facets, activity)"
+    },
+    {
+      "id": "U-014",
+      "since": "0.4.3",
+      "area": "design",
+      "title": "Menu design v2 \u00b7 XXL exact-width semantics \u00b7 double-click panel align"
     }
   ]
 }
