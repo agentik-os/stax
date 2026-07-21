@@ -809,6 +809,7 @@ function Shell() {
 function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: string, fromRefId?: string) => void; rootCollapsed?: boolean; onExpandRoot?: () => void }) {
   const ws = useWorkspace();
   const stageRef = useRef<HTMLDivElement>(null);
+  const sizes = useSizePrefs(); // a size change (e.g. → XXL) re-scrolls to the leaf
   const count = ws.path.length + ws.state.referenceRailOrder.length;
   useEffect(() => {
     const el = stageRef.current;
@@ -827,7 +828,7 @@ function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: s
     if (lr.right > sr.right - 8) left = el.scrollLeft + (lr.right - sr.right) + 16;
     if (lr.left < sr.left + 8) left = el.scrollLeft + (lr.left - sr.left) - 16;
     if (left !== el.scrollLeft) el.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
-  }, [count, ws.state.contextLeafId, ws.state.rootInstanceId, ws.path.length]);
+  }, [count, ws.state.contextLeafId, ws.state.rootInstanceId, ws.path.length, sizes]);
 
   if (!ws.state.rootInstanceId)
     return (
@@ -975,7 +976,10 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
     <section className={"panel" + (isRef ? " ref" : "") + (retained && !isRef ? " pinned" : "") + (id === ws.state.focusedPanelId ? " focused" : "")} aria-label={n.title || titleOfKey(p.target.resourceKey)}
       data-leaf={id === ws.state.contextLeafId || undefined}
       onMouseDown={() => { if (!isRef && ws.state.focusedPanelId !== id) ws.focusPanel(id); }}
-      style={compact ? undefined : (isCanvas && !isRef) || isFluid ? { width, flex: "1 1 auto", minWidth: isCanvas ? 520 : 720 } : { width }}>
+      style={compact ? undefined
+        : isFluid ? { flex: "0 0 100%", width: "100%", minWidth: 0 }
+        : isCanvas && !isRef ? { width, flex: "1 1 auto", minWidth: 520 }
+        : { width }}>
       <div className="panel-bar">
         {compact && !isRoot && (
           <button className="bar-btn back" title="Back" onClick={() => ws.closePanel(id)}>‹</button>
@@ -1220,8 +1224,12 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
           <div className="foot-actions">
             <button className="foot-cta"
               onClick={() => {
-                const cid = p.target.resourceKey.slice(4);
-                ws.openDetail(id, { panelType: "datarow", resourceKey: "dtr:" + cid + ":" + dataApp.addRow(cid) });
+                dataApp.addRow(p.target.resourceKey.slice(4));
+                // keep the stage still: just reveal the new row inside the table
+                requestAnimationFrame(() => {
+                  const sc = document.querySelector(".panel.focused .dt-scroll, .dt-scroll");
+                  if (sc) sc.scrollTop = sc.scrollHeight;
+                });
               }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New row
             </button>
