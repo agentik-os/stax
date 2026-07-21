@@ -27,8 +27,13 @@ values in this file.
 - Stage: gap `var(--stage-gap, 14px)`, gutter `var(--stage-pad, 18px)` on BOTH sides
   (left padding + end spacer). A flexing panel (canvas/kanban) keeps the right gutter.
 - Inside the body, blocks stack with these exact rhythms:
-  - `.card` — padding **14px 16px**, radius 12, 1px border, **margin-bottom 16px**;
-    its `.lab` mono label gets margin-bottom 6.
+  - `.card` (doc block) — **FLAT**: no border, no bg, radius 0; hairline TOP, padding
+    **14px 0 15px**; its `.lab` mono label gets margin-bottom 8. Borders belong to
+    FLOATING surfaces (menus, popovers, pickers), INPUTS and MEDIA — in-flow content
+    is flat, structured by hairlines and rhythm.
+  - `.stats` — no tiles: a vertical hairline BETWEEN stats (padding 18 both sides).
+  - `.drills` — hairline top on the list, hairline between rows, hover = secondary fill.
+  - `.anat-row` — hairline top, padding 10/0, mono accent label column 104px.
   - `.stat` (KPI) — padding **12px 14px**, radius 12; stats sit in a flex row, gap 10.
   - `.drills` — column gap **8px**; `.drill` row — padding **12px 14px**, radius 10,
     internal gap 12, serif lead tile 34×34 radius 9.

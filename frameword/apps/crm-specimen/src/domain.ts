@@ -121,7 +121,7 @@ export const DOMAIN: Record<string, DomainNode> = {
   "depth:1": {
     panelType: "doc", title: "Depth 1", subtitle: "Feel the mechanic before reading about it.",
     blocks: [{ kind: "card", label: "What to notice", text: "This panel opened beside its parent — nothing was replaced, nothing was covered (Law 3). The drill below opens depth 2 the exact same way, and the breadcrumb bar at the bottom grew a segment." }],
-    body: "× closes this panel. The root never moves (Law 2). Actions live in the foot below — never floating in the body (Law 6).",
+    body: "× closes this panel. Closing the ROOT promotes its child — the page never vanishes under you (Law 2). Actions live in the foot below — never floating in the body (Law 6).",
     children: ["depth:2"],
   },
   "depth:2": {
@@ -475,7 +475,7 @@ export const DOMAIN: Record<string, DomainNode> = {
     blocks: [
       { kind: "row", label: "TYPE", text: "space · registry size L 640 — roots are wide because the lists live here." },
       { kind: "row", label: "ANATOMY", text: "Bar 56 with the SPACE eyebrow · KPI stat row (mono, tabular) · numbered drill rows · composer CTA in the foot." },
-      { kind: "card", label: "What to try", text: "Open Accounts and click row 01. The list does not navigate away — Acme opens beside it (Law 3). The root's × closes the whole Space, and nothing can displace it (Law 2). The foot button below REPLACES this tour thread with the Accounts thread — that swap is Law 1. Pin this stop first (P) if you want it to ride along." },
+      { kind: "card", label: "What to try", text: "Open Accounts and click row 01. The list does not navigate away — Acme opens beside it (Law 3). Closing the root hands the lead to its open child — the page stays; the Space only ends at the last panel (Law 2). The foot button below REPLACES this tour thread with the Accounts thread — that swap is Law 1. Pin this stop first (P) if you want it to ride along." },
     ],
     footActions: [{ label: "Open Accounts", kind: "primary", space: "crm" }],
   },
@@ -517,7 +517,7 @@ export const DOMAIN: Record<string, DomainNode> = {
     panelType: "space", title: "Accounts", subtitle: "3 active accounts — click a row to open its detail beside this list.",
     children: ["acc:acme", "acc:globex", "acc:initech"], composer: "New account…",
     kpis: [{ v: "3", l: "accounts" }, { v: "5", l: "opportunities" }, { v: "€46k", l: "pipeline" }],
-    blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "Space root · L 640. KPI stats in tabular mono, numbered drills, composer in the foot. Its × closes the Space — nothing displaces the root (Law 2)." }],
+    blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "Space root · L 640. KPI stats in tabular mono, numbered drills, composer in the foot. Closing the root promotes its open child — the Space ends only at the last panel (Law 2)." }],
   },
   "acc:acme": { panelType: "account", title: "Acme Industries", subtitle: "Manufacturing · Lyon", meta: "2 contacts", children: ["con:jo", "con:max"], composer: "New contact…",
     blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "account · M 480 · depth 1. Opened by openDetail — the Accounts list stays mounted beside it (Law 3)." }] },

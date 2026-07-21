@@ -955,7 +955,10 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             PIN
           </button>
         )}
-        <button className="bar-btn" title={isRef ? "Remove reference" : isRoot ? "Close space" : "Close"} style={{ fontSize: 15 }}
+        <button className="bar-btn" style={{ fontSize: 15 }}
+          title={isRef ? "Remove reference" : isRoot
+            ? (ws.path.length > 1 ? "Close panel — the next panel takes the lead" : "Close space")
+            : "Close"}
           onClick={() => ws.closePanel(id)}>×</button>
       </div>
 
@@ -1021,7 +1024,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
                   <p style={{ fontSize: "calc(var(--fz-body, 13.5px) - 1.5px)", color: "var(--muted-foreground)" }}>Seven intent commands, (state, args) → state. That's the entire API — no other way to change what's on screen.</p>
                 </div>
               ) : b.kind === "row" ? (
-                <div key={i} className={"anat-row" + ((b.label?.length ?? 0) > 10 ? " note" : "")}><span className="k">{b.label}</span><span className="t">{b.text}</span></div>
+                <div key={i} className={"anat-row" + ((b.label?.length ?? 0) > 14 ? " note" : "")}><span className="k">{b.label}</span><span className="t">{b.text}</span></div>
               ) : b.kind === "code" ? (
                 <pre key={i} className="codeblock">{b.code}</pre>
               ) : (

@@ -240,16 +240,47 @@ describe("close & navigate — subtree policy, no silent orphans", () => {
     expect(s.contextLeafId).toBe(acmeId);
     expect(validate(s)).toEqual([]);
   });
-  test("closing the root with no pins empties the workspace", () => {
-    const s = closePanel(crmChain(), getContextPath(crmChain())[0]);
+  test("ROOT PROMOTION: closing the root with a drill open hands the lead to the child — same space", () => {
+    let s = crmChain(); // accounts → acme → jo
+    s = closePanel(s, s.rootInstanceId!);
+    expect(s.spaceId).toBe("crm");                     // we STAY on the page
+    expect(keys(s)).toEqual(["acme", "jo"]);           // the chain shifted left
+    const root = s.panelsById[s.rootInstanceId!];
+    expect(root.target.resourceKey).toBe("acme");
+    expect(root.role).toBe("root");
+    expect(root.parentInstanceId).toBeNull();
+    expect(validate(s)).toEqual([]);
+  });
+  test("ROOT PROMOTION: a PINNED root detaches to the rail while its child takes the lead", () => {
+    let s = crmChain();
+    s = pinPanel(s, s.rootInstanceId!);
+    s = closePanel(s, s.rootInstanceId!);
+    expect(keys(s)).toEqual(["acme", "jo"]);
+    expect(refKeys(s)).toEqual(["accounts"]);          // the old root rides the rail
+    expect(validate(s)).toEqual([]);
+  });
+  test("closing the LAST panel (root alone) empties the workspace", () => {
+    let s = openSpace(emptyWorkspace(), "crm", T("space", "accounts"));
+    s = closePanel(s, s.rootInstanceId!);
+    expect(s.spaceId).toBeNull();
     expect(Object.keys(s.panelsById).length).toBe(0);
   });
-  test("closing the root PRESERVES pinned panels as references", () => {
+  test("closing the root repeatedly walks the chain — the space ends only at the last panel", () => {
+    let s = crmChain();                                 // accounts → acme → jo
+    s = closePanel(s, s.rootInstanceId!);               // acme leads
+    s = closePanel(s, s.rootInstanceId!);               // jo leads
+    expect(keys(s)).toEqual(["jo"]);
+    expect(s.spaceId).toBe("crm");
+    s = closePanel(s, s.rootInstanceId!);               // last one — thread ends
+    expect(s.spaceId).toBeNull();
+    expect(validate(s)).toEqual([]);
+  });
+  test("promotion keeps a pinned DESCENDANT attached (nothing detaches on root close)", () => {
     let s = crmChain();
-    s = pinPanel(s, s.contextLeafId!);               // pin jo, still attached
-    s = closePanel(s, getContextPath(s)[0]);         // close the ROOT
-    expect(s.rootInstanceId).toBeNull();
-    expect(refKeys(s)).toEqual(["jo"]);              // the pin stayed
+    s = pinPanel(s, s.contextLeafId!);                  // pin jo, still attached
+    s = closePanel(s, s.rootInstanceId!);               // acme promoted
+    expect(keys(s)).toEqual(["acme", "jo"]);            // jo STAYS attached
+    expect(refKeys(s)).toEqual([]);                     // nothing forced into the rail
     expect(validate(s)).toEqual([]);
   });
   test("navigateTo an ancestor applies the subtree policy below it", () => {

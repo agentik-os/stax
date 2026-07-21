@@ -273,9 +273,26 @@ export function closePanel(state: WorkspaceState, instanceId: string): Workspace
     return s;
   }
   if (p.role === "root") {
-    // closing the root ends the thread — pinned descendants detach first,
-    // and existing references survive (a pin outlives its space)
     const s = clone(state);
+    // PROMOTION: closing the root while a drill chain is open must not nuke
+    // the page — the attached child takes the lead as the new root (same
+    // space, same thread, refs untouched). The space only ENDS when the root
+    // is the last context panel.
+    const heir = Object.values(s.panelsById).find(
+      (x) => x.parentInstanceId === instanceId && x.placement === "context",
+    );
+    if (heir) {
+      detachOrDeleteRoot(s, instanceId); // pinned old root → rail; else deleted
+      heir.parentInstanceId = null;
+      heir.role = "root";
+      heir.retention = "retained";
+      heir.pinned = false;
+      s.rootInstanceId = heir.instanceId;
+      if (s.contextLeafId === instanceId || !s.panelsById[s.contextLeafId!]) s.contextLeafId = heir.instanceId;
+      if (s.focusedPanelId === instanceId || !s.panelsById[s.focusedPanelId!]) s.focusedPanelId = heir.instanceId;
+      return s;
+    }
+    // no attached child — the thread really ends
     applyBranchPolicy(s, instanceId);
     detachOrDeleteRoot(s, instanceId);
     s.spaceId = null;
