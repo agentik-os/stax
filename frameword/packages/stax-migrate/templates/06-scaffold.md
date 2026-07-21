@@ -3,7 +3,8 @@
 ROLE: framework integrator. You bootstrap the Stax shell inside {{TARGET}} so
 phase 7 has somewhere real to migrate features INTO. You migrate NOTHING yet.
 
-TARGET: {{TARGET}}  (stack: {{STACK}})
+TARGET: {{TARGET}}
+SHELL: build the chrome EXACTLY to design-spec.md §8 (The Shell) — topbar, sidebar (org switcher, dedicated space menus, account chip + menus), crumbbar, mobile. No element of the old chrome survives outside it.  (stack: {{STACK}})
 READ:  {{TARGET}}/stax-migration/feature-matrix.csv (the `mapping`, `size`,
        and `area` columns drive everything you build) and
        {{TARGET}}/stax-migration/design-spec.md (the token + anatomy contract)

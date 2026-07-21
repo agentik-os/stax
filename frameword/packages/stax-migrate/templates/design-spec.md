@@ -121,3 +121,44 @@ pixel font-size that ignores them is a defect.
 Every migrated element ships all of: default · hover · focus/active · empty ·
 loading/skeleton · error. Empty states are sentences with a next action, not blank
 space. A migrated element missing a state keeps its matrix row open.
+
+## 8 · The Shell: the chrome contract (topbar · sidebar · crumbbar)
+
+A converted app ships THIS shell — every element below is part of the transformation,
+inventoried in the element matrix and rebuilt to this anatomy. Nothing of the old
+chrome (headers, navbars, user menus, settings pages, notification trays) survives
+outside it.
+
+**Topbar (h 52, solid card bg — NEVER backdrop-filter: it breaks fixed descendants):**
+- sidebar toggle (bare icon 16) · dashboard NAV as dropdown triggers (icon 14 + label
+  + caret; menu = numbered dd-items, one per space, footer hint) · spacer ·
+- GO TO pill (⌘K) · utility icons 15 (system spaces: data, notes, tasks, canvas) ·
+- notification bell (unread dot; dropdown: search, All/Unread segment, kind dots,
+  mark-all-read foot) — the ONLY floating menus allowed are these chrome dropdowns.
+
+**Sidebar (w 240, overflow hidden):**
+- org/tenant switcher head (logo tile 15, name + tier, ⇅; menu = org rows + ⌘1-3) ·
+- Quick open row (⌘K, filled) ·
+- the SPACE area: dashboard's space list at rest; a DEDICATED space menu when one is
+  open (‹ back arrow 26 with instant tooltip = dashboard name; head row = plain sans
+  600 row, click focuses/reopens the main; collapse toggle always rendered, disabled
+  when inert; numbered children 01…, one-level expansion ≤14, active thread
+  highlighted) · compact adds a 4-icon dashboard switcher row ·
+- usage/pipeline block (mono label, value, hairline track) ·
+- account chip (avatar 28 + name + role/email, ⋯): menu = Profile · Settings ·
+  Documentation · separator · Language accordion (inline rows, flag 18 SVGs, no
+  side-flyout: the sidebar clips) · separator · Sign out. Avatar everywhere follows
+  the profile store instantly.
+
+**Crumbbar (h 34):**
+- home glyph → thread crumbs (mono, focused = accent, click = navigateTo rewind) ·
+  spacer · transient toasts (inline text, never floating pills over the UI) ·
+  repo/GitHub link · theme toggle — both as bare 24px icons, menus open UPWARD.
+
+**Panels-only surfaces:** settings = a sys PANEL (appearance, fonts, accent, zoom,
+shortcuts) — never a page; profile = entity panel (fs-head name/role); language and
+theme are DEVICE-LOCAL prefs (localStorage), never navigation state.
+
+**Mobile ≤640 (PushHost):** one card + back, ref chips with remove ×, sidebar becomes
+an overlay carrying the dashboard switcher; ≤760 hides the topbar nav (the sidebar
+switcher takes over).

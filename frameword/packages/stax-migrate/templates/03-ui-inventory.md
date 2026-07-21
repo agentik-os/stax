@@ -66,6 +66,19 @@ CSV hygiene: quote fields containing commas; never reorder existing rows.
 Add a `## Design inventory summary` section: the color palette (every literal
 + count), the spacing histogram, the font-size list, and the icon census.
 
+## SHELL SWEEP: the chrome is inventoried like everything else
+
+The old app's CHROME gets its own E-rows — none of it survives as-is; each row maps in
+phase 5 onto design-spec §8 (The Shell):
+
+- every header/topbar item (logos, nav links, mega-menus, search bars, CTA buttons)
+- every nav MENU and SUBMENU (dropdowns, flyouts, accordions), with their item counts
+- the user/avatar menu and every entry in it (profile, settings, billing, logout…)
+- settings surfaces (pages, tabs, dialogs) — they become ONE sys panel
+- notification surfaces (trays, badges, toasts)
+- breadcrumbs, tenant/org switchers, language pickers, theme toggles
+- mobile navigation (burger menus, bottom bars, drawers)
+
 ## Exit criteria — prove the crawl, don't claim it
 
 1. Grep reconcile, shown raw: `grep -roE "#[0-9a-fA-F]{3,8}" src | wc -l`,
