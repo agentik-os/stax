@@ -14,7 +14,8 @@ import { DatePicker, popPos } from "./NotesApp";
 export type FieldType = "text" | "number" | "select" | "multiselect" | "date" | "check" | "url" | "email" | "phone";
 export type CellValue = string | number | boolean | string[] | undefined;
 export interface Field { id: string; name: string; type: FieldType; options?: string[]; width?: "s" | "m" | "l" }
-export interface Row { id: string; v: Record<string, CellValue>; page?: string; ts: number }
+export interface RowActivity { id: string; kind: "note" | "task"; text: string; done?: boolean; ts: number }
+export interface Row { id: string; v: Record<string, CellValue>; page?: string; activity?: RowActivity[]; ts: number }
 export interface Filter { fieldId: string; op: string; value: string }
 export interface View {
   id: string; name: string;
@@ -181,6 +182,24 @@ export const dataApp = {
     }
     dataApp.patchCol(colId, { rows });
     return id;
+  },
+  addActivity: (colId: string, rowId: string, kind: "note" | "task", text: string) => {
+    const t = text.trim();
+    if (!t) return;
+    const c = dataApp.col(colId);
+    const r = c?.rows.find((x) => x.id === rowId);
+    if (!c || !r) return;
+    dataApp.patchRow(colId, rowId, { activity: [...(r.activity ?? []), { id: uid("a"), kind, text: t, ts: Date.now() }] });
+  },
+  toggleActivity: (colId: string, rowId: string, actId: string) => {
+    const r = dataApp.col(colId)?.rows.find((x) => x.id === rowId);
+    if (!r) return;
+    dataApp.patchRow(colId, rowId, { activity: (r.activity ?? []).map((a) => (a.id === actId ? { ...a, done: !a.done } : a)) });
+  },
+  removeActivity: (colId: string, rowId: string, actId: string) => {
+    const r = dataApp.col(colId)?.rows.find((x) => x.id === rowId);
+    if (!r) return;
+    dataApp.patchRow(colId, rowId, { activity: (r.activity ?? []).filter((a) => a.id !== actId) });
   },
   patchRow: (colId: string, rowId: string, patch: Partial<Row>) =>
     dataApp.patchCol(colId, { rows: (dataApp.col(colId)?.rows ?? []).map((r) => (r.id === rowId ? { ...r, ...patch, ts: Date.now() } : r)) }),
@@ -707,21 +726,9 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
       {sheet && (
         <>
           <div className="sheet-bg" onMouseDown={() => setSheet(null)} />
-          <aside className="sheet" aria-label="Row quick peek">
-            <div className="drawer-bar">
-              <span className="eyebrow">page · quick peek</span>
-              <span style={{ flex: 1 }} />
-              <button className="d-btn outline sm"
-                onClick={() => { openRow(sheet); setSheet(null); }}>
-                Open as panel
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-              </button>
-              <button className="bar-btn" title="Close" style={{ fontSize: 15 }} onClick={() => setSheet(null)}>×</button>
-            </div>
-            <div className="sheet-body">
-              <DataRow rowKey={"dtr:" + c.id + ":" + sheet} panelId={panelId} />
-            </div>
-          </aside>
+          <RowSheet c={c} rowId={sheet} panelId={panelId}
+            onOpenPanel={() => { openRow(sheet); setSheet(null); }}
+            onClose={() => setSheet(null)} />
         </>
       )}
       <div className="dt-scroll">
@@ -791,6 +798,118 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
 }
 
 /* ── the row panel: a Notion-class page ─────────────────────────────── */
+/* ── the entity SHEET: rich header (title + pipeline pills from the first
+   select field) · facet segments · activity — structure any table inherits ── */
+function RowSheet({ c, rowId, panelId, onOpenPanel, onClose }: {
+  c: Collection; rowId: string; panelId: string; onOpenPanel: () => void; onClose: () => void;
+}) {
+  const s = useDataApp();
+  void s;
+  const [facet, setFacet] = useState<"fields" | "page" | "activity">("fields");
+  const [menu, setMenu] = useState(false);
+  const [kind, setKind] = useState<"note" | "task">("note");
+  const [draft, setDraft] = useState("");
+  const r = c.rows.find((x) => x.id === rowId);
+  if (!r) return null;
+  const firstText = c.fields.find((f) => f.type === "text");
+  const stageField = c.fields.find((f) => f.type === "select" && (f.options?.length ?? 0) > 1);
+  const acts = r.activity ?? [];
+  const open = acts.filter((a) => a.kind === "task" && !a.done).length;
+  return (
+    <aside className="sheet" aria-label="Row sheet">
+      <div className="sheet-head">
+        <div className="sh-row">
+          <span className="eyebrow">{c.name} · page</span>
+          <span style={{ flex: 1 }} />
+          <button className="bar-btn" title="Open as panel" onClick={onOpenPanel}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
+          </button>
+          <span style={{ position: "relative" }}>
+            <button className="bar-btn" title="Row actions" onClick={() => setMenu((v) => !v)}>⋯</button>
+            {menu && (
+              <>
+                <div className="pop-bg" onMouseDown={() => setMenu(false)} />
+                <div className="dp-pop dt-selfly" style={{ right: 0, left: "auto", width: 170, zIndex: 41 }}>
+                  <button className="tp-slot" onClick={() => { dataApp.duplicateRow(c.id, rowId); setMenu(false); }}>Duplicate row</button>
+                  <button className="tp-slot danger" onClick={() => { dataApp.removeRow(c.id, rowId); onClose(); }}>Delete row</button>
+                </div>
+              </>
+            )}
+          </span>
+          <button className="bar-btn" title="Close" style={{ fontSize: 15 }} onClick={onClose}>×</button>
+        </div>
+        {firstText && (
+          <input className="fs-title" placeholder="Untitled" value={String(r.v[firstText.id] ?? "")}
+            onChange={(e) => dataApp.setCell(c.id, r.id, firstText.id, e.target.value || undefined)} />
+        )}
+        {stageField && (
+          <div className="sh-pills" role="group" aria-label={stageField.name}>
+            {(stageField.options ?? []).map((o) => {
+              const cur = r.v[stageField.id] === o;
+              return (
+                <button key={o} className={"sh-pill" + (cur ? " on" : "")}
+                  onClick={() => dataApp.setCell(c.id, r.id, stageField.id, cur ? undefined : o)}>
+                  {o}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <div className="sh-tabs">
+          {([["fields", "Fields"], ["page", "Page"], ["activity", "Activity" + (acts.length ? " · " + (open || acts.length) : "")]] as const).map(([k, label]) => (
+            <button key={k} className={"sh-tab" + (facet === k ? " on" : "")} onClick={() => setFacet(k)}>{label}</button>
+          ))}
+        </div>
+      </div>
+      <div className="sheet-body">
+        {facet === "fields" && (
+          <div className="dt-props">
+            {c.fields.filter((f) => f.id !== firstText?.id).map((f) => (
+              <div key={f.id} className="dt-prop">
+                <span className="dt-proplabel">{f.name}</span>
+                <span className="dt-propval"><Cell colId={c.id} row={r} field={f} /></span>
+              </div>
+            ))}
+          </div>
+        )}
+        {facet === "page" && (
+          <RichNotes key={r.id} html={r.page ?? ""} placeholder="Write the page: this row is also a document…"
+            onChange={(h) => dataApp.patchRow(c.id, r.id, { page: h })} />
+        )}
+        {facet === "activity" && (
+          <>
+            {acts.length === 0 && <p className="pf-hint" style={{ marginBottom: 10 }}>Notes and tasks for this row live here — the composer is below.</p>}
+            <div className="sh-acts">
+              {[...acts].sort((a, b) => b.ts - a.ts).map((a) => (
+                <div key={a.id} className={"sh-act" + (a.done ? " done" : "")}>
+                  {a.kind === "task" ? (
+                    <button className={"cv-subcheck" + (a.done ? " on" : "")} title={a.done ? "Reopen" : "Done"}
+                      onClick={() => dataApp.toggleActivity(c.id, r.id, a.id)}>{a.done ? "✓" : ""}</button>
+                  ) : (
+                    <span className="sh-actdot" />
+                  )}
+                  <span className="tx">{a.text}</span>
+                  <button className="pf-x" title="Remove" onClick={() => dataApp.removeActivity(c.id, r.id, a.id)}>×</button>
+                </div>
+              ))}
+            </div>
+            <div className="sh-compose">
+              <div className="pf-seg">
+                <button className={kind === "note" ? "on" : ""} onClick={() => setKind("note")}>Note</button>
+                <button className={kind === "task" ? "on" : ""} onClick={() => setKind("task")}>Task</button>
+              </div>
+              <input className="d-input" style={{ flex: 1, minWidth: 0 }} placeholder={kind === "note" ? "Add a note…" : "Add a task…"}
+                value={draft} onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { dataApp.addActivity(c.id, r.id, kind, draft); setDraft(""); } }} />
+              <button className="d-btn outline sm" onClick={() => { dataApp.addActivity(c.id, r.id, kind, draft); setDraft(""); }}>Add</button>
+            </div>
+          </>
+        )}
+      </div>
+    </aside>
+  );
+}
+
 export function DataRow({ rowKey, panelId }: { rowKey: string; panelId: string }) {
   const s = useDataApp();
   void panelId;
