@@ -163,8 +163,11 @@ img.avatar { border: 1px solid var(--border); }
 
 /* drill rows */
 /* drill list — flat rows, hairlines BETWEEN rows, hover fill */
-.drills { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--border); }
-.drill { display: flex; align-items: center; gap: 12px; padding: 12px 6px; border: none; border-bottom: 1px solid var(--border); border-radius: 0; cursor: pointer; text-align: left; width: 100%; }
+/* the list bleeds 12px into the gutter so the hover fill BREATHES while the
+   text stays aligned with every other flat block */
+.drills { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--border); margin: 0 -12px; }
+.drills > * { width: auto; }
+.drill { display: flex; align-items: center; gap: 12px; padding: 12px; border: none; border-bottom: 1px solid var(--border); border-radius: 0; cursor: pointer; text-align: left; width: 100%; }
 /* hover: flat fill, and the row's own hairline turns ACCENT (same 1px) */
 .drill { transition: background 130ms var(--ease), border-color 130ms var(--ease); }
 .drill:hover { background: var(--secondary); border-bottom-color: var(--accent); }
