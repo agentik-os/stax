@@ -116,6 +116,9 @@ stax-migrate status [dir]      contract + phase + three matrices: counts, covera
 stax-migrate contract [dir]    the honesty check: contracted level vs live coverage (exit 1 on breach)
 stax-migrate level  [name] [dir] [--force]
                                show or change the level — lowering mid-migration (or waiving data) needs --force, and is logged
+stax-migrate upgrade [dir]    already-Stax project: applied/pending layout+design updates (U-001…)
+stax-migrate upgrade plan [id] · run --agent claude|codex [--id U-00X] · done <id>
+                               print a unit's brief · drive an agent to apply it · record it (operator-gated)
 stax-migrate scope  [a,b,c] [dir] [--force]
                                declare the STARTER in-scope areas — in-scope rows must reach 100%; changes are logged
 stax-migrate prompt [n] [dir]  print phase n's brief to stdout — pipe/paste into any agent

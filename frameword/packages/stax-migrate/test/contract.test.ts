@@ -6,6 +6,9 @@ import {
   checkPhase,
   blockingRows,
   noteSeen,
+  upgradeCatalog,
+  readApplied,
+  recordApplied,
   serializeCSV,
   LEVELS,
   CSV_HEADER,
@@ -151,5 +154,31 @@ describe("phase 2 and phase 9 gates", () => {
     expect(checkPhase(bare, 9).join("\n")).toContain("Integration contract");
     const ok = ws("full", { report: "# Report\n## Integration contract\nlevel full — honored" });
     expect(checkPhase(ok, 9)).toEqual([]);
+  });
+});
+
+
+describe("upgrade catalog — updates for already-Stax projects", () => {
+  test("the package ships a non-empty catalog and every unit has its brief", () => {
+    const cat = upgradeCatalog();
+    expect(cat.length).toBeGreaterThanOrEqual(8);
+    for (const u of cat) {
+      expect(u.id).toMatch(/^U-\d{3}$/);
+      expect(u.title.length).toBeGreaterThan(10);
+      const brief = path.join(path.dirname(new URL(import.meta.resolve("../index.mjs")).pathname), "upgrades", u.id + ".md");
+      expect(fs.existsSync(brief)).toBe(true);
+      const body = fs.readFileSync(brief, "utf8");
+      for (const sec of ["## DETECT", "## APPLY", "## VERIFY"]) expect(body).toContain(sec);
+    }
+  });
+  test("recordApplied is idempotent and readApplied round-trips — no workspace needed", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "staxu-"));
+    expect(readApplied(dir)).toEqual([]);
+    recordApplied(dir, "U-001");
+    recordApplied(dir, "U-001");
+    recordApplied(dir, "U-003");
+    const applied = readApplied(dir);
+    expect(applied.map((a: { id: string }) => a.id)).toEqual(["U-001", "U-003"]);
+    expect(applied[0].date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

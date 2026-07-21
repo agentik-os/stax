@@ -1,0 +1,12 @@
+{
+  "catalog": [
+    { "id": "U-001", "since": "0.4.0", "area": "engine", "title": "Pinned roots · reload keeps pins · Back/Forward rewind (urlSync push)" },
+    { "id": "U-002", "since": "0.4.0", "area": "design", "title": "A×F5 form grammar — the title IS the field; form cards abolished" },
+    { "id": "U-003", "since": "0.4.0", "area": "layout", "title": "Crumbbar utilities — bare theme icon at the right, repo link beside it, topbar decluttered" },
+    { "id": "U-004", "since": "0.4.0", "area": "layout", "title": "Dedicated space menus — the sidebar mirrors the OPEN space, with back arrow and root show/hide" },
+    { "id": "U-005", "since": "0.4.0", "area": "layout", "title": "Reference rail v2 — S-capped refs, scroll-to-leaf, removable chips, root-ref consume-on-resume" },
+    { "id": "U-006", "since": "0.4.0", "area": "ux", "title": "First-run auto-open · ⌘K indexes live stores · mobile dashboard switcher" },
+    { "id": "U-007", "since": "0.4.0", "area": "design", "title": "Foundations — one foot-button family, fixed-position popovers, no native selects/pickers, no emoji chrome" },
+    { "id": "U-008", "since": "0.4.0", "area": "perf", "title": "Bundle diet — lazy heavy panel modules behind a store-only seam; trim icon mega-packs" }
+  ]
+}

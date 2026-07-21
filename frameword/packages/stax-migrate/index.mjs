@@ -200,6 +200,34 @@ function writeContract(target, c) {
   );
 }
 
+/* ── upgrade catalog — layout/design updates for ALREADY-STAX projects ──
+ * The catalog ships with the package (upgrades/manifest.json + one brief per
+ * unit). Applied units are recorded per-project in stax-migration/upgrades.json
+ * — `upgrade` works standalone: it never requires the full migration workspace. */
+const UPG_DIR = path.join(PKG_DIR, "upgrades");
+function upgradeCatalog() {
+  try { return JSON.parse(fs.readFileSync(path.join(UPG_DIR, "manifest.json"), "utf8")).catalog; }
+  catch { return []; }
+}
+function readApplied(target) {
+  try { return JSON.parse(fs.readFileSync(wsPath(target, "upgrades.json"), "utf8")).applied ?? []; }
+  catch { return []; }
+}
+function recordApplied(target, id) {
+  fs.mkdirSync(wsPath(target), { recursive: true });
+  const applied = readApplied(target);
+  if (!applied.some((a) => a.id === id))
+    applied.push({ id, date: new Date().toISOString().slice(0, 10) });
+  fs.writeFileSync(wsPath(target, "upgrades.json"), JSON.stringify({ applied }, null, 2) + "\n");
+}
+function upgradeBrief(target, id) {
+  const unit = upgradeCatalog().find((u) => u.id === id);
+  if (!unit) die(`unknown upgrade "${id}" — see: stax-migrate upgrade ${target}`);
+  const p = path.join(UPG_DIR, id + ".md");
+  if (!fs.existsSync(p)) die(`brief missing from the package: ${p}`);
+  return fs.readFileSync(p, "utf8").replaceAll("{{TARGET}}", target).replaceAll("{{CLI}}", CLI_PATH);
+}
+
 /** Union the CURRENT matrix ids into state.json — the gates' memory. A row
  *  that was ever seen can never silently vanish: deletion must be logged. */
 function noteSeen(target) {
@@ -695,6 +723,73 @@ function cmdRun(target, agent, phaseFlag) {
   }
 }
 
+/* upgrade — bring an ALREADY-STAX project up to the latest layout/design grammar */
+function cmdUpgrade(target, pos, flags) {
+  const catalog = upgradeCatalog();
+  if (catalog.length === 0) die("the package ships no upgrade catalog — reinstall stax-migrate");
+  const applied = readApplied(target);
+  const isApplied = (id) => applied.some((a) => a.id === id);
+  const pending = catalog.filter((u) => !isApplied(u.id));
+  const sub = pos[0];
+
+  if (sub === "plan") {
+    const id = pos[1] === undefined || pos[1] === "next" ? pending[0]?.id : pos[1];
+    if (!id) { console.log(green("✓ nothing pending — the project speaks the latest grammar.")); return; }
+    process.stdout.write(upgradeBrief(target, id));
+    console.log(dim("\n── apply it (agent-driven): ") + cyan(`stax-migrate upgrade run ${target} --agent claude --id ${id}`));
+    console.log(dim("── then record it:          ") + cyan(`stax-migrate upgrade done ${id} ${target}`));
+    return;
+  }
+  if (sub === "done") {
+    const id = pos[1];
+    if (!id) die("usage: stax-migrate upgrade done <U-00X> [dir]");
+    if (!catalog.some((u) => u.id === id)) die(`unknown upgrade "${id}"`);
+    if (isApplied(id)) { console.log(green(`✓ ${id} already recorded.`)); return; }
+    recordApplied(target, id);
+    console.log(green(`✓ ${id} recorded`) + dim(` — ${catalog.find((u) => u.id === id).title}`));
+    const left = catalog.filter((u) => !readApplied(target).some((a) => a.id === u.id));
+    console.log(left.length ? dim(`  ${left.length} pending — next: `) + cyan(`stax-migrate upgrade plan ${target}`) : green("  all upgrades applied."));
+    return;
+  }
+  if (sub === "run") {
+    const agent = flags.agent;
+    if (!agent || !["claude", "codex"].includes(agent)) die("usage: stax-migrate upgrade run [dir] --agent claude|codex [--id U-00X]");
+    const id = flags.id ?? pending[0]?.id;
+    if (!id) { console.log(green("✓ nothing pending.")); return; }
+    if (!which(agent)) {
+      console.log(red(`✗ "${agent}" CLI not found on PATH.`));
+      console.log("  fallback: " + cyan(`stax-migrate upgrade plan ${id} ${target}`) + dim("  (paste the brief into any agent yourself)"));
+      process.exitCode = 1;
+      return;
+    }
+    const brief = upgradeBrief(target, id) +
+      "\n\nSTANDING RULES: evidence for every VERIFY item (grep output, rect dumps, screenshots) — prose is not proof. Do NOT record the upgrade yourself: the operator runs `stax-migrate upgrade done " + id + "` after checking the evidence.";
+    console.log(bold(mag(`▶ upgrade ${id}`)) + dim(` · agent: ${agent} · cwd: ${target}`));
+    const args = agent === "claude" ? ["-p", brief, "--permission-mode", "acceptEdits"] : ["exec", brief];
+    const r = spawnSync(agent, args, { cwd: target, stdio: "inherit" });
+    if (r.status !== 0) console.log(yellow(`agent exited with status ${r.status} — inspect before trusting anything.`));
+    console.log(dim("check the evidence, then record: ") + cyan(`stax-migrate upgrade done ${id} ${target}`));
+    return;
+  }
+
+  // default: status table
+  console.log();
+  console.log("  " + bold(mag("STAX UPGRADES")) + dim(" — layout/design updates for an adopted project · ") + target);
+  for (const u of catalog) {
+    const on = isApplied(u.id);
+    const mark = on ? green("✓") : yellow("○");
+    const when = on ? dim("  applied " + applied.find((a) => a.id === u.id).date) : "";
+    console.log(`  ${mark} ${bold(u.id)}  ${dim("[" + u.area + "]")} ${u.title}${when}`);
+  }
+  console.log();
+  if (pending.length) {
+    console.log("  " + bold(`${pending.length} pending`) + dim(" — next: ") + cyan(`stax-migrate upgrade plan ${target}`));
+  } else {
+    console.log("  " + green(bold("all upgrades applied — the project speaks the latest grammar.")));
+  }
+  console.log();
+}
+
 function cmdHelp() {
   console.log(`
 ${bold(mag("stax-migrate"))} — any legacy web app → the Stax panels-inside-panels grammar
@@ -709,6 +804,9 @@ ${bold("USAGE")}
   stax-migrate ${cyan("prompt")} [n] [dir]              print phase n's brief (default: current phase) — pipe anywhere
   stax-migrate ${cyan("next")}   [dir]                  print the current phase brief + how to run it
   stax-migrate ${cyan("done")}   [dir]                  validate the phase exit gate, then advance (or refuse)
+  stax-migrate ${cyan("upgrade")} [dir]                     ALREADY-STAX project: applied/pending layout+design updates
+  stax-migrate ${cyan("upgrade")} plan [id] · run --agent … · done <id>
+                                        print a unit's brief · drive an agent to apply it · record it
   stax-migrate ${cyan("run")}    [dir] --agent claude|codex [--phase n]
                                         drive ONE phase via an agent CLI, then re-check the gate
 
@@ -769,7 +867,18 @@ async function main() {
       case "contract":
         cmdContract(resolveTarget(pos[0]));
         break;
-      case "scope": {
+      case "upgrade": {
+      // positional shapes: upgrade [dir] · upgrade plan [id] [dir] · upgrade done <id> [dir] · upgrade run [dir]
+      const subs = ["plan", "done", "run"];
+      let sub, a1, dirArg;
+      if (subs.includes(pos[0])) { sub = pos[0]; 
+        if (pos[1] !== undefined && /^U-\d+$|^next$/.test(pos[1])) { a1 = pos[1]; dirArg = pos[2]; }
+        else { dirArg = pos[1]; }
+      } else { dirArg = pos[0]; }
+      cmdUpgrade(resolveTarget(dirArg), [sub, a1].filter((x) => x !== undefined), flags);
+      break;
+    }
+    case "scope": {
         let list, dirArg;
         if (pos[0] !== undefined && (pos[0].includes(",") || (!fs.existsSync(path.resolve(process.cwd(), pos[0])) && pos[1] !== undefined))) { list = pos[0]; dirArg = pos[1]; }
         else if (pos.length === 1 && pos[0] !== undefined && !fs.existsSync(path.resolve(process.cwd(), pos[0]))) { list = pos[0]; }
@@ -828,4 +937,4 @@ async function main() {
 
 if (isMain()) await main();
 
-export { parseCSV, serializeCSV, sniffStack, checkPhase, blockingRows, readContract, writeContract, noteSeen, LEVELS, CSV_HEADER, ELEM_HEADER, DATA_HEADER, WS }; // for tests / embedding
+export { parseCSV, serializeCSV, sniffStack, checkPhase, blockingRows, readContract, writeContract, noteSeen, upgradeCatalog, readApplied, recordApplied, LEVELS, CSV_HEADER, ELEM_HEADER, DATA_HEADER, WS }; // for tests / embedding

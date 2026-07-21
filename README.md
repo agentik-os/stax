@@ -97,6 +97,17 @@ never end up "10% integrated and quietly done":
 | **`starter`** | your chosen core spaces at 100% | migrated · out-of-scope **with cited reasons** |
 | **`shell`** | the Stax shell wraps the app, every route panel-reachable | migrated · wrapped **with cited reasons** |
 
+**Already on Stax?** You never re-migrate: `stax-migrate upgrade` diffs your project
+against the versioned **upgrade catalog** (engine guarantees, the A×F5 form grammar,
+crumbbar utilities, dedicated space menus, reference-rail v2…) — each unit a
+DETECT / APPLY / VERIFY brief an agent applies and YOU record after checking evidence:
+
+```sh
+node …/stax-migrate/index.mjs upgrade .                    # applied vs pending units
+node …/stax-migrate/index.mjs upgrade run . --agent claude # apply the next unit
+node …/stax-migrate/index.mjs upgrade done U-002 .         # record it (operator-gated)
+```
+
 Three matrices are the law:
 
 - **Feature matrix** — every feature and sub-feature gets an id (F-012, F-012.1…).
