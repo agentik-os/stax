@@ -170,24 +170,34 @@ img.avatar { border: 1px solid var(--border); }
    12px-inset pseudo hairlines so every line in a panel shares the EXACT
    left/right bounds of the head hairline (only the FILL bleeds, never a line) */
 .drills { display: flex; flex-direction: column; gap: 0; position: relative; margin: 0 -12px; }
-.drills::before { content: ""; position: absolute; left: 12px; right: 12px; top: 0; border-top: 1px solid var(--border); }
+.drills::before { content: ""; position: absolute; left: 12px; right: 12px; top: 0; border-top: 1px solid var(--border); transition: left 130ms var(--ease), right 130ms var(--ease); }
 .drills > * { width: auto; }
 .drill { display: flex; align-items: center; gap: 12px; padding: 12px; border: none; border-radius: 0; cursor: pointer; text-align: left; width: 100%; position: relative; }
-.drill::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease); pointer-events: none; }
-/* hover: flat fill, and the row's own hairline turns ACCENT (same 1px) */
+.drill::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease), left 130ms var(--ease), right 130ms var(--ease); pointer-events: none; }
+/* hover: flat fill; the row's own hairline turns ACCENT and EXPANDS to the
+   fill's edges (a line narrower than its surface reads broken). The line
+   ABOVE the hovered row expands too so the fill is framed symmetrically. */
 .drill { transition: background 130ms var(--ease); }
 .drill:hover { background: var(--secondary); }
-.drill:hover::after { border-color: var(--accent); }
+.drill:hover::after { border-color: var(--accent); left: 0; right: 0; }
+.drill:has(+ .drill:hover)::after, .drill:has(+ .cv-conn-row:hover)::after,
+.cv-conn-row:has(+ .drill:hover)::after, .cv-conn-row:has(+ .cv-conn-row:hover)::after { left: 0; right: 0; }
+.drills:has(> .drill:first-child:hover)::before, .drills:has(> .cv-conn-row:first-child:hover)::before { left: 0; right: 0; }
 .drill:hover .no { color: var(--accent); }
 .drill .arr { transition: transform 130ms var(--ease), color 130ms var(--ease); }
 .drill:hover .arr { color: var(--accent); transform: translateX(3px); }
 .drills .drill:last-child:hover::after { border-color: var(--accent); }
 /* rows pairing a drill with a trailing action: the separator belongs to the ROW,
    inset back to the shared gutter bounds (the drill alone stops at the button) */
-.cv-conn-row { position: relative; }
+.cv-conn-row { position: relative; transition: background 130ms var(--ease); }
 .cv-conn-row .drill::after { display: none; }
-.cv-conn-row::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease); pointer-events: none; }
-.cv-conn-row:hover::after { border-color: var(--accent); }
+.cv-conn-row::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease), left 130ms var(--ease), right 130ms var(--ease); pointer-events: none; }
+/* the FILL belongs to the whole row (drill + trailing action), matching its line */
+.cv-conn-row:hover { background: var(--secondary); }
+.cv-conn-row .drill:hover { background: transparent; }
+.cv-conn-row:hover .no, .cv-conn-row:hover .arr { color: var(--accent); }
+.cv-conn-row:hover .arr { transform: translateX(3px); }
+.cv-conn-row:hover::after { border-color: var(--accent); left: 0; right: 0; }
 .drills .cv-conn-row:last-child::after { border-bottom-color: transparent; }
 .drills .cv-conn-row:last-child:hover::after { border-color: var(--accent); }
 .drill .no { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); color: var(--muted-foreground); flex: none; }

@@ -285,7 +285,7 @@ export const DOMAIN: Record<string, DomainNode> = {
   "imp:keys": {
     panelType: "improvement", title: "Command palette + keyboard map", subtitle: "Every destination is typeable.", meta: "live",
     blocks: [
-      { kind: "card", label: "Live: the real map", text: "⌘K palette (every space, panel and action; ↑↓ moves, ↵ opens, esc closes) · ⌘B toggles the sidebar · ⌘J toggles the agent drawer · ⌘1-3 switches organization · P pins/unpins the focused panel · esc closes in precedence order: palette → drawer → menus → leaf panel. On the canvas: ⌘Z / ⇧⌘Z undo-redo, ⌘D duplicates, ⌘A selects all, arrow keys nudge, ⌫ deletes the selection." },
+      { kind: "card", label: "Live: the real map", text: "⌘K palette (every space, panel and action; ↑↓ moves, ↵ opens, esc closes) · ⌘B toggles the sidebar · ⌘J toggles the agent drawer · ⌘1-3 switches organization · P pins/unpins the focused panel · ctrl+X closes the focused panel · esc closes in precedence order: palette → drawer → menus → leaf panel. On the canvas: ⌘Z / ⇧⌘Z undo-redo, ⌘D duplicates, ⌘A selects all, arrow keys nudge, ⌫ deletes the selection." },
       { kind: "card", label: "Why it is cheap", text: "The palette reads DOMAIN and the registry: navigation is data, so every destination is enumerable and typeable. Nothing is bolted on." },
     ],
   },

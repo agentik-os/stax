@@ -456,6 +456,14 @@ function Shell() {
         }
         return;
       }
+      // Ctrl+X closes the FOCUSED panel (never while typing: that's cut)
+      if (e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "x") {
+        const t = e.target as HTMLElement | null;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+        const fid = ws.state.focusedPanelId ?? ws.state.contextLeafId;
+        if (fid && ws.state.panelsById[fid]) { e.preventDefault(); ws.closePanel(fid); }
+        return;
+      }
       if (e.key !== "Escape") return;
       if (document.querySelector(".nf-menu")) return; // the notification bell closes itself
       // an open in-panel popover (table menus, date pickers, cell flys…) always

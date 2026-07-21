@@ -48,7 +48,9 @@ values in this file.
     text keeps the flat-block left edge. Separators are drawn as 12px-INSET pseudo
     hairlines (`.drills::before`, `.drill::after`), never as borders on the bled box:
     only the FILL bleeds, never a line. Hover = secondary fill + the row's own 1px
-    hairline turns **accent** (same thickness); index/arrow accent, arrow slides 3px.
+    hairline turns **accent** and EXPANDS to the fill's edges (a line narrower than
+    its surface reads broken); the line above the hovered row expands too, framing
+    the fill symmetrically. Index/arrow accent, arrow slides 3px.
     Row meta tags are flat mono uppercase, never pills. A row that pairs a drill
     with a TRAILING action (pin, edit) draws the separator on the ROW wrapper, not
     the drill, so the line still reaches the shared right bound.
@@ -130,6 +132,7 @@ pixel font-size that ignores them is a defect.
 | Wizard | Chained drills with foot CTAs |
 | Form/inspector card ("Element", "Details"…) | **The title IS the field**: the entity's name/subtitle edit in place as the panel's serif title block (`.fs-head`/`.fs-title`/`.fs-sub`, rhythm 6/12/18); every remaining group is a flat `.section` (mono label + hairline top) — form cards are FORBIDDEN |
 | Global search | ⌘K palette |
+| Close the focused panel | ctrl+X (inert while typing) + the bar × + Escape on the leaf |
 | Chat / AI helper | Full-height drawer (⌘J) |
 
 ## 7 · States — all six, for every element
