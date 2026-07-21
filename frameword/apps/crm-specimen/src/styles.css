@@ -1137,6 +1137,11 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 
 /* Notion-style row peek: an Open chip revealed on row hover, on the title cell */
 .dt-titletd { position: relative; }
-.dt-openchip { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 7px; background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-md); font-size: calc(var(--fz-body, 13.5px) - 2.5px); font-weight: 500; color: var(--ink-2); opacity: 0; pointer-events: none; transition: opacity 110ms var(--ease); z-index: 2; }
+.dt-openchip { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 7px; background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-md); font-size: calc(var(--fz-body, 13.5px) - 2.5px); font-weight: 500; color: var(--ink-2); opacity: 0; pointer-events: none; transition: opacity 110ms var(--ease); z-index: 5; }
 .dt tbody tr:hover .dt-openchip { opacity: 1; pointer-events: auto; }
 .dt-openchip:hover { color: var(--accent); border-color: color-mix(in oklab, var(--accent) 45%, var(--border)); }
+
+/* the row quick-peek SHEET: the agent drawer's exact design, holding a page */
+.sheet-bg { position: fixed; inset: 0; z-index: 39; }
+.sheet { position: fixed; top: 52px; right: 0; bottom: 0; width: 440px; max-width: calc(var(--frame-w, 100vw) * 0.92); background: var(--card); border-left: 1px solid var(--border); box-shadow: var(--shadow-lg); z-index: 40; display: flex; flex-direction: column; animation: panelIn 200ms var(--ease); }
+.sheet-body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 18px 24px; display: flex; flex-direction: column; }

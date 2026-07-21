@@ -460,7 +460,7 @@ function Shell() {
       if (document.querySelector(".nf-menu")) return; // the notification bell closes itself
       // an open in-panel popover (table menus, date pickers, cell flys…) always
       // mounts a .pop-bg backdrop: Escape closes IT, never the panel behind it
-      const popBg = document.querySelector(".pop-bg");
+      const popBg = document.querySelector(".pop-bg, .sheet-bg");
       if (popBg) {
         popBg.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
         return;

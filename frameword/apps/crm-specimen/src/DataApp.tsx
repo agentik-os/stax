@@ -433,6 +433,7 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
   const c = s.collections.find((x) => x.id === colKey.slice(4));
   const [q, setQ] = useState("");
   const [menu, setMenu] = useState<null | string>(null);
+  const [sheet, setSheet] = useState<null | string>(null); // rowId: the quick peek
   const [pos, setPos] = useState<React.CSSProperties>({});
   const [renView, setRenView] = useState<{ id: string; v: string } | null>(null);
   const openMenu = (id: string, e: { currentTarget: EventTarget & Element }, h = 240, w = 180) => {
@@ -534,8 +535,8 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
         <td key={f.id} className={fi === 0 ? "dt-titletd" : undefined}>
           <Cell colId={c.id} row={r} field={f} wrap={view.wrap} />
           {fi === 0 && (
-          <button className="dt-openchip" title="Open as a page"
-            onClick={(e) => { e.stopPropagation(); openRow(r.id); }}>
+          <button className="dt-openchip" title="Quick peek"
+            onClick={(e) => { e.stopPropagation(); setSheet(r.id); }}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
             Open
           </button>
@@ -703,6 +704,26 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
         <span className="dt-count">{rows.length}/{c.rows.length}</span>
       </div>
 
+      {sheet && (
+        <>
+          <div className="sheet-bg" onMouseDown={() => setSheet(null)} />
+          <aside className="sheet" aria-label="Row quick peek">
+            <div className="drawer-bar">
+              <span className="eyebrow">page · quick peek</span>
+              <span style={{ flex: 1 }} />
+              <button className="d-btn outline sm"
+                onClick={() => { openRow(sheet); setSheet(null); }}>
+                Open as panel
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+              </button>
+              <button className="bar-btn" title="Close" style={{ fontSize: 15 }} onClick={() => setSheet(null)}>×</button>
+            </div>
+            <div className="sheet-body">
+              <DataRow rowKey={"dtr:" + c.id + ":" + sheet} panelId={panelId} />
+            </div>
+          </aside>
+        </>
+      )}
       <div className="dt-scroll">
         <table className={"dt" + (view.density === "compact" ? " compact" : "")}>
           <thead>
