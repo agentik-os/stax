@@ -1,9 +1,9 @@
 /**
- * DataApp — integrated tables + pages, in the panel grammar. Notion/Airtable-
+ * DataApp: integrated tables + pages, in the panel grammar. Notion/Airtable-
  * class collections: typed fields (incl. multi-select), named VIEWS carrying
  * their own filters/sort/hidden/group/wrap, per-column calculations, field
  * ops (hide, duplicate, move, width), row ops (duplicate, delete), and every
- * row opens as the NEXT panel — a page with fields + a rich body.
+ * row opens as the NEXT panel: a page with fields + a rich body.
  */
 import { useState, useSyncExternalStore } from "react";
 import { useWorkspace } from "@frameword/panels-react";
@@ -47,7 +47,7 @@ const SEED: DataState = {
         { id: "f-site", name: "Site", type: "url", width: "s" },
       ],
       rows: [
-        { id: "r1", ts: now, v: { "f-name": "Acme Industries", "f-mrr": 2400, "f-plan": "Scale", "f-tags": ["Priority", "Champion"], "f-renew": "2026-09-01", "f-active": true, "f-site": "acme.com" }, page: "<h2>Account brief</h2><p>Flagship customer since 2024 — panels rolled out to 3 teams.</p><ul><li><p>Champion: Jo Lambert</p></li><li><p>Next QBR: September</p></li></ul>" },
+        { id: "r1", ts: now, v: { "f-name": "Acme Industries", "f-mrr": 2400, "f-plan": "Scale", "f-tags": ["Priority", "Champion"], "f-renew": "2026-09-01", "f-active": true, "f-site": "acme.com" }, page: "<h2>Account brief</h2><p>Flagship customer since 2024: panels rolled out to 3 teams.</p><ul><li><p>Champion: Jo Lambert</p></li><li><p>Next QBR: September</p></li></ul>" },
         { id: "r2", ts: now, v: { "f-name": "Globex", "f-mrr": 840, "f-plan": "Pro", "f-tags": ["Design"], "f-renew": "2026-08-12", "f-active": true, "f-site": "globex.io" } },
         { id: "r3", ts: now, v: { "f-name": "Initech", "f-mrr": 0, "f-plan": "Free", "f-tags": ["Churn risk"], "f-active": false, "f-site": "initech.dev" } },
         { id: "r4", ts: now, v: { "f-name": "Umbra Analytics", "f-mrr": 1620, "f-plan": "Scale", "f-renew": "2026-11-30", "f-active": true, "f-site": "umbra.app" } },
@@ -68,7 +68,7 @@ const SEED: DataState = {
         { id: "g-done", name: "Done", type: "check", width: "s" },
       ],
       rows: [
-        { id: "s1", ts: now, v: { "g-title": "Panels, not pages — the manifesto", "g-chan": "Blog", "g-date": "2026-07-24", "g-done": false } },
+        { id: "s1", ts: now, v: { "g-title": "Panels, not pages: the manifesto", "g-chan": "Blog", "g-date": "2026-07-24", "g-done": false } },
         { id: "s2", ts: now, v: { "g-title": "Canvas board demo clip", "g-chan": "X", "g-date": "2026-07-22", "g-done": true } },
         { id: "s3", ts: now, v: { "g-title": "Migration engine announcement", "g-chan": "LinkedIn", "g-date": "2026-07-28", "g-done": false } },
       ],
@@ -307,7 +307,7 @@ export function DataHome({ panelId }: { panelId: string }) {
   return (
     <div className="section">
       <div className="lab">Tables · {s.collections.length}</div>
-      {s.collections.length === 0 && <p style={{ marginTop: 6 }}>No tables yet — create one from the foot.</p>}
+      {s.collections.length === 0 && <p style={{ marginTop: 6 }}>No tables yet: create one from the foot.</p>}
       <div className="drills" style={{ marginTop: 8 }}>
         {s.collections.map((c) => (
           <button key={c.id} className="drill"
@@ -405,7 +405,7 @@ function Cell({ colId, row, field, wrap }: { colId: string; row: Row; field: Fie
   }
 }
 
-/* ── the table panel — views, toolbar, grid, group, calcs ────────────── */
+/* ── the table panel: views, toolbar, grid, group, calcs ────────────── */
 const WIDTHS: Record<string, number> = { s: 120, m: 200, l: 300 };
 
 export function DataTable({ colKey, panelId }: { colKey: string; panelId: string }) {
@@ -520,7 +520,7 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
     <>
       {menu && <div className="pop-bg" onMouseDown={() => setMenu(null)} />}
 
-      {/* named views — each carries its own filters/sort/hidden/group/wrap */}
+      {/* named views: each carries its own filters/sort/hidden/group/wrap */}
       <div className="dtv-tabs">
         {c.views.map((v) => (
           renView?.id === v.id ? (
@@ -668,7 +668,7 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
             </tbody>
           ))}
           {rows.length === 0 && (
-            <tbody><tr><td colSpan={fields.length + 1} className="dt-empty">No rows match — clear the search or filters.</td></tr></tbody>
+            <tbody><tr><td colSpan={fields.length + 1} className="dt-empty">No rows match: clear the search or filters.</td></tr></tbody>
           )}
           <tfoot>
             <tr>
@@ -712,7 +712,7 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
   );
 }
 
-/* ── the row panel — a Notion-class page ─────────────────────────────── */
+/* ── the row panel: a Notion-class page ─────────────────────────────── */
 export function DataRow({ rowKey, panelId }: { rowKey: string; panelId: string }) {
   const s = useDataApp();
   void panelId;
@@ -740,7 +740,7 @@ export function DataRow({ rowKey, panelId }: { rowKey: string; panelId: string }
       </div>
       <div className="section">
         <div className="lab">Page</div>
-        <RichNotes key={r.id} html={r.page ?? ""} placeholder="Write the page — this row is also a document…"
+        <RichNotes key={r.id} html={r.page ?? ""} placeholder="Write the page: this row is also a document…"
           onChange={(h) => dataApp.patchRow(c.id, r.id, { page: h })} />
       </div>
     </>

@@ -164,7 +164,14 @@ img.avatar { border: 1px solid var(--border); }
 /* drill list — flat rows, hairlines BETWEEN rows, hover fill */
 .drills { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--border); }
 .drill { display: flex; align-items: center; gap: 12px; padding: 12px 6px; border: none; border-bottom: 1px solid var(--border); border-radius: 0; cursor: pointer; text-align: left; width: 100%; }
-.drill:hover { background: var(--secondary); }
+/* hover: an INSET rounded fill (never a full-bleed slab), arrow slides accent */
+.drill { position: relative; }
+.drill > * { position: relative; z-index: 1; }
+.drill::before { content: ""; position: absolute; inset: 4px -10px; border-radius: 10px; background: transparent; transition: background 130ms var(--ease); }
+.drill:hover::before { background: var(--secondary); }
+.drill:hover .no { color: var(--accent); }
+.drill .arr { transition: transform 130ms var(--ease), color 130ms var(--ease); }
+.drill:hover .arr { color: var(--accent); transform: translateX(3px); }
 .drill .no { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); color: var(--muted-foreground); flex: none; }
 .drill .bd { flex: 1; min-width: 0; }
 .drill .tt { font-weight: 500; font-size: 13px; }
@@ -581,7 +588,8 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 /* recessed action zone */
 .panel-foot { background: var(--secondary); }
 /* drill rows: serif lead tile + accent chevron on hover */
-.drill .no { width: 34px; height: 34px; border-radius: 9px; background: var(--secondary); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 14px; color: var(--ink-2); flex: none; }
+/* drill number: flat mono index, accent when the row is live */
+.drill .no { width: 26px; border: none; background: transparent; border-radius: 0; display: block; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.05); font-variant-numeric: tabular-nums; color: var(--muted-foreground); flex: none; }
 .drill:hover { border-color: var(--ink-4); }
 .drill:hover .arr { color: var(--accent); }
 /* the sidebar is its own recessed surface */

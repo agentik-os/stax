@@ -1,5 +1,5 @@
 /**
- * RichNotes — THE rich-text editor (Tiptap), shared by notes, task notes,
+ * RichNotes: THE rich-text editor (Tiptap), shared by notes, task notes,
  * data-row pages, block demos and the canvas inspectors.
  */
 import { useState } from "react";
@@ -12,13 +12,13 @@ import Highlight from "@tiptap/extension-highlight";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 
-/* ── RichNotes — THE notes editor, shared by every notes surface ─────── */
+/* ── RichNotes: THE notes editor, shared by every notes surface ─────── */
 export function RichNotes({ html, onChange, placeholder }: { html: string; onChange: (html: string) => void; placeholder?: string }) {
   const [ttMenu, setTtMenu] = useState<null | "block" | "more" | "list">(null);
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Placeholder.configure({ placeholder: placeholder ?? "Write the full story of this element — headings, lists, quotes…" }),
+      Placeholder.configure({ placeholder: placeholder ?? "Write the full story of this element: headings, lists, quotes…" }),
       Link.configure({ openOnClick: false, autolink: true }),
       Underline,
       Highlight,
@@ -75,9 +75,9 @@ export function RichNotes({ html, onChange, placeholder }: { html: string; onCha
           )}
         </span>
         <Sep />
-        <B on={editor.isActive("bold")} label="B" title="Bold — ⌘B" run={() => editor.chain().focus().toggleBold().run()} />
-        <B on={editor.isActive("italic")} label="I" title="Italic — ⌘I" run={() => editor.chain().focus().toggleItalic().run()} />
-        <B on={editor.isActive("underline")} label="U" title="Underline — ⌘U" run={() => editor.chain().focus().toggleUnderline().run()} />
+        <B on={editor.isActive("bold")} label="B" title="Bold: ⌘B" run={() => editor.chain().focus().toggleBold().run()} />
+        <B on={editor.isActive("italic")} label="I" title="Italic: ⌘I" run={() => editor.chain().focus().toggleItalic().run()} />
+        <B on={editor.isActive("underline")} label="U" title="Underline: ⌘U" run={() => editor.chain().focus().toggleUnderline().run()} />
         <span className="tt-dd">
           <button className={"tt-trigger" + (editor.isActive("strike") || editor.isActive("highlight") || editor.isActive("link") ? " on" : "")}
             title="More formatting"

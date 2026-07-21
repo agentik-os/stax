@@ -1,5 +1,5 @@
 /**
- * The full shadcn/ui gallery — for EVERY component, three structurally
+ * The full shadcn/ui gallery: for EVERY component, three structurally
  * different versions of THE COMPONENT ITSELF (not a reskin): V1 · V2 · V3.
  * One single demo background. Styled by the WhitePaper tokens.
  */
@@ -20,7 +20,7 @@ const Ph = ({ w = "100%", h = 8, r = 3, o = 1 }: { w?: number | string; h?: numb
 const muted = { color: "var(--muted-foreground)" } as const;
 function TabsDemo({ v }: { v: 1 | 2 | 3 }) {
   const [tab, setTab] = useState(0);
-  const CONTENT = ["Everything about the record, at a glance.", "The trail — every touch, in order.", "Attachments live beside the thread."];
+  const CONTENT = ["Everything about the record, at a glance.", "The trail: every touch, in order.", "Attachments live beside the thread."];
   const labels = v === 3 ? ["Deals", "Won", "Lost"] : v === 2 ? ["Details", "Activity", "Files"] : ["List", "Kanban", "Timeline"];
   return (
     <Zone col>
@@ -78,7 +78,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           {["Is it accessible?", "Is it styled?", "Is it animated?"].map((q, i) => (
             <div key={q} style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8 }}>
               <div className="d-row" style={{ justifyContent: "space-between", fontWeight: 500, color: "var(--foreground)" }}>{q}<span style={muted}>{i === 0 ? "⌄" : "›"}</span></div>
-              {i === 0 && <div style={{ fontSize: 12, ...muted, paddingTop: 6 }}>Yes — WAI-ARIA disclosure pattern.</div>}
+              {i === 0 && <div style={{ fontSize: 12, ...muted, paddingTop: 6 }}>Yes: WAI-ARIA disclosure pattern.</div>}
             </div>))}
         </div></Zone>
       ) : v === 2 ? (
@@ -86,7 +86,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           {["Billing", "Team members", "Integrations"].map((q, i) => (
             <div key={q} className="d-card" style={{ maxWidth: "none", padding: "11px 14px" }}>
               <div className="d-row" style={{ justifyContent: "space-between", fontWeight: 500, color: "var(--foreground)" }}>{q}<span style={muted}>{i === 1 ? "−" : "+"}</span></div>
-              {i === 1 && <div style={{ fontSize: 12, ...muted, paddingTop: 6 }}>Each section is its own card — heavier separation, calmer scan.</div>}
+              {i === 1 && <div style={{ fontSize: 12, ...muted, paddingTop: 6 }}>Each section is its own card: heavier separation, calmer scan.</div>}
             </div>))}
         </Zone>
       ) : (
@@ -97,16 +97,16 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
                 <span style={{ ...mono10, color: i === 2 ? "var(--accent)" : "var(--muted-foreground)" }}>0{i + 1}</span>
                 <span style={{ flex: 1, fontWeight: 500, color: "var(--foreground)" }}>{q}</span><span style={muted}>{i === 2 ? "⌄" : "›"}</span>
               </div>
-              {i === 2 && <div style={{ fontSize: 12, ...muted, paddingTop: 6, paddingLeft: 30 }}>Flush list with numbered mono index — document rhythm, zero chrome.</div>}
+              {i === 2 && <div style={{ fontSize: 12, ...muted, paddingTop: 6, paddingLeft: 30 }}>Flush list with numbered mono index: document rhythm, zero chrome.</div>}
             </div>))}
         </div></Zone>
-      )}<Note>V1 classic dividers · V2 one card per item · V3 flush numbered list. If each item has real depth, prefer a drill — depth deserves a column.</Note></>);
+      )}<Note>V1 classic dividers · V2 one card per item · V3 flush numbered list. If each item has real depth, prefer a drill: depth deserves a column.</Note></>);
 
     case "Alert":
       return (<>{v === 1 ? (
         <Zone col>
-          <div className="notif"><span className="dot ok" /><span className="nb"><b className="nt">Deployment complete</b><p>All 4 panels prefetched — the stack link is live.</p></span><span className="time">2m</span></div>
-          <div className="notif"><span className="dot err" /><span className="nb"><b className="nt">Payment failed</b><p>The card on file expired — update it in Billing.</p></span><span className="time">3h</span></div>
+          <div className="notif"><span className="dot ok" /><span className="nb"><b className="nt">Deployment complete</b><p>All 4 panels prefetched: the stack link is live.</p></span><span className="time">2m</span></div>
+          <div className="notif"><span className="dot err" /><span className="nb"><b className="nt">Payment failed</b><p>The card on file expired: update it in Billing.</p></span><span className="time">3h</span></div>
         </Zone>
       ) : v === 2 ? (
         <Zone col>
@@ -116,7 +116,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
       ) : (
         <Zone col>
           <div style={{ background: "var(--foreground)", color: "var(--background)", borderRadius: 10, padding: "10px 14px", fontSize: 12.5, display: "flex", gap: 10, alignItems: "center" }}><span>◆</span><span style={{ flex: 1 }}>Maintenance window Sunday 02:00–03:00 UTC.</span><span style={{ opacity: 0.6 }}>×</span></div>
-          <div style={{ background: "var(--accent)", color: "var(--accent-foreground)", borderRadius: 10, padding: "10px 14px", fontSize: 12.5, display: "flex", gap: 10, alignItems: "center" }}><span>⚠</span><span style={{ flex: 1 }}>Your trial ends in 2 days — export or upgrade.</span><b style={{ textDecoration: "underline" }}>Upgrade</b></div>
+          <div style={{ background: "var(--accent)", color: "var(--accent-foreground)", borderRadius: 10, padding: "10px 14px", fontSize: 12.5, display: "flex", gap: 10, alignItems: "center" }}><span>⚠</span><span style={{ flex: 1 }}>Your trial ends in 2 days: export or upgrade.</span><b style={{ textDecoration: "underline" }}>Upgrade</b></div>
         </Zone>
       )}<Note>V1 notification card + status dot · V2 left-border callout · V3 solid banner. Severity reads at a glance in all three.</Note></>);
 
@@ -131,7 +131,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
         <Zone><div className="d-pop" style={{ maxWidth: 250, textAlign: "center" }}>
           <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent-soft)", color: "var(--accent)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, marginBottom: 8 }}>!</div>
           <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--foreground)" }}>Close 3 pinned panels?</div>
-          <div style={{ marginBottom: 12, fontSize: 12 }}>References are device-local — they won't come back.</div>
+          <div style={{ marginBottom: 12, fontSize: 12 }}>References are device-local: they won't come back.</div>
           <button className="d-btn destructive sm" style={{ width: "100%", marginBottom: 6 }}>Close them</button>
           <button className="d-btn ghost sm" style={{ width: "100%" }}>Keep</button>
         </div></Zone>
@@ -159,7 +159,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
             {["AK", "JL", "MV"].map((a) => (
               <div key={a} style={{ flex: 1, aspectRatio: "1", border: "1px solid var(--border)", borderRadius: 8, background: "var(--secondary)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted-foreground)" }}>{a}</div>))}
           </div>
-          <div style={{ ...mono10, marginTop: 5 }}>1:1 grid — cells keep shape as the panel narrows</div>
+          <div style={{ ...mono10, marginTop: 5 }}>1:1 grid: cells keep shape as the panel narrows</div>
         </div></Zone>
       )}<Note>V1 the bare 16:9 frame · V2 a video player keeps its ratio · V3 1:1 grid tiles survive panel resize. Media keeps its shape while the panel's width obeys the size grammar.</Note></>);
 
@@ -200,7 +200,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
               <span style={{ position: "absolute", bottom: -1, right: -1, width: 9, height: 9, borderRadius: "50%", background: c as string, border: "2px solid var(--card)" }} />
             </span>))}
         </Zone>
-      )}<Note>V1 singles · V2 overlapping presence group · V3 squared avatars with status dots — presence on panel bars uses these at 8px.</Note></>);
+      )}<Note>V1 singles · V2 overlapping presence group · V3 squared avatars with status dots: presence on panel bars uses these at 8px.</Note></>);
 
     case "Badge":
       return (<>{v === 1 ? (
@@ -224,13 +224,13 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           {["CRM", "Acme", "Jo"].map((c, i) => (
             <span key={c} style={{ fontSize: 11.5, padding: "4px 10px 3px", borderRadius: 9999, background: i === 2 ? "var(--accent-soft)" : "var(--secondary)", color: i === 2 ? "var(--accent)" : "var(--ink-2)", fontWeight: 500 }}>{c}</span>))}
         </div></Zone>
-      )}<Note>V1 mono uppercase (our crumbbar) · V2 slash path · V3 pill chips. Always derived from the ContextPath — never stored.</Note></>);
+      )}<Note>V1 mono uppercase (our crumbbar) · V2 slash path · V3 pill chips. Always derived from the ContextPath: never stored.</Note></>);
 
     case "Bubble":
       return (<>{v === 1 ? (
         <Zone col>
           <div className="d-msg">Can you resend the contract?</div>
-          <div className="d-msg me" style={{ alignSelf: "flex-end" }}>Done — check the attachments panel.</div>
+          <div className="d-msg me" style={{ alignSelf: "flex-end" }}>Done: check the attachments panel.</div>
         </Zone>
       ) : v === 2 ? (
         <Zone col>
@@ -274,7 +274,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <button className="d-btn outline" style={{ display: "inline-flex", gap: 8, alignItems: "center" }}><span className="d-spin" style={{ width: 12, height: 12 }} />Saving</button>
           <button className="d-btn secondary" disabled style={{ opacity: 0.5, cursor: "not-allowed" }}>Disabled</button>
         </Zone>
-      )}<Note>V1 all six intents (default · secondary · outline · destructive · ghost · link) · V2 sizes + with-icon + icon-only · V3 loading & disabled. One atomic .d-btn base, modifier classes only — the same atom the panel foot CTAs are built from.</Note></>);
+      )}<Note>V1 all six intents (default · secondary · outline · destructive · ghost · link) · V2 sizes + with-icon + icon-only · V3 loading & disabled. One atomic .d-btn base, modifier classes only: the same atom the panel foot CTAs are built from.</Note></>);
 
     case "Button Group":
       return (<>{v === 1 ? (
@@ -292,7 +292,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <button className="d-btn sm" style={{ borderRadius: "7px 0 0 7px" }}>Save</button>
           <button className="d-btn sm" style={{ borderRadius: "0 7px 7px 0", borderLeft: "1px solid color-mix(in oklab, var(--primary-foreground) 25%, var(--primary))", padding: "5px 8px" }}>⌄</button>
         </div></Zone>
-      )}<Note>V1 attached segments · V2 fused icon toolbar — undo pressed, redo, more · V3 split-button (action + dropdown). View switchers change representation, never navigation.</Note></>);
+      )}<Note>V1 attached segments · V2 fused icon toolbar: undo pressed, redo, more · V3 split-button (action + dropdown). View switchers change representation, never navigation.</Note></>);
 
     case "Calendar":
       return (<>{v === 1 ? (
@@ -327,13 +327,13 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           </div>
           <div style={{ ...mono10, fontSize: 8.5, padding: "6px 4px 0" }}>Multiple · 4 dates selected</div>
         </div></Zone>
-      )}<Note>V1 default single date · V2 date-range selection · V3 multiple date selection. Serif numerals, hairlines — pure token inheritance. For time, see Date Picker's clock version.</Note></>);
+      )}<Note>V1 default single date · V2 date-range selection · V3 multiple date selection. Serif numerals, hairlines: pure token inheritance. For time, see Date Picker's clock version.</Note></>);
 
     case "Card":
       return (<>{v === 1 ? (
         <Zone><div className="d-card">
           <b style={{ fontSize: 13.5, color: "var(--foreground)" }}>Default card</b>
-          <p style={{ margin: "3px 0 10px", fontSize: 12, ...muted }}>Header, content and one action — the plain workhorse.</p>
+          <p style={{ margin: "3px 0 10px", fontSize: 12, ...muted }}>Header, content and one action: the plain workhorse.</p>
           <button className="d-btn sm">Open</button>
         </div></Zone>
       ) : v === 2 ? (
@@ -347,7 +347,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
         <Zone><div style={{ width: "100%", maxWidth: 280, border: "1.5px dashed var(--ink-4)", borderRadius: 12, padding: "18px 16px", textAlign: "center" }}>
           <div style={{ fontSize: 18, color: "var(--muted-foreground)", marginBottom: 2 }}>＋</div>
           <b style={{ fontSize: 12.5, color: "var(--foreground)" }}>Dashed card</b>
-          <p style={{ margin: "2px 0 0", fontSize: 11.5, ...muted }}>Create-new affordance — drop or click.</p>
+          <p style={{ margin: "2px 0 0", fontSize: 11.5, ...muted }}>Create-new affordance: drop or click.</p>
         </div></Zone>
       )}<Note>V1 default card · V2 card with badge · V3 dashed card (create-new affordance). A panel is a card promoted to a navigation unit.</Note></>);
 
@@ -367,7 +367,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
         <Zone><div className="d-row" style={{ gap: 6 }}>
           {[1, 2, 3, 4, 5].map((i) => <div key={i} style={{ width: 46, height: 34, border: i === 3 ? "2px solid var(--accent)" : "1px solid var(--border)", borderRadius: 6, background: "var(--secondary)", display: "grid", placeItems: "center", fontSize: 9, fontFamily: "var(--font-mono)", color: "var(--muted-foreground)" }}>{i}</div>)}
         </div></Zone>
-      )}<Note>V1 arrows · V2 dot pagination · V3 filmstrip thumbnails. Only the carousel's content scrolls — the stage keeps its own axis.</Note></>);
+      )}<Note>V1 arrows · V2 dot pagination · V3 filmstrip thumbnails. Only the carousel's content scrolls: the stage keeps its own axis.</Note></>);
 
     case "Chart":
       return (<>{v === 1 ? (
@@ -417,7 +417,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <label className="d-row"><span className="d-check">✓</span><s style={{ ...muted }}>Book the demo</s></label>
           <label className="d-row"><span className="d-check off" />Sign the contract</label>
         </Zone>
-      )}<Note>V1 form checks · V2 selectable cards · V3 task list with strikethrough — three jobs, one control.</Note></>);
+      )}<Note>V1 form checks · V2 selectable cards · V3 task list with strikethrough: three jobs, one control.</Note></>);
 
     case "Collapsible":
       return (<>{v === 1 ? (
@@ -437,8 +437,8 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
             <span className="d-row" style={{ gap: 6 }}><span className="tag">12</span><span className="d-btn ghost sm">−</span></span>
           </div>
           <div className="d-sep" style={{ margin: "8px 0" }} />
-          <div className="d-row" style={{ fontSize: 12, ...muted }}>Refonte v1 — lost</div>
-          <div className="d-row" style={{ fontSize: 12, ...muted, marginTop: 4 }}>Audit RGPD — won</div>
+          <div className="d-row" style={{ fontSize: 12, ...muted }}>Refonte v1: lost</div>
+          <div className="d-row" style={{ fontSize: 12, ...muted, marginTop: 4 }}>Audit RGPD: won</div>
         </div></Zone>
       )}<Note>V1 chevron header · V2 “show more” text fade · V3 open card revealing its rows. If the hidden part deserves a title, it deserves a panel.</Note></>);
 
@@ -474,7 +474,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           </div>
           <div style={{ padding: 5 }}><div className="d-menu" style={{ border: "none", boxShadow: "none", padding: 0 }}>
             <div className="it" style={{ background: "var(--secondary)" }}>Kickoff technique<span className="k">↵</span></div>
-            <div className="it">Theme — dark</div>
+            <div className="it">Theme: dark</div>
           </div></div>
         </div></Zone>
       ) : v === 2 ? (
@@ -490,14 +490,14 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <div className="it">Copy stack link<span className="k">⌘C</span></div>
           <div className="it">Toggle sidebar<span className="k">⌘B</span></div>
         </div></Zone>
-      )}<Note>V1 the ⌘K palette · V2 terminal-prompt command line · V3 grouped results. It reads the panel registry — everything is typeable.</Note></>);
+      )}<Note>V1 the ⌘K palette · V2 terminal-prompt command line · V3 grouped results. It reads the panel registry: everything is typeable.</Note></>);
 
     case "Context Menu":
       return (<>{v === 1 ? (
         <Zone><div className="d-menu"><div className="it">Open beside<span className="k">↵</span></div><div className="it">Pin<span className="k">P</span></div><div className="d-sep" style={{ margin: "4px 0" }} /><div className="it" style={{ color: "var(--accent)" }}>Close branch</div></div></Zone>
       ) : v === 2 ? (
         <Zone><div style={{ position: "relative" }}>
-          <div className="d-card" style={{ width: 230, padding: "10px 14px", fontSize: 12.5, fontWeight: 500, color: "var(--foreground)" }}>Refonte — 18 000 €</div>
+          <div className="d-card" style={{ width: 230, padding: "10px 14px", fontSize: 12.5, fontWeight: 500, color: "var(--foreground)" }}>Refonte: 18 000 €</div>
           <span style={{ position: "absolute", top: 32, left: 38, width: 6, height: 6, borderRadius: "50%", background: "var(--accent)" }} />
           <div className="d-menu" style={{ marginLeft: 40, marginTop: -6, position: "relative" }}>
             {[["↗", "Open beside", "↵"], ["⧉", "Copy link", "⌘C"], ["×", "Close", "⌫"]].map(([ic, l, k]) => (
@@ -528,17 +528,17 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
       ) : (
         <Zone col><table className="d-table">
           <tbody>
-            <tr><td colSpan={3} style={{ ...mono10, background: "var(--secondary)" }}>Q3 2026 — 2 deals · 31 500 €</td></tr>
+            <tr><td colSpan={3} style={{ ...mono10, background: "var(--secondary)" }}>Q3 2026: 2 deals · 31 500 €</td></tr>
             <tr><td>Refonte</td><td><span className="tag accent">PROPOSAL</span></td><td style={{ textAlign: "right" }}>18 000</td></tr>
             <tr><td>Migration</td><td><span className="tag">DISCOVERY</span></td><td style={{ textAlign: "right" }}>13 500</td></tr>
             <tr><td colSpan={2} style={{ fontWeight: 600, color: "var(--foreground)" }}>Subtotal</td><td style={{ textAlign: "right", fontWeight: 600, color: "var(--foreground)" }}>31 500</td></tr>
-            <tr><td colSpan={3} style={{ ...mono10, background: "var(--secondary)" }}>Q4 2026 — 2 deals · 14 500 €</td></tr>
+            <tr><td colSpan={3} style={{ ...mono10, background: "var(--secondary)" }}>Q4 2026: 2 deals · 14 500 €</td></tr>
             <tr><td>Équipement</td><td><span className="tag">DISCOVERY</span></td><td style={{ textAlign: "right" }}>6 500</td></tr>
             <tr><td>Maintenance</td><td><span className="tag">DISCOVERY</span></td><td style={{ textAlign: "right" }}>8 000</td></tr>
             <tr><td colSpan={2} style={{ fontWeight: 600, color: "var(--foreground)" }}>Subtotal</td><td style={{ textAlign: "right", fontWeight: 600, color: "var(--foreground)" }}>14 500</td></tr>
           </tbody>
         </table></Zone>
-      )}<Note>V1 sortable · V2 selection + bulk bar · V3 grouped with subtotal rows. A row click is a DrillTrigger — the record opens beside the table.</Note></>);
+      )}<Note>V1 sortable · V2 selection + bulk bar · V3 grouped with subtotal rows. A row click is a DrillTrigger: the record opens beside the table.</Note></>);
 
     case "Date Picker":
       return (<>{v === 1 ? (
@@ -621,7 +621,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <p style={{ margin: 0, fontSize: 12, color: "var(--ink-2)", textAlign: "left" }}>Panels open to the right; the peek edge sits left.</p>
           <p style={{ margin: 0, fontSize: 12, color: "var(--ink-2)", textAlign: "right", direction: "rtl" }}>تفتح اللوحات إلى اليسار؛ الحافة على اليمين.</p>
         </Zone>
-      )}<Note>Under RTL the whole stack mirrors — logical inline-start/end everywhere, never hardcoded left/right.</Note></>);
+      )}<Note>Under RTL the whole stack mirrors: logical inline-start/end everywhere, never hardcoded left/right.</Note></>);
 
     case "Drawer":
       return (<>{v === 1 ? (
@@ -641,7 +641,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
             <div style={{ width: 34, height: 4, borderRadius: 9999, background: "var(--border)", margin: "6px auto 0" }} />
           </div>
         </div></Zone>
-      )}<Note>V1 bottom sheet · V2 right utility (our ✶ drawer) · V3 stacked nested sheets — depth reads at the peeking edge. Overlays never join the stack.</Note></>);
+      )}<Note>V1 bottom sheet · V2 right utility (our ✶ drawer) · V3 stacked nested sheets: depth reads at the peeking edge. Overlays never join the stack.</Note></>);
 
     case "Dropdown Menu":
       return (<>{v === 1 ? (
@@ -696,7 +696,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
       ) : (
         <Zone col>
           <div className="d-row" style={{ width: "100%", maxWidth: 300 }}><label style={{ width: 90, fontSize: 12, ...muted }}>SIRET</label><input className="d-input" defaultValue="123 456 789" style={{ flex: 1, borderColor: "var(--accent)" }} readOnly /></div>
-          <div style={{ fontSize: 11, color: "var(--accent)", paddingLeft: 98 }}>14 digits expected — 9 given.</div>
+          <div style={{ fontSize: 11, color: "var(--accent)", paddingLeft: 98 }}>14 digits expected: 9 given.</div>
         </Zone>
       )}<Note>V1 stacked label + help · V2 floating label · V3 horizontal + error state. Form panels are S-width by grammar.</Note></>);
 
@@ -739,7 +739,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <div className="d-chart" style={{ height: 40 }}>{[30, 55, 45, 70, 90].map((h, i) => <div key={i} className="bar" style={{ height: h + "%", width: 14 }} />)}</div>
           <div style={{ fontSize: 11, ...muted, marginTop: 4 }}>18 000 € · closes in 12d</div>
         </div></Zone>
-      )}<Note>V1 person peek · V2 link preview · V3 metric peek with mini chart — hover previews; the click still opens the real panel.</Note></>);
+      )}<Note>V1 person peek · V2 link preview · V3 metric peek with mini chart: hover previews; the click still opens the real panel.</Note></>);
 
     case "Input":
       return (<>{v === 1 ? (
@@ -773,7 +773,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <input className="d-input" defaultValue="Objet : proposition" style={{ width: "100%", borderRadius: "8px 8px 0 0" }} readOnly />
           <textarea className="d-input" defaultValue="Bonjour Jo, voici la V3…" readOnly style={{ width: "100%", height: 56, borderTop: "none", borderRadius: "0 0 8px 8px", resize: "none" }} />
         </div></Zone>
-      )}<Note>V1 prefix affix · V2 input + action button · V3 stacked attached group — one control to the eye.</Note></>);
+      )}<Note>V1 prefix affix · V2 input + action button · V3 stacked attached group: one control to the eye.</Note></>);
 
     case "Input OTP":
       return (<>{v === 1 ? (
@@ -803,7 +803,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
       ) : (
         <Zone col><div className="drill" style={{ cursor: "grab" }}>
           <span style={{ ...muted, letterSpacing: 2 }}>⋮⋮</span>
-          <span className="bd"><span className="tt" style={{ display: "block" }}>Écrans clés</span><span className="ss" style={{ display: "block" }}>drag to reorder — references only</span></span>
+          <span className="bd"><span className="tt" style={{ display: "block" }}>Écrans clés</span><span className="ss" style={{ display: "block" }}>drag to reorder: references only</span></span>
           <span style={muted}>⋯</span>
         </div></Zone>
       )}<Note>V1 our drill row (the signature interaction) · V2 checkable task item · V3 draggable item with a grip.</Note></>);
@@ -890,7 +890,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
     case "Message":
       return (<>{v === 1 ? (
         <Zone col>
-          <div className="d-msg"><span style={{ color: "var(--accent)" }}>✶</span> I can see your open stack — it is my working memory.</div>
+          <div className="d-msg"><span style={{ color: "var(--accent)" }}>✶</span> I can see your open stack: it is my working memory.</div>
           <div className="d-msg me" style={{ alignSelf: "flex-end" }}>What are the laws?</div>
         </Zone>
       ) : v === 2 ? (
@@ -914,7 +914,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <div className="d-col">
             <div className="d-msg" style={{ opacity: 0.4 }}>…earlier</div>
             <div className="d-msg me" style={{ alignSelf: "flex-end" }}>And pinning?</div>
-            <div className="d-msg">Pin detaches instead of lying — law 4.</div>
+            <div className="d-msg">Pin detaches instead of lying: law 4.</div>
           </div>
           <div style={{ position: "absolute", bottom: 6, right: 6 }} className="d-btn outline sm">↓ 3 new</div>
         </div></Zone>
@@ -988,7 +988,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <button className="d-btn outline" style={{ alignSelf: "center" }}>Load 20 more</button>
           <div style={{ textAlign: "center", fontSize: 10.5, ...muted, marginTop: 6 }}>40 / 128 loaded</div>
         </Zone>
-      )}<Note>V1 numbered · V2 compact stepper · V3 load-more. Collections paginate INSIDE their panel — the stage axis belongs to depth.</Note></>);
+      )}<Note>V1 numbered · V2 compact stepper · V3 load-more. Collections paginate INSIDE their panel: the stage axis belongs to depth.</Note></>);
 
     case "Popover":
       return (<>{v === 1 ? (
@@ -996,7 +996,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <button className="d-btn outline sm">◷ Remind me</button>
           <div style={{ position: "relative", marginTop: 9 }}>
             <div className="d-pop">
-              Set a reminder for this deal — one small decision, anchored.
+              Set a reminder for this deal: one small decision, anchored.
               <div className="d-row" style={{ marginTop: 8 }}><span className="tag">Tomorrow</span><span className="tag">Next week</span></div>
             </div>
             <span style={{ position: "absolute", top: -5, left: 24, width: 10, height: 10, background: "var(--card)", borderLeft: "1px solid var(--border)", borderTop: "1px solid var(--border)", transform: "rotate(45deg)" }} />
@@ -1074,12 +1074,12 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <div style={{ width: 5, background: "var(--card)", borderInline: "1px solid var(--border)", cursor: "col-resize", position: "relative" }}><span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", fontSize: 8, color: "var(--muted-foreground)" }}>⋮</span></div>
           <div style={{ width: 70, background: "var(--secondary)", display: "grid", placeItems: "center", ...mono10 }}>AUX</div>
         </div></Zone>
-      )}<Note>V1 two-pane with grip handle · V2 nested L-split — list, detail, log · V3 three panes. INSIDE one panel resize freely; between panels the size grammar rules.</Note></>);
+      )}<Note>V1 two-pane with grip handle · V2 nested L-split: list, detail, log · V3 three panes. INSIDE one panel resize freely; between panels the size grammar rules.</Note></>);
 
     case "Scroll Area":
       return (<>{v === 1 ? (
         <Zone><div style={{ width: 220, height: 80, overflow: "hidden", position: "relative", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 12px", fontSize: 12, color: "var(--ink-2)" }}>
-          Panel bodies scroll alone — the bar and the foot never move…
+          Panel bodies scroll alone: the bar and the foot never move…
           <div style={{ position: "absolute", right: 3, top: 10, width: 4, height: 30, borderRadius: 9999, background: "var(--border)" }} />
         </div></Zone>
       ) : v === 2 ? (
@@ -1155,7 +1155,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <div style={{ position: "absolute", inset: 0, background: "oklch(0.145 0 0 / 0.3)" }} />
           <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 70, background: "var(--card)", borderRight: "1px solid var(--border)", padding: 6 }}><Ph h={5} w="70%" /><div style={{ height: 4 }} /><Ph h={5} /></div>
         </div></Zone>
-      )}<Note>V1 right utility with header, fields and pinned footer · V2 bottom with handle · V3 left with scrim. shadcn's Sheet = our UtilityDrawer — never an in-page panel.</Note></>);
+      )}<Note>V1 right utility with header, fields and pinned footer · V2 bottom with handle · V3 left with scrim. shadcn's Sheet = our UtilityDrawer: never an in-page panel.</Note></>);
 
     case "Sidebar":
       return (<>{v === 1 ? (
@@ -1229,7 +1229,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           {["Contact saved", "Panel pinned", "Export ready"].map((t) => (
             <div key={t} className="d-pop" style={{ maxWidth: "none", padding: "9px 12px", fontSize: 12 }}>{t}</div>))}
         </div></Zone>
-      )}<Note>V1 promise toast — loading resolves into its result · V2 collapsed stack · V3 expanded queue with Clear all. Transient — state lives in the panels.</Note></>);
+      )}<Note>V1 promise toast: loading resolves into its result · V2 collapsed stack · V3 expanded queue with Clear all. Transient: state lives in the panels.</Note></>);
 
     case "Spinner":
       return (<>{v === 1 ? (
@@ -1242,7 +1242,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
         <Zone><div style={{ width: 180, height: 4, borderRadius: 9999, background: "var(--secondary)", overflow: "hidden", position: "relative" }}>
           <span style={{ position: "absolute", left: "30%", width: "35%", top: 0, bottom: 0, background: "var(--foreground)", borderRadius: 9999 }} />
         </div></Zone>
-      )}<Note>V1 ring · V2 pulsing dots · V3 indeterminate bar. For whole panels prefer the Skeleton — shape beats motion.</Note></>);
+      )}<Note>V1 ring · V2 pulsing dots · V3 indeterminate bar. For whole panels prefer the Skeleton: shape beats motion.</Note></>);
 
     case "Switch":
       return (<>{v === 1 ? (
@@ -1269,7 +1269,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <span style={{ flex: 1 }}><b style={{ fontSize: 12.5, color: "var(--foreground)" }}>Presence</b><br /><span style={{ fontSize: 11, ...muted }}>Show who is viewing each panel.</span></span>
           <span className="d-switch on" />
         </div></Zone>
-      )}<Note>V1 inline toggles · V2 labeled-track anatomy — state text lives inside the control · V3 setting-row card. Device-local preference, never navigation state.</Note></>);
+      )}<Note>V1 inline toggles · V2 labeled-track anatomy: state text lives inside the control · V3 setting-row card. Device-local preference, never navigation state.</Note></>);
 
     case "Table":
       return (<>{v === 1 ? (
@@ -1277,7 +1277,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <tbody><tr><td>Jo Lambert</td><td>Head of operations</td></tr><tr><td>Max Verne</td><td>Procurement</td></tr></tbody></table></Zone>
       ) : v === 2 ? (
         <Zone col>
-          <div style={{ fontSize: 11, color: "var(--muted-foreground)", fontStyle: "italic" }}>Open opportunities — July 2026</div>
+          <div style={{ fontSize: 11, color: "var(--muted-foreground)", fontStyle: "italic" }}>Open opportunities: July 2026</div>
           <table className="d-table"><thead><tr><th>Deal</th><th style={{ textAlign: "right" }}>€</th></tr></thead>
             <tbody><tr><td>Refonte</td><td style={{ textAlign: "right" }}>18 000</td></tr><tr><td>Migration</td><td style={{ textAlign: "right" }}>13 500</td></tr>
               <tr><td style={{ fontWeight: 600, color: "var(--foreground)" }}>Total</td><td style={{ textAlign: "right", fontWeight: 600, color: "var(--foreground)", borderTop: "2px solid var(--foreground)" }}>31 500</td></tr></tbody></table>
@@ -1296,10 +1296,10 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
               </tr>))}
           </tbody>
         </table></Zone>
-      )}<Note>V1 basic · V2 caption + totals footer · V3 Notion-style composed table — checkbox, icon+name, tag pills, avatar, status column. Every row stays a DrillTrigger.</Note></>);
+      )}<Note>V1 basic · V2 caption + totals footer · V3 Notion-style composed table: checkbox, icon+name, tag pills, avatar, status column. Every row stays a DrillTrigger.</Note></>);
 
     case "Tabs":
-      return (<><TabsDemo v={v} /><Note>V1 segmented well · V2 underline with accent · V3 folder tabs — all clickable; in the grammar, tabs become sibling drills.</Note></>);
+      return (<><TabsDemo v={v} /><Note>V1 segmented well · V2 underline with accent · V3 folder tabs: all clickable; in the grammar, tabs become sibling drills.</Note></>);
     case "Textarea":
       return (<>{v === 1 ? (
         <Zone><textarea className="d-input" style={{ width: "100%", maxWidth: 280, height: 70, resize: "none" }} defaultValue="Compte-rendu : périmètre validé…" readOnly /></Zone>
@@ -1322,7 +1322,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
           <span style={{ color: "var(--foreground)" }}>✓</span><span style={{ flex: 1 }}>Contact saved.</span><button className="d-btn ghost sm">Undo</button>
         </div></Zone>
       ) : v === 2 ? (
-        <Zone><div className="toast" style={{ position: "static", transform: "none" }}>Pinned — survives every page</div></Zone>
+        <Zone><div className="toast" style={{ position: "static", transform: "none" }}>Pinned: survives every page</div></Zone>
       ) : (
         <Zone><div className="d-pop" style={{ maxWidth: 290, display: "flex", gap: 10 }}>
           <span style={{ width: 28, height: 28, borderRadius: 8, background: "var(--accent-soft)", color: "var(--accent)", display: "grid", placeItems: "center", flex: "none" }}>↧</span>
@@ -1369,7 +1369,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
     case "Tooltip":
       return (<>{v === 1 ? (
         <Zone><div style={{ textAlign: "center" }}>
-          <div className="d-tooltip" style={{ display: "inline-block", marginBottom: 6 }}>Pin — keep this panel when drilling elsewhere</div>
+          <div className="d-tooltip" style={{ display: "inline-block", marginBottom: 6 }}>Pin: keep this panel when drilling elsewhere</div>
           <div><button className="d-btn outline sm">PIN</button></div>
         </div></Zone>
       ) : v === 2 ? (
@@ -1386,7 +1386,7 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
       return (<>{v === 1 ? (
         <Zone col>
           <div style={{ fontFamily: "var(--font-serif)", fontSize: 26, letterSpacing: "-0.02em" }}>Newsreader for display</div>
-          <div style={{ fontSize: 13.5 }}>Inter for the interface — quiet, legible, unremarkable on purpose.</div>
+          <div style={{ fontSize: 13.5 }}>Inter for the interface: quiet, legible, unremarkable on purpose.</div>
           <div style={{ ...mono10, fontSize: 11 }}>Geist Mono for labels & data</div>
         </Zone>
       ) : v === 2 ? (
@@ -1403,6 +1403,6 @@ function DemoBody({ name, v }: { name: string; v: 1 | 2 | 3 }) {
       )}<Note>V1 the three voices · V2 article rhythm · V3 data typography. Serif speaks, sans works, mono measures.</Note></>);
 
     default:
-      return <Note>Demo coming — the token map already covers it.</Note>;
+      return <Note>Demo coming: the token map already covers it.</Note>;
   }
 }

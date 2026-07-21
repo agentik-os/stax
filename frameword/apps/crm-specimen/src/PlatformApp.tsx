@@ -1,5 +1,5 @@
 /**
- * PlatformApp — platform-class console & studio surfaces (the OpenAI-platform
+ * PlatformApp: platform-class console & studio surfaces (the OpenAI-platform
  * archive), rebuilt in the panel grammar. One store, seventeen panel types:
  * API keys (masked secrets, reveal-once, roll/revoke), people & permissions,
  * projects, billing, spend limits & alerts, usage analytics, service health &
@@ -101,14 +101,14 @@ const SEED: PfState = {
   seq: 9,
 };
 
-/* ── store (module pattern — let + Set + useSyncExternalStore) ───────── */
-const VER = 2; // bump when SEED's shape changes — stale snapshots are purged, never shallow-merged over
+/* ── store (module pattern: let + Set + useSyncExternalStore) ───────── */
+const VER = 2; // bump when SEED's shape changes: stale snapshots are purged, never shallow-merged over
 function load(): PfState {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // freshKey never persists — "visible once" means once, not once per reload
+      // freshKey never persists: "visible once" means once, not once per reload
       if (parsed && parsed.v === VER) return { ...SEED, ...parsed.s, freshKey: null };
     }
   } catch { /* fresh */ }
@@ -154,7 +154,7 @@ export const pfApp = {
   cancelInvite(id: string) { update((s) => ({ ...s, invites: s.invites.filter((i) => i.id !== id) })); },
   soleOwner: (id: string) => state.members.filter((m) => m.role === "Owner").length === 1 && state.members.find((m) => m.id === id)?.role === "Owner",
   setRole(id: string, role: PfMember["role"]) {
-    // the last Owner can never demote themself — the org would be ownerless
+    // the last Owner can never demote themself: the org would be ownerless
     if (role !== "Owner" && pfApp.soleOwner(id)) return;
     update((s) => ({ ...s, members: s.members.map((m) => (m.id === id ? { ...m, role } : m)) }));
   },
@@ -172,7 +172,7 @@ export const pfApp = {
   },
   renameProject(id: string, name: string) { update((s) => ({ ...s, projects: s.projects.map((p) => (p.id === id ? { ...p, name } : p)) })); },
   toggleArchive(id: string) { update((s) => ({ ...s, projects: s.projects.map((p) => (p.id === id ? { ...p, archived: !p.archived } : p)) })); },
-  addCredits() { update((s) => ({ ...s, balance: Math.round((s.balance + 25) * 100) / 100, banner: "Payment successful — $25.00 added to your credit balance." })); },
+  addCredits() { update((s) => ({ ...s, balance: Math.round((s.balance + 25) * 100) / 100, banner: "Payment successful: $25.00 added to your credit balance." })); },
   dismissBanner() { update((s) => ({ ...s, banner: null })); },
   toggleAuto() { update((s) => ({ ...s, auto: !s.auto })); },
   bumpLimit(d: number) { update((s) => ({ ...s, limit: Math.max(20, s.limit + d) })); },
@@ -195,7 +195,7 @@ export const pfApp = {
   addVar() { update((s) => ({ ...s, seq: s.seq + 1, prompt: { ...s.prompt, vars: [...s.prompt.vars, "var_" + (s.seq + 1)] } })); },
   removeVar(v: string) { update((s) => ({ ...s, prompt: { ...s.prompt, vars: s.prompt.vars.filter((x) => x !== v) } })); },
   run(text: string) {
-    // deterministic telemetry — a run is a LOG ROW: it streams into the
+    // deterministic telemetry: a run is a LOG ROW: it streams into the
     // Console's Logs panel the moment it happens (cross-dashboard live store)
     const ms = 400 + ((text.length * 37) % 2200);
     const tokens = 60 + text.length * 3;
@@ -299,7 +299,7 @@ function KeysTable({ panelId }: { panelId: string }) {
             : <button className="tp-slot danger" onClick={() => { pfApp.removeKey(menu.id); setMenu(null); }}>Delete key</button>}
         </div>
       )}
-      <Grammar text="pfkeys · XL 800. The org table pattern: search + segment filter in the toolbar, masked mono secrets, a row ⋯ menu (fixed-positioned — it never clips in the scroll container), and the empty state when a filter dries up. A row opens its key BESIDE the table — never a page swap." />
+      <Grammar text="pfkeys · XL 800. The org table pattern: search + segment filter in the toolbar, masked mono secrets, a row ⋯ menu (fixed-positioned: it never clips in the scroll container), and the empty state when a filter dries up. A row opens its key BESIDE the table: never a page swap." />
     </div>
   );
 }
@@ -314,7 +314,7 @@ function KeyDetail({ id }: { id: string }) {
       <input className="inline-edit pf-name" value={k.name} onChange={(e) => pfApp.renameKey(id, e.target.value)} aria-label="Key name" />
       {fresh ? (
         <div className="pf-secretbox">
-          <div className="lab">Secret — visible once</div>
+          <div className="lab">Secret: visible once</div>
           <div className="mono val">{k.secret}</div>
           <div className="hint">Copy it now. After you leave, only the masked form remains.</div>
           <button className="d-btn outline sm" onClick={() => { navigator.clipboard?.writeText(k.secret); }}>Copy secret</button>
@@ -326,7 +326,7 @@ function KeyDetail({ id }: { id: string }) {
       <div className="anat-row"><span className="k">CREATED</span><span className="t">{k.created}</span></div>
       <div className="anat-row"><span className="k">LAST USED</span><span className="t">{k.lastUsed}</span></div>
       <div className="anat-row"><span className="k">SPEND</span><span className="t mono">{usd(k.spend)} this month</span></div>
-      <Grammar text="pfkey · S 380 — the inspector class. Reveal-once lives HERE, not in a modal: the table row simply opened its detail panel. Revoke is in the foot — the one action zone." />
+      <Grammar text="pfkey · S 380: the inspector class. Reveal-once lives HERE, not in a modal: the table row simply opened its detail panel. Revoke is in the foot: the one action zone." />
     </div>
   );
 }
@@ -356,7 +356,7 @@ function PeopleList({ panelId }: { panelId: string }) {
           ))}
         </div>
       ) : s.invites.length === 0 ? (
-        <EmptyState glyph={<><path d="M22 6 12 13 2 6" /><rect x="2" y="4" width="20" height="16" rx="2" /></>} title="No pending invitations" text="Invite a teammate from the foot — the invitation appears here until it is accepted." />
+        <EmptyState glyph={<><path d="M22 6 12 13 2 6" /><rect x="2" y="4" width="20" height="16" rx="2" /></>} title="No pending invitations" text="Invite a teammate from the foot: the invitation appears here until it is accepted." />
       ) : (
         <div className="pf-list">
           {s.invites.map((i) => (
@@ -364,14 +364,14 @@ function PeopleList({ panelId }: { panelId: string }) {
               <span className="pf-ava dim">@</span>
               <span className="bd">
                 <span className="nm">{i.email}<span className="pf-role">{i.role}</span></span>
-                <span className="em">Invited {i.sent} — pending</span>
+                <span className="em">Invited {i.sent}: pending</span>
               </span>
               <button className="d-btn ghost sm" onClick={() => pfApp.cancelInvite(i.id)}>Cancel</button>
             </div>
           ))}
         </div>
       )}
-      <Grammar text="pfpeople · L 640. The original's Members/Invitations TABS become a segment — a view filter, not navigation (Law 2). 'Select a member to view details' does not exist here: the detail IS the next panel." />
+      <Grammar text="pfpeople · L 640. The original's Members/Invitations TABS become a segment: a view filter, not navigation (Law 2). 'Select a member to view details' does not exist here: the detail IS the next panel." />
     </div>
   );
 }
@@ -391,9 +391,9 @@ function MemberDetail({ id }: { id: string }) {
       </div>
       <div className="pop-sub" style={{ marginTop: 14 }}>Role</div>
       <Seg items={["Owner", "Member", "Reader"]} value={m.role} onPick={(r) => pfApp.setRole(id, r as PfMember["role"])} />
-      {pfApp.soleOwner(id) && <div className="pf-hint" style={{ marginTop: 6 }}>The last Owner cannot be demoted or removed — promote someone else first.</div>}
+      {pfApp.soleOwner(id) && <div className="pf-hint" style={{ marginTop: 6 }}>The last Owner cannot be demoted or removed: promote someone else first.</div>}
       <div className="anat-row" style={{ marginTop: 12 }}><span className="k">JOINED</span><span className="t">{m.joined}</span></div>
-      <div className="anat-row"><span className="k">ACCESS</span><span className="t">{m.role === "Owner" ? "Full — billing, keys, members" : m.role === "Member" ? "Build — keys and usage" : "Read — usage only"}</span></div>
+      <div className="anat-row"><span className="k">ACCESS</span><span className="t">{m.role === "Owner" ? "Full: billing, keys, members" : m.role === "Member" ? "Build: keys and usage" : "Read: usage only"}</span></div>
       <Grammar text="pfmember · S 380. Role is a segmented choice, not a dropdown; removing the member is a foot action. The people list stays mounted on the left the whole time (Law 3)." />
     </div>
   );
@@ -452,7 +452,7 @@ function ProjectDetail({ id }: { id: string }) {
       <div className="anat-row"><span className="k">MEMBERS</span><span className="t mono">{p.members}</span></div>
       <div className="anat-row"><span className="k">CREATED</span><span className="t">{p.created}</span></div>
       <div className="anat-row"><span className="k">SPEND</span><span className="t mono">{usd(p.spend)} this month</span></div>
-      <Grammar text="pfproject · S 380. Inline rename with the .inline-edit pattern — no borders, no window.prompt. Archive toggles in the foot." />
+      <Grammar text="pfproject · S 380. Inline rename with the .inline-edit pattern: no borders, no window.prompt. Archive toggles in the foot." />
     </div>
   );
 }
@@ -483,7 +483,7 @@ function BillingBody({ panelId }: { panelId: string }) {
       <div className="pf-autorow">
         <div>
           <div className="t">Automatic recharge</div>
-          <div className="s">{s.auto ? "When the balance drops below $5, restore to $10." : "Off — API calls fail once the balance reaches $0."}</div>
+          <div className="s">{s.auto ? "When the balance drops below $5, restore to $10." : "Off: API calls fail once the balance reaches $0."}</div>
         </div>
         <button className={"d-switch" + (s.auto ? " on" : "")} role="switch" aria-checked={s.auto} aria-label="Automatic recharge" onClick={() => pfApp.toggleAuto()} />
       </div>
@@ -496,7 +496,7 @@ function BillingBody({ panelId }: { panelId: string }) {
           </button>
         ))}
       </div>
-      <Grammar text="pfbilling · M 480. The billing hub: one big mono number, a switch row, and icon nav-cards that DRILL — the original's sub-pages become sibling panels, and the success toast becomes a dismissible banner inside the panel, never a modal (Law 1)." />
+      <Grammar text="pfbilling · M 480. The billing hub: one big mono number, a switch row, and icon nav-cards that DRILL: the original's sub-pages become sibling panels, and the success toast becomes a dismissible banner inside the panel, never a modal (Law 1)." />
     </div>
   );
 }
@@ -521,7 +521,7 @@ function LimitsBody() {
       </div>
       <div className="section">
         <div className="lab">Spend alerts</div>
-        {s.alerts.length === 0 && <div className="pf-hint">No alerts — add one from the foot.</div>}
+        {s.alerts.length === 0 && <div className="pf-hint">No alerts: add one from the foot.</div>}
         {s.alerts.map((a) => (
           <div key={a} className="pf-alertrow">
             <Ic d={<><path d="M22 6 12 13 2 6" /><rect x="2" y="4" width="20" height="16" rx="2" /></>} s={13} />
@@ -542,7 +542,7 @@ function LimitsBody() {
           {s.tier < 5 && <button className="d-btn outline sm" onClick={() => pfApp.upgradeTier()}>Upgrade tier</button>}
         </div>
       </div>
-      <Grammar text="pflimits · M 480. Big numbers stay mono and tabular; the progress bar and the tier rail are token-painted divs. Alerts are a small collection — add in the foot, remove inline." />
+      <Grammar text="pflimits · M 480. Big numbers stay mono and tabular; the progress bar and the tier rail are token-painted divs. Alerts are a small collection: add in the foot, remove inline." />
     </div>
   );
 }
@@ -556,7 +556,7 @@ const MODELS = [
   { name: "embeddings-4", v: 1.25, pct: 7 },
 ];
 const rangeSlice = (range: string) => (range === "7d" ? DAILY.slice(-7) : DAILY);
-// per-day derived telemetry — the KPI stats and the CSV follow the range, always
+// per-day derived telemetry: the KPI stats and the CSV follow the range, always
 const dayStats = (range: string) => {
   const data = rangeSlice(range);
   const sum = data.reduce((a, b) => a + b, 0);
@@ -608,7 +608,7 @@ function UsageBody() {
           </div>
         ))}
       </div>
-      <Grammar text="pfusage · L 640. The usage dashboard: KPI stats reuse the framework's stat row, the chart is a plain token-colored SVG, and Export in the foot downloads a real CSV. The original's right rail became the stat row — no second column inside a panel." />
+      <Grammar text="pfusage · L 640. The usage dashboard: KPI stats reuse the framework's stat row, the chart is a plain token-colored SVG, and Export in the foot downloads a real CSV. The original's right rail became the stat row: no second column inside a panel." />
     </div>
   );
 }
@@ -647,7 +647,7 @@ function HealthBody({ panelId }: { panelId: string }) {
               <span className="no">{String(i + 1).padStart(2, "0")}</span>
               <span className="bd">
                 <span className="tt" style={{ display: "block" }}>{inc.title}</span>
-                <span className="ss" style={{ display: "block" }}>{inc.date} — resolved</span>
+                <span className="ss" style={{ display: "block" }}>{inc.date}: resolved</span>
               </span>
               <span className="arr">→</span>
             </button>
@@ -669,7 +669,7 @@ function IncidentDetail({ id }: { id: string }) {
       <div className="anat-row"><span className="k">SERVICE</span><span className="t">{inc.service}</span></div>
       <div className="anat-row"><span className="k">STATUS</span><span className="t"><Pill on>resolved</Pill></span></div>
       <div className="leaf-note" style={{ marginTop: 12 }}>{inc.note}</div>
-      <Grammar text="pfincident · S 380 — a leaf. The incident rail of the original is just a drill list here; the write-up gets its own panel instead of a hover popover." />
+      <Grammar text="pfincident · S 380: a leaf. The incident rail of the original is just a drill list here; the write-up gets its own panel instead of a hover popover." />
     </div>
   );
 }
@@ -678,7 +678,7 @@ function IncidentDetail({ id }: { id: string }) {
 const CONTROL_GROUPS: { key: "threads" | "usage" | "logs"; label: string; sub: string; opts: { v: string; l: string }[] }[] = [
   { key: "threads", label: "Threads", sub: "The threads page shows conversations created with the API and the Studio.", opts: [{ v: "hidden", l: "Hidden" }, { v: "owners", l: "Visible to organization owners" }, { v: "everyone", l: "Visible to everyone" }] },
   { key: "usage", label: "Usage dashboard", sub: "Activity and costs for the whole organization.", opts: [{ v: "owners", l: "Owners and users with usage permissions" }, { v: "everyone", l: "Visible to everyone" }] },
-  { key: "logs", label: "Logs page", sub: "Who can read request logs in the console UI — API access is unaffected.", opts: [{ v: "hidden", l: "Hidden" }, { v: "owners", l: "Visible to organization owners" }, { v: "everyone", l: "Visible to everyone" }] },
+  { key: "logs", label: "Logs page", sub: "Who can read request logs in the console UI: API access is unaffected.", opts: [{ v: "hidden", l: "Hidden" }, { v: "owners", l: "Visible to organization owners" }, { v: "everyone", l: "Visible to everyone" }] },
 ];
 function ControlsBody() {
   const s = usePfApp();
@@ -697,8 +697,8 @@ function ControlsBody() {
           ))}
         </div>
       ))}
-      {pfApp.controlsDirty() && <div className="pf-hint hot">Unsaved changes — Save lives in the foot, the one action zone.</div>}
-      <Grammar text="pfcontrols · M 480. A settings FORM in the grammar: radio groups with their explanations, drafts held until Save — and Save is the foot's primary action, not a button floating at the end of the page." />
+      {pfApp.controlsDirty() && <div className="pf-hint hot">Unsaved changes: Save lives in the foot, the one action zone.</div>}
+      <Grammar text="pfcontrols · M 480. A settings FORM in the grammar: radio groups with their explanations, drafts held until Save: and Save is the foot's primary action, not a button floating at the end of the page." />
     </div>
   );
 }
@@ -744,7 +744,7 @@ function SecurityBody() {
           ))}
         </div>
       )}
-      <Grammar text="pfsecurity · M 480. Three former tabs, one segment. The empty state is a first-class pattern: an icon, one sentence, and at most one inline CTA — the panel never pretends to be full." />
+      <Grammar text="pfsecurity · M 480. Three former tabs, one segment. The empty state is a first-class pattern: an icon, one sentence, and at most one inline CTA: the panel never pretends to be full." />
     </div>
   );
 }
@@ -758,7 +758,7 @@ function PromptBody() {
     <div>
       <div className="section">
         <div className="lab">Prompt</div>
-        <textarea className="pf-ta" rows={4} placeholder="Describe desired model behavior — tone, tool usage, response style…"
+        <textarea className="pf-ta" rows={4} placeholder="Describe desired model behavior: tone, tool usage, response style…"
           value={p.text} onChange={(e) => pfApp.setPrompt({ text: e.target.value })} />
         <div className="pf-btnrow">
           <button className="d-btn outline sm" onClick={() => pfApp.setPrompt({ text: PROMPT_TPL })}>Generate prompt</button>
@@ -798,7 +798,7 @@ function PromptBody() {
           ))}
         </div>
       )}
-      <Grammar text="pfprompt · L 640. The playground's config column becomes stacked sections; model, reasoning and verbosity are segments, never native selects. The floating 'Ask anything' composer is anchored in the FOOT — one action zone, Law 6." />
+      <Grammar text="pfprompt · L 640. The playground's config column becomes stacked sections; model, reasoning and verbosity are segments, never native selects. The floating 'Ask anything' composer is anchored in the FOOT: one action zone, Law 6." />
     </div>
   );
 }
@@ -862,7 +862,7 @@ function ImagesBody() {
           </figure>
         ))}
       </div>
-      <Grammar text="pfimages · L 640. The media grid: tiles are token-painted SVG, captions stay small, and the 'describe what you want to see' composer sits in the foot with Generate as its primary — the floating pill of the original, anchored." />
+      <Grammar text="pfimages · L 640. The media grid: tiles are token-painted SVG, captions stay small, and the 'describe what you want to see' composer sits in the foot with Generate as its primary: the floating pill of the original, anchored." />
     </div>
   );
 }
@@ -870,14 +870,14 @@ function ImagesBody() {
 /* ── Studio · Build hub (L prompt cards) ─────────────────────────────── */
 interface HubCard { id: string; title: string; sub: string; glyph: React.ReactNode; prompt: string }
 const HUB_BUILD: HubCard[] = [
-  { id: "crm", title: "Build a panel-native CRM", sub: "Accounts → contacts → deals as one drill chain.", glyph: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></>, prompt: "Build a CRM on the Stax panel grammar. Spaces: Accounts (root L), Reports (read-only). Every record opens with openDetail beside its parent — no routes, no modals. Foot = one accent CTA per panel. Widths from the registry (S380/M480/L640/XL800). Start from packages/panels-react." },
+  { id: "crm", title: "Build a panel-native CRM", sub: "Accounts → contacts → deals as one drill chain.", glyph: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></>, prompt: "Build a CRM on the Stax panel grammar. Spaces: Accounts (root L), Reports (read-only). Every record opens with openDetail beside its parent: no routes, no modals. Foot = one accent CTA per panel. Widths from the registry (S380/M480/L640/XL800). Start from packages/panels-react." },
   { id: "agent", title: "Build an agent console", sub: "Runs, traces and tools as drillable panels.", glyph: <><rect x="4" y="6" width="16" height="12" rx="2" /><path d="M9 2v4M15 2v4M9 11h.01M15 11h.01M9.5 15h5" /></>, prompt: "Build an agent-operations console in the Stax grammar: a Runs space (XL table with status pills, mono ids, row → run detail panel), each run drilling to its trace (steps as numbered drills) and tool calls (S inspectors). Live state in a module store with useSyncExternalStore." },
-  { id: "voice", title: "Build a realtime audio app", sub: "A voice-first surface with session panels.", glyph: <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /></>, prompt: "Build a realtime voice app in the Stax grammar: a Sessions space, each session a panel with a live transcript, the composer anchored in the foot, and device settings as an S drill. No floating overlays — every surface is a panel." },
+  { id: "voice", title: "Build a realtime audio app", sub: "A voice-first surface with session panels.", glyph: <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /></>, prompt: "Build a realtime voice app in the Stax grammar: a Sessions space, each session a panel with a live transcript, the composer anchored in the foot, and device settings as an S drill. No floating overlays: every surface is a panel." },
 ];
 const HUB_IMPROVE: HubCard[] = [
   { id: "modals", title: "Convert modals to panels", sub: "Kill every dialog without losing a feature.", glyph: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /></>, prompt: "Inventory every modal/dialog/drawer in this codebase (grep for Modal|Dialog|Drawer). For each, restate its job, then re-express it in the Stax grammar: detail modals → openDetail panels, confirms → foot actions with undo, wizards → chained drills. Produce the conversion table first, then migrate one modal per commit." },
   { id: "audit", title: "Audit against the laws", sub: "Nine laws, evidence or it didn't happen.", glyph: <><path d="M20 6 9 17l-5-5" /></>, prompt: "Run the Stax law audit on this app (the master prompt ships in Prompt pack → Compliance audit). For each of the nine laws: PASS/FAIL with grep output, file:line or screenshot. Any FAIL blocks done. Output laws-report.md." },
-  { id: "table", title: "Add a data-table space", sub: "Views, filters, calcs — rows open as panels.", glyph: <><path d="M3 9h18M3 15h18M9 3v18" /><rect x="3" y="3" width="18" height="18" rx="2" /></>, prompt: "Add an Airtable-class collection space to this Stax app: typed fields, named views carrying filters/sort/hidden/group, per-column calcs, and every row opening as a document panel beside the table. Follow apps/crm-specimen/src/DataApp.tsx as the reference implementation." },
+  { id: "table", title: "Add a data-table space", sub: "Views, filters, calcs: rows open as panels.", glyph: <><path d="M3 9h18M3 15h18M9 3v18" /><rect x="3" y="3" width="18" height="18" rx="2" /></>, prompt: "Add an Airtable-class collection space to this Stax app: typed fields, named views carrying filters/sort/hidden/group, per-column calcs, and every row opening as a document panel beside the table. Follow apps/crm-specimen/src/DataApp.tsx as the reference implementation." },
 ];
 function HubBody({ panelId }: { panelId: string }) {
   const ws = useWorkspace();
@@ -913,7 +913,7 @@ function HubBody({ panelId }: { panelId: string }) {
     <div>
       <div className="pf-herocard">
         <div className="t">Build faster with Stax in your coding agent.</div>
-        <div className="s">Every card below is a ready-to-paste mission for Claude Code or Codex — the same prompts that ship in the Prompt pack, scoped to a single build.</div>
+        <div className="s">Every card below is a ready-to-paste mission for Claude Code or Codex: the same prompts that ship in the Prompt pack, scoped to a single build.</div>
         <div className="steps">
           <span><span className="no mono">1</span>Copy a prompt</span>
           <span><span className="no mono">2</span>Paste it into your agent</span>
@@ -924,12 +924,12 @@ function HubBody({ panelId }: { panelId: string }) {
       <Cards cards={HUB_BUILD} />
       <div className="pop-sub" style={{ margin: "14px 0 6px" }}>Improve an existing app</div>
       <Cards cards={HUB_IMPROVE} />
-      <Grammar text="pfhub · L 640. The prompt-card hub: a hero with numbered steps, then card rows whose ONLY verbs are Copy and Open-in-Studio — and Open in Studio drills the composer panel beside this one, prefilled. Expanding a card is a disclosure, not navigation." />
+      <Grammar text="pfhub · L 640. The prompt-card hub: a hero with numbered steps, then card rows whose ONLY verbs are Copy and Open-in-Studio: and Open in Studio drills the composer panel beside this one, prefilled. Expanding a card is a disclosure, not navigation." />
     </div>
   );
 }
 
-/* ── Console · Logs (XL) — fed live by the Studio composer's runs ────── */
+/* ── Console · Logs (XL): fed live by the Studio composer's runs ────── */
 function LogsBody({ panelId }: { panelId: string }) {
   const s = usePfApp();
   const ws = useWorkspace();
@@ -943,7 +943,7 @@ function LogsBody({ panelId }: { panelId: string }) {
       </div>
       {rows.length === 0 ? (
         <EmptyState glyph={<><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /><path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2" /><line x1="4" y1="12" x2="20" y2="12" /></>}
-          title="No requests match" text="Run something in the Studio composer — it lands here the moment it returns." cta="Show all" onCta={() => setFlt("All")} />
+          title="No requests match" text="Run something in the Studio composer: it lands here the moment it returns." cta="Show all" onCta={() => setFlt("All")} />
       ) : (
         <div className="pf-scroll">
           <table className="pf-tbl">
@@ -963,7 +963,7 @@ function LogsBody({ panelId }: { panelId: string }) {
           </table>
         </div>
       )}
-      <Grammar text="pflogs · XL 800. The Logs page the console copy promised — fed LIVE by the Studio composer's runs store: fire a prompt in the other dashboard and the row appears here. One store, two dashboards, zero sync code — that is the module-store pattern." />
+      <Grammar text="pflogs · XL 800. The Logs page the console copy promised: fed LIVE by the Studio composer's runs store: fire a prompt in the other dashboard and the row appears here. One store, two dashboards, zero sync code: that is the module-store pattern." />
     </div>
   );
 }
@@ -983,7 +983,7 @@ function LogDetail({ id }: { id: string }) {
         <div className="lab">Prompt</div>
         <div className="leaf-note">{r.text}</div>
       </div>
-      <Grammar text="pflog · S 380 — the request inspector. A log row opened beside its table; in production this panel would carry the full request/response pair and a re-run foot action." />
+      <Grammar text="pflog · S 380: the request inspector. A log row opened beside its table; in production this panel would carry the full request/response pair and a re-run foot action." />
     </div>
   );
 }
@@ -1053,7 +1053,7 @@ export function PlatformFoot({ panelType, resourceKey, panelId, closePanel }: { 
       const m = s.members.find((x) => x.id === id);
       if (!m) return <span className="foot-note">Member removed</span>;
       return m.you
-        ? <span className="foot-note">This is you — the workspace owner</span>
+        ? <span className="foot-note">This is you: the workspace owner</span>
         : <button className="d-btn destructive sm" onClick={() => { pfApp.removeMember(id); closePanel(); }}>{trash} Remove member</button>;
     }
     case "pfprojects":
@@ -1080,7 +1080,7 @@ export function PlatformFoot({ panelType, resourceKey, panelId, closePanel }: { 
         </button>
       );
     case "pfhealth":
-      return <span className="foot-note">Live status — read-only</span>;
+      return <span className="foot-note">Live status: read-only</span>;
     case "pfincident":
       return <span className="foot-note">Read-only</span>;
     case "pflogs":
@@ -1098,13 +1098,13 @@ export function PlatformFoot({ panelType, resourceKey, panelId, closePanel }: { 
         ? <button className="d-btn destructive sm" onClick={() => pfApp.removeProvider()}>{trash} Remove provider</button>
         : <button className="foot-cta" onClick={() => pfApp.createProvider()}>{plus} Create identity provider</button>;
     case "pfprompt":
-      return <ComposerFoot placeholder="Ask anything — runs with the config above…" cta="Run" onRun={(t) => pfApp.run(t)} />;
+      return <ComposerFoot placeholder="Ask anything: runs with the config above…" cta="Run" onRun={(t) => pfApp.run(t)} />;
     case "pfrealtime":
       return <button className="foot-cta" disabled={!s.rtDraft.trim()} onClick={() => pfApp.createRt()}>{plus} Create prompt</button>;
     case "pfimages":
       return <ComposerFoot placeholder="Describe what you want to see…" cta="Generate" onRun={(t) => pfApp.genImage(t)} />;
     case "pfhub":
-      return <span className="foot-note">Copy a prompt — or open it in the Studio composer beside this panel</span>;
+      return <span className="foot-note">Copy a prompt: or open it in the Studio composer beside this panel</span>;
     default:
       return <span className="foot-note">Read-only</span>;
   }

@@ -1,5 +1,5 @@
 /**
- * The Blocks catalog — every dashboard element the framework ships, each in
+ * The Blocks catalog: every dashboard element the framework ships, each in
  * THREE structurally different versions, each with the grammar table that
  * explains how it plugs into the panel framework (lives / drill / state / size).
  */
@@ -18,7 +18,7 @@ export const BLOCKS: Record<string, BlockMeta> = {
   /* KPI & stats */
   "blk:stat-card": { title: "Stat card", sub: "Mono label + serif value + delta.", cat: "kpi", g: ["Panel body (stats grid)", "Click → drills the metric detail to the right", "App data (query)", "L root · M detail"] },
   "blk:big-number": { title: "Big number", sub: "The number IS the message.", cat: "kpi", g: ["Body, full width", "Click → metric explainer panel", "App data", "S · M"] },
-  "blk:delta-badge": { title: "Delta badge", sub: "+12% ↑ — the change in one pill.", cat: "kpi", g: ["Inline in stats, tables, titles", "Click → period comparison panel", "Derived (computed)", "—"] },
+  "blk:delta-badge": { title: "Delta badge", sub: "+12% ↑: the change in one pill.", cat: "kpi", g: ["Inline in stats, tables, titles", "Click → period comparison panel", "Derived (computed)", "—"] },
   "blk:sparkline-stat": { title: "Sparkline stat", sub: "Value + trend in one block.", cat: "kpi", g: ["Body (KPI row)", "Click → full-size chart as a drill", "App data", "M"] },
   "blk:gauge": { title: "Gauge", sub: "Position on a bounded scale.", cat: "kpi", g: ["Body", "Click → gauge history", "Data + configured thresholds", "S"] },
   "blk:progress-ring": { title: "Progress ring", sub: "Circular completion.", cat: "kpi", g: ["Body · card corner", "Click → list of remaining items", "Derived", "S"] },
@@ -32,10 +32,10 @@ export const BLOCKS: Record<string, BlockMeta> = {
   "blk:stacked-bars": { title: "Stacked bars", sub: "Composition per category.", cat: "charts", g: ["Body", "Segment → sub-series drill", "App data", "M · L"] },
   "blk:donut": { title: "Donut / Pie", sub: "Parts of a whole.", cat: "charts", g: ["Body", "Slice → slice drill", "App data", "S · M"] },
   "blk:scatter": { title: "Scatter", sub: "Correlation across two axes.", cat: "charts", g: ["Body", "Point = a record → openDetail", "App data", "L"] },
-  "blk:heatmap": { title: "Calendar heatmap", sub: "The GitHub pixel-grid — the LifeOS signature.", cat: "charts", g: ["Body, full width, jamais de h-scroll", "Cell = a day → drills that day", "App data (logs/jour)", "L · XL"] },
+  "blk:heatmap": { title: "Calendar heatmap", sub: "The GitHub pixel-grid: the LifeOS signature.", cat: "charts", g: ["Body, full width, jamais de h-scroll", "Cell = a day → drills that day", "App data (logs/jour)", "L · XL"] },
   "blk:funnel": { title: "Funnel", sub: "Step-by-step conversion.", cat: "charts", g: ["Body", "Step → drills the lost/passed cohort", "Derived", "M"] },
   "blk:radar": { title: "Radar", sub: "Multi-dimensional profile.", cat: "charts", g: ["Body", "Axis → dimension drill", "App data", "M"] },
-  "blk:treemap": { title: "Treemap", sub: "Proportional hierarchy.", cat: "charts", g: ["Body", "Cell → drill (recursive — it IS a tree!)", "App data", "L · XL"] },
+  "blk:treemap": { title: "Treemap", sub: "Proportional hierarchy.", cat: "charts", g: ["Body", "Cell → drill (recursive: it IS a tree!)", "App data", "L · XL"] },
   "blk:sankey": { title: "Sankey", sub: "Flows between states.", cat: "charts", g: ["Body (panneau wide)", "Ribbon → flow drill", "Derived", "XL"] },
   "blk:geo-map": { title: "Geo map", sub: "Values by territory.", cat: "charts", g: ["Body (canvas-like)", "Marker → node-inspector drill", "App data", "L · XL"] },
   "blk:sparklines": { title: "Sparklines", sub: "Inline micro-trends.", cat: "charts", g: ["Inline (tables, lists, text)", "Click → full chart as a drill", "Derived", "—"] },
@@ -44,14 +44,14 @@ export const BLOCKS: Record<string, BlockMeta> = {
   "blk:tree-table": { title: "Tree table", sub: "Hierarchy + columns.", cat: "data", g: ["Body", "Caret expands IN PLACE · title → drills right", "App data", "L"] },
   "blk:virtual-list": { title: "Virtual list", sub: "10k rows without flinching.", cat: "data", g: ["Body (seul scrolleur vertical)", "Row = DrillTrigger", "Paginated data (query)", "M · L"] },
   "blk:timeline": { title: "Timeline / feed", sub: "Activity, in order.", cat: "data", g: ["Body", "Entry → drills the related record", "App data", "M"] },
-  "blk:kanban": { title: "Kanban", sub: "State columns, draggable cards.", cat: "data", g: ["Body (wide) — a VIEW, not a navigation", "Card → openDetail beside the board", "App data (mutations)", "XL"] },
+  "blk:kanban": { title: "Kanban", sub: "State columns, draggable cards.", cat: "data", g: ["Body (wide): a VIEW, not a navigation", "Card → openDetail beside the board", "App data (mutations)", "XL"] },
   "blk:gantt": { title: "Gantt", sub: "Durations and dependencies.", cat: "data", g: ["Body (wide)", "Bar → task drill", "App data", "XL"] },
   "blk:log-viewer": { title: "Log viewer", sub: "Mono stream, colored levels.", cat: "data", g: ["Body pleine hauteur", "Line → error-context drill", "Stream (append-only)", "L · XL"] },
   "blk:diff-viewer": { title: "Diff viewer", sub: "Before / after.", cat: "data", g: ["Body", "Hunk → full-file drill", "Derived", "L · XL"] },
   "blk:code-block": { title: "Code block", sub: "Readable, copyable source.", cat: "data", g: ["Body", "Copy in the block · run → result as a drill", "Static content", "M · L"] },
   /* Content */
-  "blk:rich-editor": { title: "Rich text editor (Tiptap)", sub: "Real Tiptap — notes, blog writing, image note-taking.", cat: "content", g: ["Panel body, full height (editor-typed panel)", "@-mention a record → opens its panel beside the draft", "Draft state (local) → document (app data) on save", "L · XL"] },
-  "blk:stepper": { title: "Stepper / wizard", sub: "Sequenced progression.", cat: "content", g: ["Body · the step CTA lives in the FOOT", "Next/Back = footActions — never floating", "Local draft state", "M"] },
+  "blk:rich-editor": { title: "Rich text editor (Tiptap)", sub: "Real Tiptap: notes, blog writing, image note-taking.", cat: "content", g: ["Panel body, full height (editor-typed panel)", "@-mention a record → opens its panel beside the draft", "Draft state (local) → document (app data) on save", "L · XL"] },
+  "blk:stepper": { title: "Stepper / wizard", sub: "Sequenced progression.", cat: "content", g: ["Body · the step CTA lives in the FOOT", "Next/Back = footActions: never floating", "Local draft state", "M"] },
   /* Navigation & filters */
   "blk:filter-bar": { title: "Filter bar", sub: "Active filter chips.", cat: "nav", g: ["Top of the body, under the title", "A chip changes the QUERY, not navigation", "Presentation (device-local)", "—"] },
   "blk:saved-views": { title: "Saved views", sub: "Named, reusable segments.", cat: "nav", g: ["Top of the body · ⌘K palette", "A view = named query params", "Preference (device/org)", "—"] },
@@ -59,11 +59,11 @@ export const BLOCKS: Record<string, BlockMeta> = {
   "blk:presence": { title: "Presence", sub: "Who is viewing what, live.", cat: "states", g: ["Panel bar", "Avatar → profile drill", "Ephemeral (live query)", "—"] },
   "blk:panel-states": { title: "Panel states", sub: "All 8 states from the brief, drawn.", cat: "states", g: ["The panel's ENTIRE body", "Retry / Request access = footActions", "Query lifecycle", "all"] },
   /* IA */
-  "blk:voice-input": { title: "Voice to text", sub: "Dictate anywhere — Web Speech here, ElevenLabs Scribe in production.", cat: "ai", g: ["Composer of chat panels · any input", "Transcript lands in the focused field/panel", "Ephemeral until sent", "—"] },
-  "blk:tool-trace": { title: "Tool-call trace", sub: "What the agent did — verifiable.", cat: "ai", g: ["Body du chat (sous le message)", "Step → drills the panel it read", "Execution log", "M"] },
+  "blk:voice-input": { title: "Voice to text", sub: "Dictate anywhere: Web Speech here, ElevenLabs Scribe in production.", cat: "ai", g: ["Composer of chat panels · any input", "Transcript lands in the focused field/panel", "Ephemeral until sent", "—"] },
+  "blk:tool-trace": { title: "Tool-call trace", sub: "What the agent did: verifiable.", cat: "ai", g: ["Body du chat (sous le message)", "Step → drills the panel it read", "Execution log", "M"] },
   "blk:agent-presence": { title: "Agent presence", sub: "The agent is a visible collaborator.", cat: "ai", g: ["Panel bar + presence stack", "Click → opens the agent drawer", "Ephemeral", "—"] },
   /* Natifs */
-  "blk:canvas": { title: "Canvas + node inspector", sub: "The topology axis — React Flow as a panel.", cat: "native", g: ["A panel TYPE (XL)", "Node → node-inspector drill to the right", "{nodes, edges} JSON — URL/agent ready", "XL + S inspector"] },
+  "blk:canvas": { title: "Canvas + node inspector", sub: "The topology axis: React Flow as a panel.", cat: "native", g: ["A panel TYPE (XL)", "Node → node-inspector drill to the right", "{nodes, edges} JSON: URL/agent ready", "XL + S inspector"] },
   "blk:stack-minimap": { title: "Stack minimap", sub: "The stack as thumbnails.", cat: "native", g: ["Breadcrumb hover · stage corner", "Thumbnail → focus/scroll that panel", "Derived du ContextPath", "—"] },
   "blk:saved-stacks": { title: "Saved stacks", sub: "A named arrangement = a workspace.", cat: "native", g: ["Sidebar · palette", "Open = openPath of the saved stack", "Persisted (Convex/localStorage)", "—"] },
 };
@@ -128,7 +128,7 @@ function Gram({ g }: { g: [string, string, string, string] }) {
 /* ── REAL Tiptap integration ─────────────────────────────────────────── */
 export function TiptapDemo({ v }: { v: 1 | 2 | 3 }) {
   const [rich, setRich] = useState(
-    "<h2>The framework editor</h2><p>The same <b>RichNotes</b> component the canvas, tasks and data pages use — smart paragraph menu, checklists, links, highlight.</p><ul data-type=\"taskList\"><li data-type=\"taskItem\" data-checked=\"true\"><label><input type=\"checkbox\" checked=\"checked\"><span></span></label><div><p>One editor everywhere</p></div></li><li data-type=\"taskItem\" data-checked=\"false\"><label><input type=\"checkbox\"><span></span></label><div><p>Try the Text menu</p></div></li></ul>");
+    "<h2>The framework editor</h2><p>The same <b>RichNotes</b> component the canvas, tasks and data pages use: smart paragraph menu, checklists, links, highlight.</p><ul data-type=\"taskList\"><li data-type=\"taskItem\" data-checked=\"true\"><label><input type=\"checkbox\" checked=\"checked\"><span></span></label><div><p>One editor everywhere</p></div></li><li data-type=\"taskItem\" data-checked=\"false\"><label><input type=\"checkbox\"><span></span></label><div><p>Try the Text menu</p></div></li></ul>");
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -137,10 +137,10 @@ export function TiptapDemo({ v }: { v: 1 | 2 | 3 }) {
     ],
     content:
       v === 1
-        ? "<p>A <b>real</b> Tiptap editor inside a panel — select text, use the toolbar.</p><ul><li>Notes</li><li>Specs</li><li>Meeting minutes</li></ul>"
+        ? "<p>A <b>real</b> Tiptap editor inside a panel: select text, use the toolbar.</p><ul><li>Notes</li><li>Specs</li><li>Meeting minutes</li></ul>"
         : v === 2
-          ? "<h2>Why panels beat pages</h2><p>The draft lives beside its sources — pin a record, quote it, keep writing. <i>Blog writing without losing the thread.</i></p><blockquote>A panel is a modal that respects its parent.</blockquote>"
-          : "<p>Image note-taking — insert screenshots and annotate around them.</p>",
+          ? "<h2>Why panels beat pages</h2><p>The draft lives beside its sources: pin a record, quote it, keep writing. <i>Blog writing without losing the thread.</i></p><blockquote>A panel is a modal that respects its parent.</blockquote>"
+          : "<p>Image note-taking: insert screenshots and annotate around them.</p>",
   }, [v]);
   if ((v as number) === 1) {
     return (
@@ -168,13 +168,13 @@ export function TiptapDemo({ v }: { v: 1 | 2 | 3 }) {
         <EditorContent editor={editor} className={v === 2 ? "blog-host" : undefined} />
       </div>
       <div style={{ fontSize: 10.5, ...muted }}>
-        {v === 1 ? "Default editor — StarterKit, fully editable right now." : v === 2 ? "Blog mode — serif voice, placeholder, headings & quotes." : "Note-taker — click 🖼 Image to insert, then keep typing around it."}
+        {v === 1 ? "Default editor: StarterKit, fully editable right now." : v === 2 ? "Blog mode: serif voice, placeholder, headings & quotes." : "Note-taker: click 🖼 Image to insert, then keep typing around it."}
       </div>
     </Zone>
   );
 }
 
-/* ── voice to text — Web Speech API live, ElevenLabs Scribe in prod ──── */
+/* ── voice to text: Web Speech API live, ElevenLabs Scribe in prod ──── */
 export function VoiceDemo({ v }: { v: 1 | 2 | 3 }) {
   const [live, setLive] = useState(false);
   const [text, setText] = useState("");
@@ -183,7 +183,7 @@ export function VoiceDemo({ v }: { v: 1 | 2 | 3 }) {
     if (live) { recRef.current?.stop(); return; }
     const W = window as unknown as { webkitSpeechRecognition?: new () => never; SpeechRecognition?: new () => never };
     const SR = W.SpeechRecognition ?? W.webkitSpeechRecognition;
-    if (!SR) { setText("Speech recognition unavailable in this browser — production wires ElevenLabs Scribe here."); return; }
+    if (!SR) { setText("Speech recognition unavailable in this browser: production wires ElevenLabs Scribe here."); return; }
     const r = new (SR as new () => {
       continuous: boolean; interimResults: boolean; lang: string;
       onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void;
@@ -205,7 +205,7 @@ export function VoiceDemo({ v }: { v: 1 | 2 | 3 }) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
             {live ? "Stop" : "Push to talk"}
           </button>
-          <div className="d-msg" style={{ maxWidth: "100%", minHeight: 40 }}>{text || "Your words land here — live transcript."}</div>
+          <div className="d-msg" style={{ maxWidth: "100%", minHeight: 40 }}>{text || "Your words land here: live transcript."}</div>
         </>
       ) : v === 2 ? (
         <div className="d-row" style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 14px", background: "var(--card)", justifyContent: "space-between" }}>
@@ -300,7 +300,7 @@ function Body({ k, v }: { k: string; v: 1 | 2 | 3 }) {
     case "blk:stacked-bars":
       return v === 1 ? (<Zone><div className="d-chart">{[[40, 25, 15], [55, 20, 10], [35, 30, 20]].map((seg, i) => <div key={i} style={{ display: "flex", flexDirection: "column-reverse", height: "100%", width: 24, gap: 1 }}>{seg.map((h, j) => <span key={j} style={{ height: h + "%", borderRadius: 2, background: ["var(--accent)", "var(--accent-3)", "var(--accent-2)"][j] }} />)}</div>)}</div></Zone>)
         : v === 2 ? (<Zone><div style={{ width: 220 }}>{[["Q2", [50, 30, 20]], ["Q3", [45, 20, 35]]].map(([l, seg]) => <div key={l as string} className="d-row" style={{ marginBottom: 6 }}><span style={{ ...mono10, width: 26 }}>{l as string}</span><div style={{ display: "flex", flex: 1, height: 12, borderRadius: 6, overflow: "hidden", gap: 1 }}>{(seg as number[]).map((p, j) => <span key={j} style={{ width: p + "%", background: ["var(--accent)", "var(--accent-3)", "var(--accent-2)"][j] }} />)}</div></div>)}</div></Zone>)
-        : (<Zone><div style={{ width: 220 }}>{[["FR", [70, 30]], ["DE", [45, 55]], ["UK", [55, 45]]].map(([l, seg]) => <div key={l as string} className="d-row" style={{ marginBottom: 5 }}><span style={{ ...mono10, width: 24 }}>{l as string}</span><div style={{ display: "flex", flex: 1, height: 10, borderRadius: 5, overflow: "hidden" }}>{(seg as number[]).map((p, j) => <span key={j} style={{ width: p + "%", background: j ? "var(--ink-4)" : "var(--accent)" }} />)}</div></div>)}<div style={{ ...mono10, fontSize: 8.5, marginTop: 4 }}>100% — part won / lost</div></div></Zone>);
+        : (<Zone><div style={{ width: 220 }}>{[["FR", [70, 30]], ["DE", [45, 55]], ["UK", [55, 45]]].map(([l, seg]) => <div key={l as string} className="d-row" style={{ marginBottom: 5 }}><span style={{ ...mono10, width: 24 }}>{l as string}</span><div style={{ display: "flex", flex: 1, height: 10, borderRadius: 5, overflow: "hidden" }}>{(seg as number[]).map((p, j) => <span key={j} style={{ width: p + "%", background: j ? "var(--ink-4)" : "var(--accent)" }} />)}</div></div>)}<div style={{ ...mono10, fontSize: 8.5, marginTop: 4 }}>100%: part won / lost</div></div></Zone>);
     case "blk:donut":
       return v === 1 ? (<Zone><Ring pct={44} size={72} color="var(--accent)" label="44%" /><div className="d-col" style={{ width: "auto", gap: 4 }}>{[["Organic", "var(--accent)"], ["Outbound", "var(--accent-3)"], ["Referral", "var(--secondary)"]].map(([l, c]) => <div key={l} className="d-row" style={{ fontSize: 11 }}><span style={{ width: 8, height: 8, borderRadius: 2, background: c }} />{l}</div>)}</div></Zone>)
         : v === 2 ? (<Zone><svg width="80" height="80" viewBox="0 0 42 42"><circle cx="21" cy="21" r="21" fill="var(--accent-3)" /><path d="M21 21 L21 0 A21 21 0 0 1 42 21 Z" fill="var(--accent)" /><path d="M21 21 L42 21 A21 21 0 0 1 30 39 Z" fill="var(--accent-2)" /></svg></Zone>)
@@ -382,7 +382,7 @@ function Body({ k, v }: { k: string; v: 1 | 2 | 3 }) {
     case "blk:stepper":
       return v === 1 ? (<Zone><div style={{ display: "flex", alignItems: "center", width: 240 }}>{[1, 2, 3].map((n, i) => <div key={n} style={{ display: "flex", alignItems: "center", flex: i < 2 ? 1 : "none" }}><span style={{ width: 22, height: 22, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 10.5, background: n <= 2 ? "var(--primary)" : "var(--secondary)", color: n <= 2 ? "var(--primary-foreground)" : "var(--muted-foreground)", border: "1px solid var(--border)" }}>{n < 2 ? "✓" : n}</span>{i < 2 && <span style={{ flex: 1, height: 2, background: n < 2 ? "var(--primary)" : "var(--border)" }} />}</div>)}</div></Zone>)
         : v === 2 ? (<Zone col><div style={{ position: "relative", paddingLeft: 22 }}><span style={{ position: "absolute", left: 8, top: 6, bottom: 6, width: 2, background: "var(--border)" }} />{[["Account created", 1], ["Team invited", 1], ["First deal", 0]].map(([l, on]) => <div key={l as string} style={{ position: "relative", marginBottom: 8, fontSize: 12.5, color: on ? "var(--foreground)" : "var(--muted-foreground)" }}><span style={{ position: "absolute", left: -20, top: 3, width: 12, height: 12, borderRadius: "50%", background: on ? "var(--foreground)" : "var(--secondary)", border: "2px solid var(--card)", outline: "1px solid var(--border)" }} />{l as string}</div>)}</div></Zone>)
-        : (<Zone col><div className="d-row" style={{ justifyContent: "space-between", marginBottom: 4 }}><b style={{ fontSize: 12.5 }}>Step 2 / 4 — Contact details</b><span style={mono10}>50%</span></div><div className="d-prog" style={{ width: "100%" }}><div className="fill" style={{ width: "50%" }} /></div><div className="d-row" style={{ justifyContent: "space-between", marginTop: 8 }}><button className="d-btn ghost sm">‹ Back</button><button className="d-btn sm">Next ›</button></div></Zone>);
+        : (<Zone col><div className="d-row" style={{ justifyContent: "space-between", marginBottom: 4 }}><b style={{ fontSize: 12.5 }}>Step 2 / 4: Contact details</b><span style={mono10}>50%</span></div><div className="d-prog" style={{ width: "100%" }}><div className="fill" style={{ width: "50%" }} /></div><div className="d-row" style={{ justifyContent: "space-between", marginTop: 8 }}><button className="d-btn ghost sm">‹ Back</button><button className="d-btn sm">Next ›</button></div></Zone>);
     case "blk:rich-editor":
       return <TiptapDemo v={v} />;
     /* ═══ NAV ═══ */
@@ -400,9 +400,9 @@ function Body({ k, v }: { k: string; v: 1 | 2 | 3 }) {
         : v === 2 ? (<Zone col><div style={{ border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden" }}><div className="d-row" style={{ height: 34, padding: "0 12px", borderBottom: "1px solid var(--border)", justifyContent: "space-between" }}><span style={mono10}>account · acme</span><span className="d-row" style={{ gap: 4 }}><span className="d-avatar" style={{ width: 18, height: 18, fontSize: 7 }}>JL</span><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--foreground)" }} /></span></div><div style={{ padding: 10 }}><Ph w="70%" /><div style={{ height: 5 }} /><Ph w="45%" /></div></div></Zone>)
         : (<Zone col>{[["Jo Lambert", "viewing Refonte", "var(--foreground)"], ["Agent ✶", "summarizing the thread", "var(--accent)"]].map(([n, a, c]) => <div key={n as string} className="d-row" style={{ fontSize: 12 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: c as string }} /><b>{n as string}</b><span style={muted}>{a as string}</span></div>)}</Zone>);
     case "blk:panel-states":
-      return v === 1 ? (<Zone><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>{[["LOADING", <span key="s" className="d-skel" style={{ height: 22, width: "100%" }} />], ["EMPTY", <span key="e" style={{ fontSize: 11, ...muted }}>Nothing here yet — add one.</span>]].map(([t, body]) => <div key={t as string} className="d-card" style={{ padding: 10 }}><div style={{ ...mono10, fontSize: 8, marginBottom: 6 }}>{t as string}</div>{body as ReactNode}</div>)}</div></Zone>)
-        : v === 2 ? (<Zone><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>{[["ERROR", "Query failed — Retry", "var(--accent)"], ["PERMISSION", "Access required — Request", "var(--accent-3)"]].map(([t, m, c]) => <div key={t as string} className="d-card" style={{ padding: 10, borderColor: `color-mix(in oklab, ${c} 40%, var(--border))` }}><div style={{ ...mono10, fontSize: 8, color: c as string, marginBottom: 4 }}>{t as string}</div><span style={{ fontSize: 11, ...muted }}>{m as string}</span></div>)}</div></Zone>)
-        : (<Zone><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>{[["STALE", "Updated 4h ago — Refresh"], ["DELETED", "This record no longer exists"]].map(([t, m]) => <div key={t} className="d-card" style={{ padding: 10, opacity: 0.8 }}><div style={{ ...mono10, fontSize: 8, marginBottom: 4 }}>{t}</div><span style={{ fontSize: 11, ...muted }}>{m}</span></div>)}</div></Zone>);
+      return v === 1 ? (<Zone><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>{[["LOADING", <span key="s" className="d-skel" style={{ height: 22, width: "100%" }} />], ["EMPTY", <span key="e" style={{ fontSize: 11, ...muted }}>Nothing here yet: add one.</span>]].map(([t, body]) => <div key={t as string} className="d-card" style={{ padding: 10 }}><div style={{ ...mono10, fontSize: 8, marginBottom: 6 }}>{t as string}</div>{body as ReactNode}</div>)}</div></Zone>)
+        : v === 2 ? (<Zone><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>{[["ERROR", "Query failed: Retry", "var(--accent)"], ["PERMISSION", "Access required: Request", "var(--accent-3)"]].map(([t, m, c]) => <div key={t as string} className="d-card" style={{ padding: 10, borderColor: `color-mix(in oklab, ${c} 40%, var(--border))` }}><div style={{ ...mono10, fontSize: 8, color: c as string, marginBottom: 4 }}>{t as string}</div><span style={{ fontSize: 11, ...muted }}>{m as string}</span></div>)}</div></Zone>)
+        : (<Zone><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>{[["STALE", "Updated 4h ago: Refresh"], ["DELETED", "This record no longer exists"]].map(([t, m]) => <div key={t} className="d-card" style={{ padding: 10, opacity: 0.8 }}><div style={{ ...mono10, fontSize: 8, marginBottom: 4 }}>{t}</div><span style={{ fontSize: 11, ...muted }}>{m}</span></div>)}</div></Zone>);
     /* ═══ IA ═══ */
     case "blk:tool-trace":
       return v === 1 ? (<Zone col>{[["✓", "read panel acc:acme", "42ms"], ["✓", "query deals.byAccount", "118ms"], ["⏳", "compose answer…", ""]].map(([s, l, t]) => <div key={l as string} className="d-row" style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--ink-2)" }}><span style={{ color: s === "✓" ? "var(--foreground)" : "var(--accent-3)", width: 14 }}>{s as string}</span><span style={{ flex: 1 }}>{l as string}</span><span style={muted}>{t as string}</span></div>)}</Zone>)

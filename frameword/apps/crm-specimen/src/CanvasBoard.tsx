@@ -1,5 +1,5 @@
 /**
- * The Canvas board — a Figma/Miro-class whiteboard on React Flow, speaking the
+ * The Canvas board: a Figma/Miro-class whiteboard on React Flow, speaking the
  * WhitePaper design language and the panel grammar: clicking a node opens its
  * inspector as the NEXT PANEL; clicking a link opens the link inspector;
  * following a connection drills node to node. Board state lives in a tiny
@@ -38,7 +38,7 @@ import { useWorkspace } from "@frameword/panels-react";
 import { board, useBoard, useBoardsFile, SEED, DEFAULT_UI, type BoardUi, type CvNode, type CvEdge, type CvSub } from "./boardStore";
 import { RichNotes } from "./RichNotes";
 
-/* element colors — the accent ramp only; they follow the Settings accent */
+/* element colors: the accent ramp only; they follow the Settings accent */
 const RAMP: Record<string, string> = {
   soft: "var(--accent-soft)",
   tint: "var(--accent-4)",
@@ -123,7 +123,7 @@ function LabelNode({ data, selected }: NodeProps) {
 }
 const NODE_TYPES = { card: CardNode, note: NoteNode, shape: ShapeNode, label: LabelNode, step: StepNode };
 
-/* ── adjustable edge — drag the middle segment, double-click the label ── */
+/* ── adjustable edge: drag the middle segment, double-click the label ── */
 function AdjustableEdge(props: EdgeProps) {
   const { id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, selected, style, markerEnd } = props;
   const d = (props.data ?? {}) as { label?: string; mx?: number; my?: number; step?: boolean };
@@ -213,7 +213,7 @@ function BoardInner({ panelId }: { panelId: string }) {
   const [edgeSel, setEdgeSel] = useState<ReadonlySet<string>>(new Set());
   const [menu, setMenu] = useState<null | "add" | "grid" | "more" | "boards">(null);
   const [ctx, setCtx] = useState<null | { x: number; y: number; kind: "node" | "edge" | "pane"; id?: string; fx: number; fy: number }>(null);
-  /* body zoom scales fixed-position coordinates — divide client coords and clamp to the viewport */
+  /* body zoom scales fixed-position coordinates: divide client coords and clamp to the viewport */
   const ctxAt = (cx: number, cy: number) => {
     const zs = (document.body.style as CSSStyleDeclaration & { zoom: string }).zoom;
     const z = zs ? parseFloat(zs) / 100 : 1;
@@ -255,7 +255,7 @@ function BoardInner({ panelId }: { panelId: string }) {
     labelBgStyle: { fill: "var(--background)", fillOpacity: 0.9 },
   }));
 
-  /* magnetic alignment — a dragged node snaps to other nodes' edges/centers */
+  /* magnetic alignment: a dragged node snaps to other nodes' edges/centers */
   const snapToGuides = (changes: NodeChange[]) => {
     const T = 6;
     if (board.get().ui.snap) return changes; // grid already aligns; the two snaps fight and the drag jitters
@@ -385,7 +385,7 @@ function BoardInner({ panelId }: { panelId: string }) {
       const indeg = new Map<string, number>();
       st.nodes.forEach((n) => { depth.set(n.id, 0); indeg.set(n.id, 0); });
       st.edges.forEach((e) => indeg.set(e.target, (indeg.get(e.target) ?? 0) + 1));
-      // longest-path layering (bounded relaxation — the graph may have cycles)
+      // longest-path layering (bounded relaxation: the graph may have cycles)
       for (let i = 0; i < st.nodes.length; i++) {
         let changed = false;
         for (const e of st.edges) {
@@ -428,7 +428,7 @@ function BoardInner({ panelId }: { panelId: string }) {
   const ui = s.ui;
   const setUi = (patch: Partial<BoardUi>) => board.update((st) => ({ ...st, ui: { ...st.ui, ...patch } }), false);
 
-  /* board shortcuts — window-level while a board is mounted (the RF pane is
+  /* board shortcuts: window-level while a board is mounted (the RF pane is
      not reliably focusable, so a host onKeyDown would miss most keystrokes) */
   const rfNodesRef = useRef(rfNodes);
   rfNodesRef.current = rfNodes;
@@ -601,23 +601,23 @@ function BoardInner({ panelId }: { panelId: string }) {
         <button title="Fit view" onClick={() => rf.fitView({ padding: 0.2, duration: 300, maxZoom: 1 })}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
         </button>
-        <button title="Auto layout — tidy the graph" onClick={autoLayout}>
+        <button title="Auto layout: tidy the graph" onClick={autoLayout}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="6" height="6" rx="1.5" /><rect x="15" y="4" width="6" height="6" rx="1.5" /><rect x="9" y="14" width="6" height="6" rx="1.5" /><path d="M6 10v2a2 2 0 0 0 2 2h1M18 10v2a2 2 0 0 1-2 2h-1" /></svg>
         </button>
-        <button title="Undo — ⌘Z" disabled={!board.canUndo()} onClick={() => board.undo()}>
+        <button title="Undo: ⌘Z" disabled={!board.canUndo()} onClick={() => board.undo()}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 0 12h-3" /></svg>
         </button>
-        <button title="Redo — ⇧⌘Z" disabled={!board.canRedo()} onClick={() => board.redo()}>
+        <button title="Redo: ⇧⌘Z" disabled={!board.canRedo()} onClick={() => board.redo()}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14l5-5-5-5" /><path d="M20 9H10a6 6 0 0 0 0 12h3" /></svg>
         </button>
         <span className="cv-sep" />
-        <button title="More — zoom, export, reset" className={menu === "more" ? "on" : ""} onClick={() => setMenu((m) => (m === "more" ? null : "more"))}>
+        <button title="More: zoom, export, reset" className={menu === "more" ? "on" : ""} onClick={() => setMenu((m) => (m === "more" ? null : "more"))}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="19" cy="12" r="1.7" /></svg>
         </button>
 
         {menu === "add" && (
           <div className="cv-fly">
-            {([["card", "Card"], ["note", "Sticky note"], ["shape", "Shape"], ["step", "Step — numbered"], ["label", "Section label"]] as const).map(([k, lab]) => (
+            {([["card", "Card"], ["note", "Sticky note"], ["shape", "Shape"], ["step", "Step: numbered"], ["label", "Section label"]] as const).map(([k, lab]) => (
               <button key={k} className="fly-main" onClick={() => { add(k as CvNode["kind"]); setMenu(null); }}>{lab}</button>
             ))}
           </div>
@@ -688,7 +688,7 @@ export function CanvasBoard({ panelId }: { panelId: string }) {
   );
 }
 
-/* ── node inspector — the panel opened by clicking a node ────────────── */
+/* ── node inspector: the panel opened by clicking a node ────────────── */
 export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: string }) {
   const ws = useWorkspace();
   const s = useBoard();
@@ -717,13 +717,13 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
         )}
       </div>
       <div className="section">
-        <div className="lab">Notes — write like a blog</div>
+        <div className="lab">Notes: write like a blog</div>
         <RichNotes key={id} html={n.notes ?? ""}
           onChange={(h) => board.update((st) => ({ ...st, nodes: st.nodes.map((x) => (x.id === id ? { ...x, notes: h } : x)) }), false)} />
       </div>
       <div className="section">
         <div className="lab">Sub-cards · {n.subs?.length ?? 0}</div>
-        {(n.subs?.length ?? 0) === 0 && <p style={{ marginTop: 6 }}>Break this card into features — each sub-card can later be extracted as its own connected card.</p>}
+        {(n.subs?.length ?? 0) === 0 && <p style={{ marginTop: 6 }}>Break this card into features: each sub-card can later be extracted as its own connected card.</p>}
         <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
           {(n.subs ?? []).map((f) => (
             <div key={f.id} className="cv-subedit">
@@ -775,7 +775,7 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
       </div>
       <div className="section">
         <div className="lab">Connections · {conns.length}</div>
-        {conns.length === 0 && <p style={{ marginTop: 6 }}>No connections yet — drag from any of the 4 handles on the board.</p>}
+        {conns.length === 0 && <p style={{ marginTop: 6 }}>No connections yet: drag from any of the 4 handles on the board.</p>}
         <div className="drills" style={{ marginTop: 8 }}>
           {conns.map((e) => {
             const otherId = e.source === id ? e.target : e.source;
@@ -821,7 +821,7 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
   );
 }
 
-/* ── edge inspector — the panel opened by clicking a link ────────────── */
+/* ── edge inspector: the panel opened by clicking a link ────────────── */
 export function EdgeInspector({ edgeKey, panelId }: { edgeKey: string; panelId: string }) {
   const ws = useWorkspace();
   const s = useBoard();

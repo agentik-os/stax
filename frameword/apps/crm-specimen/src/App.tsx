@@ -1,4 +1,4 @@
-import { createContext, lazy, Suspense, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, lazy, Suspense, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { PanelInstance, PanelTarget } from "@frameword/panels-core";
 import {
   WorkspaceProvider,
@@ -12,7 +12,7 @@ import { DOMAIN, SPACES, DASHBOARDS, dashboardOfSpace, chainOf, spaceOf } from "
 import { ComponentDemo } from "./ComponentDemo";
 import { BlockDemo } from "./BlockDemo";
 import { board, boardFromPrompt } from "./boardStore";
-// the canvas renderer (React Flow + dagre) loads lazily — it is the heaviest
+// the canvas renderer (React Flow + dagre) loads lazily: it is the heaviest
 // module in the app and only two panel types ever need it
 const CanvasBoard = lazy(() => import("./CanvasBoard").then((m) => ({ default: m.CanvasBoard })));
 const NodeInspector = lazy(() => import("./CanvasBoard").then((m) => ({ default: m.NodeInspector })));
@@ -121,7 +121,7 @@ const ACCENTS: { key: string; color: string; title: string }[] = [
 const GAPS: Record<Prefs["gap"], string> = { S: "8px", M: "14px", L: "22px" };
 const PADS: Record<Prefs["pad"], string> = { S: "10px", M: "18px", L: "28px" };
 
-/* ── organisations / teams — the sidebar-08 team switcher, framework-side ─ */
+/* ── organisations / teams: the sidebar-08 team switcher, framework-side ─ */
 interface Org { id: string; name: string; tier: string }
 const ORGS: Org[] = [
   { id: "stax", name: "Stax", tier: "Enterprise" },
@@ -150,12 +150,27 @@ const LANGS = [
   { id: "pt", label: "Português", flag: "pt" },
 ];
 
+/* ── per-panel size memory (device-local presentation, never navigation) ──
+   A width the user chose for a panel is part of that panel's SETUP: it comes
+   back at the same size after close and reload. Keyed by resourceKey. */
+let sizePrefs: Record<string, PanelSize> = (() => {
+  try { return JSON.parse(localStorage.getItem("frameword-sizes") ?? "{}"); } catch { return {}; }
+})();
+const sizeSubs = new Set<() => void>();
+const setSizePref = (key: string, size: PanelSize | undefined) => {
+  sizePrefs = { ...sizePrefs };
+  if (size) sizePrefs[key] = size; else delete sizePrefs[key];
+  localStorage.setItem("frameword-sizes", JSON.stringify(sizePrefs));
+  sizeSubs.forEach((f) => f());
+};
+const useSizePrefs = () => useSyncExternalStore((cb) => (sizeSubs.add(cb), () => sizeSubs.delete(cb)), () => sizePrefs);
+
 const targetOf = (key: string): PanelTarget => ({
   panelType: DOMAIN[key].panelType,
   resourceKey: key,
 });
 
-/* canvas nodes live in the board store, not in DOMAIN — resolve titles through both */
+/* canvas nodes live in the board store, not in DOMAIN: resolve titles through both */
 const titleOfKey = (key: string): string =>
   DOMAIN[key]?.title ??
   (key.startsWith("cvn:") ? board.node(key.slice(4))?.label ?? "Node"
@@ -208,7 +223,7 @@ function SpaceIcon({ id }: { id: string }) {
   }
 }
 
-/* lucide icons for the dashboard nav — word + icon, no text glyphs */
+/* lucide icons for the dashboard nav: word + icon, no text glyphs */
 function DashIcon({ id }: { id: string }) {
   const common = { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   if (id === "crm")
@@ -249,7 +264,7 @@ function Shell() {
     ? SPACES.find((s) => s.spaceId === ws.state.spaceId) ?? null
     : null;
   const pathKeys = new Set(ws.path.map((id) => ws.state.panelsById[id]?.target.resourceKey));
-  // UI-only: the ROOT panel can collapse to a slim spine on stage — toggled
+  // UI-only: the ROOT panel can collapse to a slim spine on stage: toggled
   // from the space head; it is presentation, never navigation state
   const [rootCollapsed, setRootCollapsed] = useState(false);
   useEffect(() => { setRootCollapsed(false); }, [ws.state.spaceId]);
@@ -265,7 +280,7 @@ function Shell() {
   const [toast, setToast] = useState<string | null>(null);
   const [theme, setThemeState] = useState<string>(() => localStorage.getItem("frameword-theme") ?? "system");
 
-  // FIRST RUN — a brand-new visitor (no snapshot, no deep link) should see the
+  // FIRST RUN: a brand-new visitor (no snapshot, no deep link) should see the
   // mechanic immediately, not an empty stage
   useEffect(() => {
     if (!ws.state.rootInstanceId && !location.hash && localStorage.getItem("frameword-crm") === null)
@@ -329,7 +344,7 @@ function Shell() {
     return () => sys.removeEventListener("change", apply);
   }, [theme]);
 
-  /* dynamic (store-owned) resources live outside DOMAIN — resolve their opening
+  /* dynamic (store-owned) resources live outside DOMAIN: resolve their opening
    * path here: owning system space root → container → the resource itself */
   const dynamicPath = (key: string): { spaceId: string; targets: PanelTarget[] } | null => {
     const t = (panelType: string, resourceKey: string): PanelTarget => ({ panelType, resourceKey });
@@ -357,15 +372,28 @@ function Shell() {
   };
 
   const SYS_ROOTS = ["sec:canvas", "sec:data", "sec:notes", "sec:tasks", "sys:profile", "sys:settings"];
+  /* the user closed the space's MAIN panel (a promoted child leads): true when
+     the active root exists in this space but is NOT the space's root target */
+  const mainClosed = (spaceId: string, rootKey: string) => {
+    if (ws.state.spaceId !== spaceId || !ws.state.rootInstanceId) return false;
+    return ws.state.panelsById[ws.state.rootInstanceId]?.target.resourceKey !== rootKey;
+  };
   const deepLink = (key: string, fromRefId?: string) => {
     const sp = spaceOf(key);
     const dyn = !sp && !DOMAIN[key] ? dynamicPath(key) : null;
-    if (sp) ws.openPath(sp.spaceId, chainOf(key).map(targetOf));
+    if (sp) {
+      let chain = chainOf(key);
+      // respect a closed main: never resurrect it from a child link — the
+      // clicked child (or its subchain) leads instead
+      if (key !== sp.rootKey && mainClosed(sp.spaceId, sp.rootKey) && chain[0] === sp.rootKey)
+        chain = chain.slice(1);
+      ws.openPath(sp.spaceId, chain.map(targetOf));
+    }
     /* nodes living outside every dashboard (sys:settings, sec:canvas) open as their own space */
     else if (DOMAIN[key]) ws.openSpace(key.replace(/^\w+:/, ""), targetOf(key));
     else if (dyn) ws.openPath(dyn.spaceId, dyn.targets);
     else return;
-    // resuming a SPACE-ROOT reference consumes it — the reopened Space IS the
+    // resuming a SPACE-ROOT reference consumes it: the reopened Space IS the
     // reference; keeping both would show the same Space twice side-by-side.
     // Detail references keep their stay-in-rail semantics.
     if (fromRefId && (sp?.rootKey === key || SYS_ROOTS.includes(key))) ws.closePanel(fromRefId);
@@ -394,7 +422,7 @@ function Shell() {
         if (o) { e.preventDefault(); setOrg(o); say(`Switched to ${o.name}`); }
         return;
       }
-      // [ / ] move panel focus along the thread — the ‹ › bar buttons, on keys
+      // [ / ] move panel focus along the thread: the ‹ › bar buttons, on keys
       if (!e.metaKey && !e.ctrlKey && !e.altKey && (e.key === "[" || e.key === "]")) {
         const t = e.target as HTMLElement | null;
         if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
@@ -404,7 +432,7 @@ function Shell() {
         if (i !== -1 && j >= 0 && j < ws.path.length) { e.preventDefault(); ws.focusPanel(ws.path[j]); }
         return;
       }
-      // P pins the focused panel — keep it across pages (skip while typing)
+      // P pins the focused panel: keep it across pages (skip while typing)
       if (!e.metaKey && !e.ctrlKey && !e.altKey && e.key.toLowerCase() === "p") {
         const t = e.target as HTMLElement | null;
         if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
@@ -414,14 +442,14 @@ function Shell() {
           e.preventDefault();
           const on = fp.role === "root" ? !!fp.pinned : fp.retention === "retained";
           if (on) { ws.unpinPanel(fid!); say("Unpinned"); }
-          else { ws.pinPanel(fid!); say(fp.role === "root" ? "Pinned — this root rides the rail across switches" : "Pinned — survives every page"); }
+          else { ws.pinPanel(fid!); say(fp.role === "root" ? "Pinned: this root rides the rail across switches" : "Pinned: survives every page"); }
         }
         return;
       }
       if (e.key !== "Escape") return;
       if (document.querySelector(".nf-menu")) return; // the notification bell closes itself
       // an open in-panel popover (table menus, date pickers, cell flys…) always
-      // mounts a .pop-bg backdrop — Escape closes IT, never the panel behind it
+      // mounts a .pop-bg backdrop: Escape closes IT, never the panel behind it
       const popBg = document.querySelector(".pop-bg");
       if (popBg) {
         popBg.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
@@ -452,7 +480,7 @@ function Shell() {
     <PrefsCtx.Provider value={{ prefs, set: setPrefs, reset: () => setPrefsState(DEFAULT_PREFS), theme, setTheme }}>
     <div className="frame">
       <div className="topbar">
-        <button className="tb-icon" title="Toggle sidebar — ⌘B" onClick={() => setSbOpen((v) => !v)}>
+        <button className="tb-icon" title="Toggle sidebar: ⌘B" onClick={() => setSbOpen((v) => !v)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /></svg>
         </button>
         <nav className="tb-nav" aria-label="Dashboards">
@@ -494,7 +522,7 @@ function Shell() {
         <button className="tb-goto" onClick={() => setPalette(true)}>
           GO TO<span className="kbd" style={{ minWidth: 0 }}>⌘K</span>
         </button>
-        <button className="tb-btn" title="Data — tables & pages" onClick={() => ws.openSpace("data", targetOf("sec:data"))}>
+        <button className="tb-btn" title="Data: tables & pages" onClick={() => ws.openSpace("data", targetOf("sec:data"))}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6" /><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></svg>
         </button>
         <button className="tb-btn" title="Notes" onClick={() => ws.openSpace("notes", targetOf("sec:notes"))}>
@@ -503,7 +531,7 @@ function Shell() {
         <button className="tb-btn" title="Tasks" onClick={() => ws.openSpace("tasks", targetOf("sec:tasks"))}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="4" /><path d="M8 12l3 3 5-6" /></svg>
         </button>
-        <button className="tb-btn" title="Canvas board — your whiteboard" onClick={() => ws.openSpace("canvas", targetOf("sec:canvas"))}>
+        <button className="tb-btn" title="Canvas board: your whiteboard" onClick={() => ws.openSpace("canvas", targetOf("sec:canvas"))}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M12 17v4" /><path d="M8 21h8" /><path d="M7.5 12l3-3.5 2.5 2 3.5-4" /></svg>
         </button>
         <NotifBell />
@@ -524,7 +552,7 @@ function Shell() {
             </div>
           </>
         )}
-        <button className="tb-btn agent" title="Agent — ⌘J" onClick={() => setDrawer((v) => !v)}>✶</button>
+        <button className="tb-btn agent" title="Agent: ⌘J" onClick={() => setDrawer((v) => !v)}>✶</button>
       </div>
 
       <div className="mid">
@@ -568,7 +596,7 @@ function Shell() {
                     </button>
                   ))}
                   <div className="menu-sep" />
-                  <button className="org-item" onClick={() => { setOrgMenu(false); say("Add organisation — demo"); }}>
+                  <button className="org-item" onClick={() => { setOrgMenu(false); say("Add organisation: demo"); }}>
                     <span className="org-ico">＋</span>
                     <span style={{ flex: 1, textAlign: "left", color: "var(--muted-foreground)" }}>Add organisation</span>
                   </button>
@@ -585,20 +613,24 @@ function Shell() {
             </button>
           </div>
           {sbSpace ? (
-            /* ── DEDICATED SPACE MENU — the sidebar mirrors the OPEN Space,
+            /* ── DEDICATED SPACE MENU: the sidebar mirrors the OPEN Space,
              *    not the dashboard's space list (the console "Back to project"
              *    pattern): ‹ back to the dashboard, then this Space's own
              *    tree, deep-linkable, following the active thread. ── */
             <div className="sb-space">
               <div className="sb-space-head">
-                <button className="sb-backarrow" data-tip={activeDash.label} aria-label={"Back — " + activeDash.label}
+                <button className="sb-backarrow" data-tip={activeDash.label} aria-label={"Back: " + activeDash.label}
                   onClick={() => setSbView("dash")}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                 </button>
-                <button className="sb-item head" title="Focus the main panel"
+                <button className="sb-item head" title="Focus the main panel (reopens it if closed)"
                   onClick={() => {
                     setRootCollapsed(false);
-                    if (ws.state.rootInstanceId) ws.focusPanel(ws.state.rootInstanceId);
+                    if (mainClosed(sbSpace.spaceId, sbSpace.rootKey)) {
+                      // rebuild: main first, then the chain that was leading
+                      const chainKeys = ws.path.map((pid) => ws.state.panelsById[pid]?.target.resourceKey).filter(Boolean) as string[];
+                      ws.openPath(sbSpace.spaceId, [sbSpace.rootKey, ...chainKeys].map(targetOf));
+                    } else if (ws.state.rootInstanceId) ws.focusPanel(ws.state.rootInstanceId);
                     document.querySelector(".stage")?.scrollTo({ left: 0, behavior: "smooth" });
                   }}>
                   {sbSpace.label}
@@ -606,7 +638,7 @@ function Shell() {
                 {(
                   <button className={"sb-collapse" + (rootCollapsed ? " on" : "")} aria-pressed={rootCollapsed}
                     disabled={ws.path.length <= 1 && !rootCollapsed}
-                    title={rootCollapsed ? "Show the main panel" : ws.path.length > 1 ? "Hide the main panel" : "Open a drill first — nothing to hide yet"}
+                    title={rootCollapsed ? "Show the main panel" : ws.path.length > 1 ? "Hide the main panel" : "Open a drill first: nothing to hide yet"}
                     onClick={() => setRootCollapsed((v) => !v)}>
                     {rootCollapsed ? (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /><path d="m14 9 3 3-3 3" /></svg>
@@ -694,7 +726,7 @@ function Shell() {
                   <div className="acct-menu">
                     <button className="menu-item" onClick={() => { setAcctMenu(false); ws.openSpace("profile", targetOf("sys:profile")); }}>Profile</button>
                     <button className="menu-item" onClick={() => { setAcctMenu(false); ws.openSpace("settings", targetOf("sys:settings")); }}>Settings</button>
-                    <button className="menu-item" onClick={() => { setAcctMenu(false); say("Docs — see PROMPT-KIT.md"); }}>Documentation</button>
+                    <button className="menu-item" onClick={() => { setAcctMenu(false); say("Docs: see PROMPT-KIT.md"); }}>Documentation</button>
                     <div className="menu-sep" />
                     <button className="menu-item" onClick={() => setLangMenu((v) => !v)} aria-expanded={langMenu}>
                       <span className="flag"><Flag id={LANGS.find((l) => l.id === prefs.lang)?.flag ?? "gb"} /></span>
@@ -702,7 +734,7 @@ function Shell() {
                     </button>
                     {langMenu && LANGS.map((l) => (
                       <button key={l.id} className={"menu-item lang-item" + (prefs.lang === l.id ? " on" : "")}
-                        onClick={() => { setPrefs({ lang: l.id }); setLangMenu(false); say("Language — " + l.label); }}>
+                        onClick={() => { setPrefs({ lang: l.id }); setLangMenu(false); say("Language: " + l.label); }}>
                         <span className="flag"><Flag id={l.flag} /></span>
                         <span style={{ flex: 1 }}>{l.label}</span>
                         {prefs.lang === l.id && <span style={{ color: "var(--accent)", fontSize: 11 }}>✓</span>}
@@ -722,7 +754,7 @@ function Shell() {
       </div>
 
       {prefs.crumb && <div className="crumbbar">
-        <span className="crumb" title={activeDash.label + " — home"} style={{ display: "inline-flex", alignItems: "center" }}
+        <span className="crumb" title={activeDash.label + ": home"} style={{ display: "inline-flex", alignItems: "center" }}
           onClick={() => ws.state.rootInstanceId && ws.closePanel(ws.state.rootInstanceId)}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9.5 9-7 9 7" /><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10" /></svg>
         </span>
@@ -745,7 +777,7 @@ function Shell() {
         )}
         <span style={{ flex: 1 }} />
         {toast && <span className="crumb-toast">{toast}</span>}
-        <a className="crumb-theme crumb-gh" href="https://github.com/agentik-os/stax" target="_blank" rel="noreferrer" title="GitHub — source & docs">
+        <a className="crumb-theme crumb-gh" href="https://github.com/agentik-os/stax" target="_blank" rel="noreferrer" title="GitHub: source & docs">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" /><path d="M9 18c-4.51 2-5-2-7-2" /></svg>
         </a>
         <button className="crumb-theme" title="Theme" onClick={() => setThemeMenu((v) => !v)}>
@@ -761,7 +793,7 @@ function Shell() {
   );
 }
 
-/* ═══ ColumnHost — the stage ══════════════════════════════════════════ */
+/* ═══ ColumnHost: the stage ══════════════════════════════════════════ */
 
 function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: string, fromRefId?: string) => void; rootCollapsed?: boolean; onExpandRoot?: () => void }) {
   const ws = useWorkspace();
@@ -773,7 +805,7 @@ function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: s
     // switching Space (path back to the root alone) rewinds the stage —
     // the root panel is always fully visible, never hidden behind the sidebar edge
     if (ws.path.length <= 1) { el.scrollTo({ left: 0 }); return; }
-    // scroll the context LEAF into view — never the rail: references render
+    // scroll the context LEAF into view: never the rail: references render
     // after the path, so scrollWidth would park the viewport on the pins and
     // hide the panel the user just opened.
     const leafEl = el.querySelector<HTMLElement>("[data-leaf]");
@@ -819,7 +851,7 @@ function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: s
   );
 }
 
-/* ═══ PushHost — compact, one card + back ═════════════════════════════ */
+/* ═══ PushHost: compact, one card + back ═════════════════════════════ */
 
 function PushHost({ deepLink }: { deepLink: (k: string, fromRefId?: string) => void }) {
   const ws = useWorkspace();
@@ -846,7 +878,7 @@ function PushHost({ deepLink }: { deepLink: (k: string, fromRefId?: string) => v
             <div className="glyph"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="8" height="16" rx="2" /><rect x="14" y="4" width="7" height="16" rx="2" opacity="0.45" /></svg></div>
             <b>Open a space to begin.</b>
             <br />
-            Pick a space from the sidebar — or search everything with GO TO.
+            Pick a space from the sidebar: or search everything with GO TO.
           </div>
         </div>
       </div>
@@ -862,16 +894,18 @@ function PushHost({ deepLink }: { deepLink: (k: string, fromRefId?: string) => v
   );
 }
 
-/* ═══ Panel — bar 56 · body · foot ════════════════════════════════════ */
+/* ═══ Panel: bar 56 · body · foot ════════════════════════════════════ */
 
 function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; deepLink: (k: string, fromRefId?: string) => void; compact?: boolean; collapsed?: boolean; onExpand?: () => void }) {
   const ws = useWorkspace();
   const [gear, setGear] = useState(false);
-  const [wOverride, setWOverride] = useState<PanelSize | undefined>(undefined);
+  const sizes = useSizePrefs();
   const [sOpen, setSOpen] = useState(false);
   const [q, setQ] = useState("");
   const p: PanelInstance | undefined = ws.state.panelsById[id];
   if (!p) return null;
+  const wOverride = sizes[p.target.resourceKey];
+  const setWOverride = (s: PanelSize | undefined) => setSizePref(p.target.resourceKey, s);
   useNotesApp(); // foot actions (pin state, counts) re-render with the notes store
   useDataApp(); // crumb/foot re-render with the data store
   usePfApp(); // platform titles & foot state re-render with the platform store
@@ -885,13 +919,13 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
   const pfDyn = /^pf[kmpil]:/.test(p.target.resourceKey);
   const n = DOMAIN[p.target.resourceKey] ?? (pfDyn ? {
     panelType: p.target.panelType,
-    // pfkey/pfproject render their own inline-edit name, pfmember its id card — no double title
+    // pfkey/pfproject render their own inline-edit name, pfmember its id card: no double title
     title: ["pfincident", "pflog"].includes(p.target.panelType) ? titleOfKey(p.target.resourceKey) : "",
     eyebrow: { pfkey: "console · key", pfmember: "console · member", pfproject: "console · project", pfincident: "console · incident", pflog: "console · request" }[p.target.panelType],
   } : {
     panelType: p.target.panelType,
     // entity panels (note, task, row, canvas node/edge) edit their identity in
-    // their OWN fs-head title block — the shell renders no h2 for them
+    // their OWN fs-head title block: the shell renders no h2 for them
     title: nt || tk || isDataRow || bn || be ? "" : dc ? dc.name : fd ? fd.name : "Node",
     eyebrow: bn ? "canvas · " + bn.kind : be ? "canvas · link" : nt ? "note" : fd ? "folder" : tk ? "task" : dc ? "table" : isDataRow ? "page" : undefined,
     subtitle: dc ? dc.rows.length + " rows · filters, sort and search live in the toolbar." : undefined,
@@ -899,12 +933,12 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
   const isCanvas = p.target.panelType === "canvas";
   const isRef = p.placement === "reference";
   const isRoot = p.role === "root";
-  // a root is always retention:"retained" — its pin state lives in `pinned`
+  // a root is always retention:"retained": its pin state lives in `pinned`
   const retained = isRoot ? !!p.pinned : p.retention === "retained";
-  // references are peripheral — cap them at S so L/XL root-refs never eat the stage
+  // references are peripheral: cap them at S so L/XL root-refs never eat the stage
   const width = panelWidth(ws.registry, p, isRef ? "S" : wOverride);
   const refIndex = ws.state.referenceRailOrder.indexOf(id);
-  // per-panel search (the zip's foot search) — panels with a real list get it
+  // per-panel search (the zip's foot search): panels with a real list get it
   const searchable = !isRef && (n.children?.length ?? 0) >= 4;
   const kids = (n.children ?? []).filter((k) =>
     !q.trim() || (DOMAIN[k].title + " " + (DOMAIN[k].subtitle ?? "")).toLowerCase().includes(q.trim().toLowerCase()),
@@ -912,7 +946,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
 
   if (collapsed)
     return (
-      <section className="panel root-collapsed" aria-label={(n.title || titleOfKey(p.target.resourceKey)) + " — hidden"}
+      <section className="panel root-collapsed" aria-label={(n.title || titleOfKey(p.target.resourceKey)) + ": hidden"}
         role="button" tabIndex={0} title="Show the main panel"
         onClick={onExpand}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onExpand?.(); } }}>
@@ -950,14 +984,14 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
         ) : null}
         {!isRef && (
           <button className={"pin-btn" + (retained ? " on" : "")} aria-pressed={retained}
-            title={isRoot ? "Pin — keep this Space in the rail when you switch" : "Pin — keep this panel when drilling elsewhere"}
+            title={isRoot ? "Pin: keep this Space in the rail when you switch" : "Pin: keep this panel when drilling elsewhere"}
             onClick={() => (retained ? ws.unpinPanel(id) : ws.pinPanel(id))}>
             PIN
           </button>
         )}
         <button className="bar-btn" style={{ fontSize: 15 }}
           title={isRef ? "Remove reference" : isRoot
-            ? (ws.path.length > 1 ? "Close panel — the next panel takes the lead" : "Close space")
+            ? (ws.path.length > 1 ? "Close panel: the next panel takes the lead" : "Close space")
             : "Close"}
           onClick={() => ws.closePanel(id)}>×</button>
       </div>
@@ -1010,18 +1044,18 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
                     <span className="arr">→</span>
                     <div className="mini-panel ghost"><div className="mhead" /><div className="mbody"><div className="ln" style={{ width: "70%" }} /><div style={{ height: 37 }} /></div></div>
                   </div>
-                  <div className="legend"><span>Root — fixed</span><span>Child</span><span className="hot">Pinned — stays</span><span>Preview — replaceable</span></div>
+                  <div className="legend"><span>Root: fixed</span><span>Child</span><span className="hot">Pinned: stays</span><span>Preview: replaceable</span></div>
                 </div>
               ) : b.kind === "ops" ? (
                 <div key={i} className="card" style={{ marginBottom: 16 }}>
-                  <div className="lab"><span className="sig">✶</span> State — the only thing that exists</div>
+                  <div className="lab"><span className="sig">✶</span> State: the only thing that exists</div>
                   <pre className="codeblock" style={{ margin: "8px 0 0", border: "none", background: "transparent", padding: 0 }}>{"WorkspaceState = { panelsById, contextLeafId,\n                   focusedPanelId, referenceRailOrder }\nPanelInstance  = { target, parentInstanceId,\n                   retention, placement }"}</pre>
                   <div className="op-pills">
                     {["openSpace", "openDetail", "pinPanel", "unpinPanel", "closePanel", "navigateTo", "resumeReference"].map((op) => (
                       <span key={op} className="op-pill">{op}</span>
                     ))}
                   </div>
-                  <p style={{ fontSize: "calc(var(--fz-body, 13.5px) - 1.5px)", color: "var(--muted-foreground)" }}>Seven intent commands, (state, args) → state. That's the entire API — no other way to change what's on screen.</p>
+                  <p style={{ fontSize: "calc(var(--fz-body, 13.5px) - 1.5px)", color: "var(--muted-foreground)" }}>Seven intent commands, (state, args) → state. That's the entire API: no other way to change what's on screen.</p>
                 </div>
               ) : b.kind === "row" ? (
                 <div key={i} className={"anat-row" + ((b.label?.length ?? 0) > 14 ? " note" : "")}><span className="k">{b.label}</span><span className="t">{b.text}</span></div>
@@ -1061,7 +1095,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
                     onClick={() => (isRef ? deepLink(key) : ws.openDetail(id, targetOf(key)))}>
                     <span className="no">✶</span>
                     <span className="bd">
-                      <span className="tt" style={{ display: "block" }}>See also — {DOMAIN[key].title}</span>
+                      <span className="tt" style={{ display: "block" }}>See also: {DOMAIN[key].title}</span>
                       <span className="ss" style={{ display: "block" }}>same target, this parent → a distinct instance</span>
                     </span>
                     <span className="arr">→</span>
@@ -1087,7 +1121,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setSOpen(false); setQ(""); } }}
             placeholder="Search this panel…" />
         ) : isRef ? (
-          <span className="foot-note"><span className="sig">✶</span> Pinned — click the title or a drill to reopen</span>
+          <span className="foot-note"><span className="sig">✶</span> Pinned: click the title or a drill to reopen</span>
         ) : n.footActions ? (
           n.footActions.map((a) => (
             <button key={a.label} className={"foot-cta" + (a.kind === "outline" ? " ghost" : "")}
@@ -1103,7 +1137,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
         ) : p.target.panelType.startsWith("pf") ? (
           <PlatformFoot panelType={p.target.panelType} resourceKey={p.target.resourceKey} panelId={id} closePanel={() => ws.closePanel(id)} />
         ) : isCanvas ? (
-          <span className="foot-note">Canvas — click a node to inspect · drag a handle to connect</span>
+          <span className="foot-note">Canvas: click a node to inspect · drag a handle to connect</span>
         ) : p.target.panelType === "canvasnode" ? (
           <div className="foot-actions">
             <button className="d-btn outline sm"
@@ -1112,7 +1146,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
                 const src = board.node(nid);
                 if (src) board.update((st) => ({ ...st, seq: st.seq + 1, nodes: [...st.nodes, { ...src, id: "n" + (st.seq + 1), x: src.x + 24, y: src.y + 24 }] }));
               }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg> Duplicate — ⌘D
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg> Duplicate: ⌘D
             </button>
             <button className="d-btn destructive sm"
               onClick={() => {
@@ -1203,10 +1237,10 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
           <button className="foot-cta" onClick={() => notesApp.addCategory()}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New category</button>
         ) : p.target.panelType === "block" ? (
           <button className="foot-cta" onClick={() => ws.openDetail(id, { panelType: "blocklive", resourceKey: p.target.resourceKey })}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg> Live demo — full width
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg> Live demo: full width
           </button>
         ) : p.target.panelType === "blocklive" ? (
-          <span className="foot-note">Live demo — real size, live tokens; change the accent in Settings and watch it follow</span>
+          <span className="foot-note">Live demo: real size, live tokens; change the accent in Settings and watch it follow</span>
         ) : n.composer ? (
           <button className="foot-cta" onClick={() => { /* demo action zone */ }}>{n.composer.replace("…", "")}</button>
         ) : (
@@ -1237,7 +1271,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
   );
 }
 
-/* ═══ Settings — the zip's panel, complete ════════════════════════════ */
+/* ═══ Settings: the zip's panel, complete ════════════════════════════ */
 
 function SettingsBody() {
   const { prefs, set, reset, theme, setTheme } = usePrefs();
@@ -1311,7 +1345,7 @@ function SettingsBody() {
               title={a.title} style={{ background: a.color }}
               onClick={() => set({ accent: a.key })} />
           ))}
-          <input type="color" className="swatch-custom" title="Color picker — any accent"
+          <input type="color" className="swatch-custom" title="Color picker: any accent"
             value={prefs.accent.startsWith("#") ? prefs.accent : "#e02d27"}
             onChange={(e) => set({ accent: e.target.value })} />
           <input className="d-input" style={{ width: 86, fontFamily: "var(--font-mono)", fontSize: 11, padding: "5px 8px" }}
@@ -1359,10 +1393,10 @@ function SettingsBody() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌘K</span>Command palette</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌘B</span>Toggle sidebar</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">esc</span>Palette → drawer → menus → panel</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">P</span>Pin the focused panel — keeps it across pages</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">P</span>Pin the focused panel: keeps it across pages</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌘J</span>Open / close the Agent</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌘1–3</span>Switch organization</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌫</span>Canvas — delete the selected element</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌫</span>Canvas: delete the selected element</div>
         </div>
       </div>
       <button onClick={() => { reset(); setTheme("system"); }}
@@ -1397,7 +1431,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
     for (const [key, n] of Object.entries(DOMAIN))
       if (n.panelType !== "space")
         out.push({ tag: n.panelType, label: n.title, run: () => deepLink(key) });
-    // LIVE content — the palette searches the stores, not just the docs
+    // LIVE content: the palette searches the stores, not just the docs
     for (const nt of notesApp.get().notes)
       out.push({ tag: "note", label: nt.title || "Untitled note", run: () => deepLink("nte:" + nt.id) });
     for (const fd of notesApp.get().folders ?? [])
@@ -1409,7 +1443,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
       const ft = c.fields.find((f) => f.type === "text");
       for (const r of c.rows) {
         const label = String((ft && r.v[ft.id]) || "").trim();
-        if (label) out.push({ tag: "row", label: label + " — " + c.name, run: () => deepLink("dtr:" + c.id + ":" + r.id) });
+        if (label) out.push({ tag: "row", label: label + ": " + c.name, run: () => deepLink("dtr:" + c.id + ":" + r.id) });
       }
     }
     for (const k of pfApp.get().keys)
@@ -1419,17 +1453,17 @@ function Palette({ onClose, deepLink, say, setTheme }: {
     for (const m of pfApp.get().members)
       out.push({ tag: "member", label: m.name, run: () => deepLink("pfm:" + m.id) });
     out.push({ tag: "action", label: "Copy stack link", run: () => { navigator.clipboard?.writeText(location.href); say("Stack link copied"); } });
-    out.push({ tag: "action", label: "Toggle sidebar — ⌘B", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true })) });
+    out.push({ tag: "action", label: "Toggle sidebar: ⌘B", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true })) });
     out.push({ tag: "action", label: "Open Settings", run: () => ws.openSpace("settings", targetOf("sys:settings")) });
     out.push({ tag: "action", label: "Open Canvas board", run: () => ws.openSpace("canvas", targetOf("sec:canvas")) });
-    out.push({ tag: "action", label: "Open Agent — ⌘J", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", metaKey: true })) });
+    out.push({ tag: "action", label: "Open Agent: ⌘J", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", metaKey: true })) });
     out.push({ tag: "action", label: "Open Profile", run: () => ws.openSpace("profile", targetOf("sys:profile")) });
-    out.push({ tag: "action", label: "Open Data — tables & pages", run: () => ws.openSpace("data", targetOf("sec:data")) });
+    out.push({ tag: "action", label: "Open Data: tables & pages", run: () => ws.openSpace("data", targetOf("sec:data")) });
     out.push({ tag: "action", label: "Open Notes", run: () => ws.openSpace("notes", targetOf("sec:notes")) });
     out.push({ tag: "action", label: "Open Tasks", run: () => ws.openSpace("tasks", targetOf("sec:tasks")) });
-    out.push({ tag: "action", label: "Theme — light", run: () => setTheme("light") });
-    out.push({ tag: "action", label: "Theme — dark", run: () => setTheme("dark") });
-    out.push({ tag: "action", label: "Theme — system", run: () => setTheme("system") });
+    out.push({ tag: "action", label: "Theme: light", run: () => setTheme("light") });
+    out.push({ tag: "action", label: "Theme: dark", run: () => setTheme("dark") });
+    out.push({ tag: "action", label: "Theme: system", run: () => setTheme("system") });
     out.push({ tag: "action", label: "Reset workspace", run: () => ws.reset() });
     return out;
   }, [ws, deepLink, say, setTheme]);
@@ -1477,7 +1511,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
   );
 }
 
-/* ═══ Agent drawer — a real LLM client: sizes, files, voice, history ══ */
+/* ═══ Agent drawer: a real LLM client: sizes, files, voice, history ══ */
 
 interface ChatAtt { kind: "file" | "audio"; name?: string; size?: number; url?: string; dur?: number }
 interface ChatMsg { me: boolean; t: string; atts?: ChatAtt[] }
@@ -1539,15 +1573,15 @@ function AgentDrawer({ onClose }: { onClose: () => void }) {
     const refs = ws.state.referenceRailOrder.map((id) => titleOfKey(ws.state.panelsById[id].target.resourceKey));
     const ctx = path.length
       ? `Your stack right now: ${path.join(" › ")}${refs.length ? ` · pinned refs: ${refs.join(", ")}` : ""}.`
-      : "Your stack is empty — open a space and I'll see it.";
+      : "Your stack is empty: open a space and I'll see it.";
     const attNote = sent.length
-      ? `\n\nReceived ${sent.map((a) => (a.kind === "audio" ? `a ${a.dur ?? 0}s voice note` : `"${a.name}"`)).join(", ")} — in production each attachment is resolved into the stack context (files parsed, voice transcribed) before the model answers.`
+      ? `\n\nReceived ${sent.map((a) => (a.kind === "audio" ? `a ${a.dur ?? 0}s voice note` : `"${a.name}"`)).join(", ")}: in production each attachment is resolved into the stack context (files parsed, voice transcribed) before the model answers.`
       : "";
     const s = q.toLowerCase();
     if (s.includes("law")) return `${ctx}\n\nThe laws in force here: ancestry is parent links (never visual order); same target + same parent reveals; a pinned panel detaches into a reference instead of orphaning; only references reorder; the URL carries the ContextPath alone.${attNote}`;
-    if (s.includes("convex")) return `${ctx}\n\nIn production this state writes to a Convex stacks table on every navigation — one mutation, one live query for presence. Signed out it falls back to localStorage, exactly like this demo.${attNote}`;
-    if (s.includes("modal")) return `${ctx}\n\nA modal steals context and cannot nest. A panel is a modal that respects its parent — it opens beside its source and keeps the whole thread on stage.${attNote}`;
-    if (s.includes("pin")) return `${ctx}\n\nPIN sets retention:"retained". If a branch change would orphan it, it detaches into the reference rail — visual order never lies about parentage.${attNote}`;
+    if (s.includes("convex")) return `${ctx}\n\nIn production this state writes to a Convex stacks table on every navigation: one mutation, one live query for presence. Signed out it falls back to localStorage, exactly like this demo.${attNote}`;
+    if (s.includes("modal")) return `${ctx}\n\nA modal steals context and cannot nest. A panel is a modal that respects its parent: it opens beside its source and keeps the whole thread on stage.${attNote}`;
+    if (s.includes("pin")) return `${ctx}\n\nPIN sets retention:"retained". If a branch change would orphan it, it detaches into the reference rail: visual order never lies about parentage.${attNote}`;
     return `${ctx}\n\nThis is the stack-as-working-memory seam: agent.ask resolves every open PanelRef via its registered load(params) and answers from exactly what you see. Ask about laws, pin, Convex, or modals.${attNote}`;
   };
 
@@ -1597,7 +1631,7 @@ function AgentDrawer({ onClose }: { onClose: () => void }) {
       r.start();
       setRec(r);
     } catch {
-      setAtts((a) => [...a, { kind: "audio", dur: 0 }]); // mic denied — demo chip anyway
+      setAtts((a) => [...a, { kind: "audio", dur: 0 }]); // mic denied: demo chip anyway
     }
   };
 
@@ -1624,7 +1658,7 @@ function AgentDrawer({ onClose }: { onClose: () => void }) {
       {histOpen ? (
         <div className="drawer-msgs">
           <button className="hist-item new" onClick={newConvo}>＋ New conversation</button>
-          {convos.length === 0 && <div className="hist-empty">No conversations yet — ask your first question.</div>}
+          {convos.length === 0 && <div className="hist-empty">No conversations yet: ask your first question.</div>}
           {convos.map((c) => (
             <div key={c.id} className={"hist-item" + (c.id === activeId ? " on" : "")}
               onClick={() => { setActiveId(c.id); setHistOpen(false); }}>
@@ -1640,7 +1674,7 @@ function AgentDrawer({ onClose }: { onClose: () => void }) {
         </div>
       ) : (
         <div className="drawer-msgs" ref={msgsRef}>
-          <div className="msg bot"><span style={{ color: "var(--accent)" }}>✶</span> I can see your open stack — it is my working memory. Ask about the laws, pinning, Convex, or why not modals. Attach a file or a voice note — I see those too. And ask me to BUILD A BOARD: “canvas: Idea → Prototype → Ship”.</div>
+          <div className="msg bot"><span style={{ color: "var(--accent)" }}>✶</span> I can see your open stack: it is my working memory. Ask about the laws, pinning, Convex, or why not modals. Attach a file or a voice note: I see those too. And ask me to BUILD A BOARD: “canvas: Idea → Prototype → Ship”.</div>
           {msgs.map((m, i) => (
             <div key={i} className={"msg " + (m.me ? "me" : "bot")}>
               {!m.me && <span className="b-tag">Agent</span>}
@@ -1697,7 +1731,7 @@ function AgentDrawer({ onClose }: { onClose: () => void }) {
             </button>
             <textarea rows={1} value={draft} onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(draft); } }}
-              placeholder={rec ? "Recording…" : "Ask — or describe a board to build…"} />
+              placeholder={rec ? "Recording…" : "Ask: or describe a board to build…"} />
             <button className="chat-send" title="Send" onClick={() => send(draft)}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5" /><path d="M5 12l7-7 7 7" /></svg>
             </button>

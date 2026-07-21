@@ -1,5 +1,5 @@
 /**
- * boardStore — the canvas board's shared store + the agent's board builder.
+ * boardStore: the canvas board's shared store + the agent's board builder.
  * Deliberately free of React Flow and Tiptap so the shell can import it
  * statically while CanvasBoard.tsx (the heavy renderer) loads lazily.
  */
@@ -24,7 +24,7 @@ export const SEED: BoardState = {
   seq: 9,
   ui: DEFAULT_UI,
   nodes: [
-    { id: "n1", kind: "card", x: 40, y: 60, label: "Concept", sub: "One mechanic — open right", notes: "The founding idea: panels inside panels." },
+    { id: "n1", kind: "card", x: 40, y: 60, label: "Concept", sub: "One mechanic: open right", notes: "The founding idea: panels inside panels." },
     { id: "n2", kind: "card", x: 300, y: 40, label: "Research", sub: "LifeOS → laws → brief" },
     { id: "n3", kind: "card", x: 300, y: 170, label: "Design", sub: "WhitePaper tokens" },
     { id: "n4", kind: "card", x: 560, y: 100, label: "Build", sub: "panels-core · react · app" },
@@ -131,7 +131,7 @@ export const useBoard = () => useSyncExternalStore(board.subscribe, board.get);
 export const useBoardsFile = () => useSyncExternalStore(board.subscribe, board.file);
 
 
-/* ── the agent's board builder — parse a prompt into nodes + edges ───── */
+/* ── the agent's board builder: parse a prompt into nodes + edges ───── */
 const TEMPLATES: Record<string, string[]> = {
   sprint: ["Backlog -> Sprint -> In progress -> Review -> Done"],
   retro: ["Went well -> Actions", "To improve -> Actions", "Ideas -> Actions"],
@@ -193,6 +193,6 @@ export function boardFromPrompt(q: string): string | null {
     n.y = 60 + row * 126;
   }
   board.update(() => ({ seq: seq + 1, ui: { ...DEFAULT_UI }, nodes, edges }));
-  return `Built a board with ${nodes.length} cards and ${edges.length} links${chains.length > 1 ? ` across ${chains.length} branches` : ""}. It replaced the previous board (⌘Z on the canvas restores it). Click any card to open its inspector — notes support rich text.`;
+  return `Built a board with ${nodes.length} cards and ${edges.length} links${chains.length > 1 ? ` across ${chains.length} branches` : ""}. It replaced the previous board (⌘Z on the canvas restores it). Click any card to open its inspector: notes support rich text.`;
 }
 

@@ -1,9 +1,9 @@
 /**
- * Notifications — the topbar notification center. A bell button with an
+ * Notifications: the topbar notification center. A bell button with an
  * unread dot; clicking it opens a fixed dropdown listing mentions, task
  * reminders, agent reports and system events, searchable and filterable.
  * One tiny module store (localStorage-persisted, useSyncExternalStore)
- * keeps the badge and the open list in sync — marking a row read updates
+ * keeps the badge and the open list in sync: marking a row read updates
  * the dot instantly.
  */
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -26,10 +26,10 @@ const H = 3_600_000;
 const SEED: Notif[] = [
   { id: "nf-mention-refonte", kind: "mention", title: "Jo mentioned you in Refonte e-commerce", body: "Can you check the checkout panel spacing before Friday?", ts: now - 25 * M, read: false },
   { id: "nf-task-notes", kind: "task", title: "Ship the notes module is due tomorrow 18:00", body: "High priority · in Doing · 1 of 2 subtasks left", ts: now - 2 * H, read: false },
-  { id: "nf-agent-board", kind: "agent", title: "Board build finished — 4 cards, 3 links", body: "The canvas agent laid out Refonte e-commerce and wired the flows", ts: now - 3 * H, read: false },
+  { id: "nf-agent-board", kind: "agent", title: "Board build finished: 4 cards, 3 links", body: "The canvas agent laid out Refonte e-commerce and wired the flows", ts: now - 3 * H, read: false },
   { id: "nf-sys-deploy", kind: "system", title: "Vercel deploy went live", body: "crm-specimen · production · built in 42s, all routes green", ts: now - 5 * H, read: false },
   { id: "nf-mention-launch", kind: "mention", title: "Mel replied in Launch checklist", body: "Freeze the grammar today, sweep the routes right after.", ts: now - 9 * H, read: false },
-  { id: "nf-task-retro", kind: "task", title: "Book the launch retro moved to Jul 28", body: "Rescheduled from Jul 24 — the calendar hold followed", ts: now - 28 * H, read: true },
+  { id: "nf-task-retro", kind: "task", title: "Book the launch retro moved to Jul 28", body: "Rescheduled from Jul 24: the calendar hold followed", ts: now - 28 * H, read: true },
   { id: "nf-agent-digest", kind: "agent", title: "Weekly digest is ready", body: "3 notes touched, 6 tasks closed, 1 board grew by 4 cards", ts: now - 2 * 24 * H, read: true },
   { id: "nf-sys-signin", kind: "system", title: "New sign-in from Safari on macOS", body: "Paris, FR · marked as trusted", ts: now - 3 * 24 * H, read: true },
 ];
@@ -80,7 +80,7 @@ function ago(ts: number): string {
   return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-/* ── the bell + dropdown — fully self-contained ──────────────────────── */
+/* ── the bell + dropdown: fully self-contained ──────────────────────── */
 export function NotifBell() {
   const list = useNotifs();
   const [open, setOpen] = useState(false);

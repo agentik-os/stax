@@ -59,6 +59,12 @@
       "since": "0.4.1",
       "area": "engine",
       "title": "Root-close promotion \u2014 closing the root hands the lead to its child; the space ends at the last panel"
+    },
+    {
+      "id": "U-011",
+      "since": "0.4.2",
+      "area": "ux",
+      "title": "Panel setups remembered, root-respecting deep-links, drill hover polish, no-dash copy"
     }
   ]
 }

@@ -1,5 +1,5 @@
 /**
- * Profile — the account identity, editable from the avatar menu as a real
+ * Profile: the account identity, editable from the avatar menu as a real
  * panel (sys:profile). One tiny shared store: the sidebar account block, the
  * avatar initials/picture and the profile panel all read the same truth,
  * persisted in localStorage.
@@ -56,7 +56,7 @@ export const useProfile = () => useSyncExternalStore(profile.subscribe, profile.
 export const initialsOf = (name: string) =>
   name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?";
 
-/** The avatar bubble — picture if uploaded, initials otherwise. */
+/** The avatar bubble: picture if uploaded, initials otherwise. */
 export function AvatarBubble({ size = 28 }: { size?: number }) {
   const p = useProfile();
   return p.avatar
@@ -103,7 +103,7 @@ export function ProfileBody() {
             onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
         </div>
         <p style={{ fontSize: "calc(var(--fz-body, 13.5px) - 1.5px)", color: "var(--muted-foreground)", marginTop: 10 }}>
-          Stored locally — the sidebar and every avatar in the app follow instantly.
+          Stored locally: the sidebar and every avatar in the app follow instantly.
         </p>
       </div>
 
@@ -125,7 +125,7 @@ export function ProfileBody() {
           <Row label="Website" value={p.link} placeholder="yoursite.com" onChange={(v) => profile.set({ link: v })} />
           <div className="pop-sub">Bio</div>
           <textarea className="d-input" style={{ width: "100%", height: 92, resize: "vertical" }}
-            value={p.bio} placeholder="A few lines about you — shown on hover cards and in presence."
+            value={p.bio} placeholder="A few lines about you: shown on hover cards and in presence."
             onChange={(e) => profile.set({ bio: e.target.value })} />
         </div>
       </div>

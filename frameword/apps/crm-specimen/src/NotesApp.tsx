@@ -1,8 +1,8 @@
 /**
- * NotesApp — a Notes + personal Task manager module speaking the panel
+ * NotesApp: a Notes + personal Task manager module speaking the panel
  * grammar: the root panel lists notes and tasks; clicking an item opens its
  * editor as the NEXT PANEL. One tiny shared store (localStorage-persisted)
- * keeps the root list and every open editor in sync — each keystroke writes
+ * keeps the root list and every open editor in sync: each keystroke writes
  * the store, the list re-renders live.
  */
 import { useState, useSyncExternalStore } from "react";
@@ -29,11 +29,11 @@ const SEED: NotesState = {
   notes: [
     {
       id: "n-launch", title: "Launch checklist", pinned: true, ts: now - 2 * H,
-      body: "<h2>Before the flip</h2><ul><li><p>Freeze the panel grammar — open right, nothing else</p></li><li><p>Sweep every route for console noise</p></li><li><p>Write the announcement note</p></li></ul><p>Ship it loud.</p>",
+      body: "<h2>Before the flip</h2><ul><li><p>Freeze the panel grammar: open right, nothing else</p></li><li><p>Sweep every route for console noise</p></li><li><p>Write the announcement note</p></li></ul><p>Ship it loud.</p>",
     },
     {
-      id: "n-meet", title: "Meeting — panel grammar review", ts: now - 30 * H,
-      body: "<p>Agreed: drilling stays the only navigation. No modals, no tabs.</p><blockquote><p>Every click answers the same question — what opens next?</p></blockquote><p>Follow-up: the canvas inspector should reuse the drill rows.</p>",
+      id: "n-meet", title: "Meeting: panel grammar review", ts: now - 30 * H,
+      body: "<p>Agreed: drilling stays the only navigation. No modals, no tabs.</p><blockquote><p>Every click answers the same question: what opens next?</p></blockquote><p>Follow-up: the canvas inspector should reuse the drill rows.</p>",
     },
   ],
   cats: [
@@ -145,7 +145,7 @@ export const notesApp = {
 };
 export const useNotesApp = () => useSyncExternalStore(notesApp.subscribe, notesApp.get);
 
-/* ── fixed-position popovers — escape scroll clipping and stacking traps ── */
+/* ── fixed-position popovers: escape scroll clipping and stacking traps ── */
 const zoomFactor = () => {
   const z = (document.body.style as CSSStyleDeclaration & { zoom: string }).zoom;
   return z ? parseFloat(z) / 100 : 1;
@@ -163,7 +163,7 @@ export const popPos = (e: { currentTarget: EventTarget & Element }, popH = 240, 
     : { position: "fixed", left, top: r.bottom / z + 6, bottom: "auto", right: "auto", zIndex: 40 };
 };
 
-/* ── shadcn-style pickers — popover calendar + time list, no native UI ── */
+/* ── shadcn-style pickers: popover calendar + time list, no native UI ── */
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 export function DatePicker({ value, onChange }: { value?: string; onChange: (v?: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -262,7 +262,7 @@ const PRIO_DOT: Record<Prio, string> = {
   low: "var(--ink-4)",
 };
 
-/* ── root panel — notes list + task list ─────────────────────────────── */
+/* ── root panel: notes list + task list ─────────────────────────────── */
 export function NotesRoot({ panelId }: { panelId: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
@@ -278,7 +278,7 @@ export function NotesRoot({ panelId }: { panelId: string }) {
   return (
     <div className="section">
       <div className="lab">Notes · {s.notes.length}</div>
-      {s.notes.length === 0 && folders.length === 0 && <p style={{ marginTop: 6 }}>No notes yet — start one from the foot.</p>}
+      {s.notes.length === 0 && folders.length === 0 && <p style={{ marginTop: 6 }}>No notes yet: start one from the foot.</p>}
       <div className="drills" style={{ marginTop: 8 }}>
         {folders.map((f) => {
           const count = s.notes.filter((n) => n.folder === f.id).length;
@@ -315,7 +315,7 @@ export function NotesRoot({ panelId }: { panelId: string }) {
   );
 }
 
-/* ── folder panel — a folder opens its own panel of notes ────────────── */
+/* ── folder panel: a folder opens its own panel of notes ────────────── */
 export function FolderPanel({ folderKey, panelId }: { folderKey: string; panelId: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
@@ -344,7 +344,7 @@ export function FolderPanel({ folderKey, panelId }: { folderKey: string; panelId
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
         </button>
       </div>
-      {notes.length === 0 && <p style={{ marginTop: 6 }}>Empty folder — add a note from the foot.</p>}
+      {notes.length === 0 && <p style={{ marginTop: 6 }}>Empty folder: add a note from the foot.</p>}
       <div className="drills" style={{ marginTop: 8 }}>
         {notes.map((n) => (
           <div key={n.id} className="cv-conn-row">
@@ -418,7 +418,7 @@ export function TasksRoot({ panelId }: { panelId: string }) {
           {t.subs!.filter((x) => x.done).length}/{t.subs!.length}
         </span>
       )}
-      <span title={"Priority — " + t.prio}
+      <span title={"Priority: " + t.prio}
         style={{ width: 7, height: 7, flex: "none", borderRadius: 999, background: PRIO_DOT[t.prio] }} />
       {t.due && <span className="tag" style={{ flex: "none" }}>{fmtDue(t.due)}{t.dueTime ? " · " + t.dueTime : ""}</span>}
     </div>
@@ -553,11 +553,11 @@ export function TasksRoot({ panelId }: { panelId: string }) {
   );
 }
 
-/* ── note body — a real Tiptap editor, keyed by note id ──────────────── */
+/* ── note body: a real Tiptap editor, keyed by note id ──────────────── */
 function NoteDoc({ noteId, html }: { noteId: string; html: string }) {
   return (
     <div className="nt-docwrap">
-      <RichNotes key={noteId} html={html} placeholder="Write the note — headings, lists, checklists, links…"
+      <RichNotes key={noteId} html={html} placeholder="Write the note: headings, lists, checklists, links…"
         onChange={(h) => notesApp.update((st) => ({
           ...st,
           notes: st.notes.map((n) => (n.id === noteId ? { ...n, body: h, ts: Date.now() } : n)),
@@ -566,7 +566,7 @@ function NoteDoc({ noteId, html }: { noteId: string; html: string }) {
   );
 }
 
-/* ── note panel — the panel opened by clicking a note ────────────────── */
+/* ── note panel: the panel opened by clicking a note ────────────────── */
 export function NoteEditor({ noteKey, panelId }: { noteKey: string; panelId: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
@@ -596,7 +596,7 @@ export function NoteEditor({ noteKey, panelId }: { noteKey: string; panelId: str
   );
 }
 
-/* ── task panel — the panel opened by clicking a task ────────────────── */
+/* ── task panel: the panel opened by clicking a task ────────────────── */
 export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
@@ -641,7 +641,7 @@ export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: str
             </button>
           ))}
         </div>
-        <div className="pop-sub">Due — date & time</div>
+        <div className="pop-sub">Due: date & time</div>
         <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
           <DatePicker value={t.due} onChange={(v) => patch({ due: v })} />
           <TimePicker value={t.dueTime} onChange={(v) => patch({ dueTime: v })} />

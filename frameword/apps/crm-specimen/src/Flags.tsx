@@ -1,5 +1,5 @@
 /**
- * Flags — the five language flags as tiny inline SVGs. Replaces the
+ * Flags: the five language flags as tiny inline SVGs. Replaces the
  * flag-icons package (5.3 MB of assets, 250+ flags) with ~1 KB: the app
  * renders exactly these five, at 18×13.5, forever.
  */
