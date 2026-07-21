@@ -38,18 +38,21 @@ values in this file.
   - `.stats` — no tiles: a vertical hairline BETWEEN stats (padding 18 both sides).
   - `.drills` — hairline top on the list, hairline between rows; the list bleeds
     **12px into the gutter** (margin 0 -12px, row padding 12px) so hover breathes while
-    text keeps the flat-block left edge; hover = secondary fill + the row's own 1px
+    text keeps the flat-block left edge. Separators are drawn as 12px-INSET pseudo
+    hairlines (`.drills::before`, `.drill::after`), never as borders on the bled box:
+    only the FILL bleeds, never a line. Hover = secondary fill + the row's own 1px
     hairline turns **accent** (same thickness); index/arrow accent, arrow slides 3px.
-    Row meta tags are flat mono uppercase, never pills.
+    Row meta tags are flat mono uppercase, never pills. A row that pairs a drill
+    with a TRAILING action (pin, edit) draws the separator on the ROW wrapper, not
+    the drill, so the line still reaches the shared right bound.
   - **Separator law** — ONE hairline between any two stacked blocks, never two:
     containers absorb their first child's top hairline; lists drop the last row's
-    bottom hairline.
+    bottom hairline. And ONE alignment: every separator in a panel shares the EXACT
+    left/right bounds of the head hairline (the content box); a surface that bleeds
+    into the gutter draws its lines inset back to those bounds.
   - **Focus ring** — neutral (foreground mix), suppressed while hovered/active
     (Safari fires :focus-visible on click); keyboard keeps it. Never accent.
   - `.anat-row` — hairline top, padding 10/0, mono accent label column 104px.
-  - `.stat` (KPI) — padding **12px 14px**, radius 12; stats sit in a flex row, gap 10.
-  - `.drills` — column gap **8px**; `.drill` row — padding **12px 14px**, radius 10,
-    internal gap 12, serif lead tile 34×34 radius 9.
   - Popover labels `.pop-sub` — margin-bottom 6.
 - The foot is the ONLY action zone: primary CTA = accent bg + **accent border** +
   `--accent-hover` on hover; destructive = `--destructive` text. Never object-state

@@ -164,23 +164,36 @@ img.avatar { border: 1px solid var(--border); }
 /* drill rows */
 /* drill list — flat rows, hairlines BETWEEN rows, hover fill */
 /* the list bleeds 12px into the gutter so the hover fill BREATHES while the
-   text stays aligned with every other flat block */
-.drills { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--border); margin: 0 -12px; }
+   text stays aligned with every other flat block. Separators are drawn as
+   12px-inset pseudo hairlines so every line in a panel shares the EXACT
+   left/right bounds of the head hairline (only the FILL bleeds, never a line) */
+.drills { display: flex; flex-direction: column; gap: 0; position: relative; margin: 0 -12px; }
+.drills::before { content: ""; position: absolute; left: 12px; right: 12px; top: 0; border-top: 1px solid var(--border); }
 .drills > * { width: auto; }
-.drill { display: flex; align-items: center; gap: 12px; padding: 12px; border: none; border-bottom: 1px solid var(--border); border-radius: 0; cursor: pointer; text-align: left; width: 100%; }
+.drill { display: flex; align-items: center; gap: 12px; padding: 12px; border: none; border-radius: 0; cursor: pointer; text-align: left; width: 100%; position: relative; }
+.drill::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease); pointer-events: none; }
 /* hover: flat fill, and the row's own hairline turns ACCENT (same 1px) */
-.drill { transition: background 130ms var(--ease), border-color 130ms var(--ease); }
-.drill:hover { background: var(--secondary); border-bottom-color: var(--accent); }
+.drill { transition: background 130ms var(--ease); }
+.drill:hover { background: var(--secondary); }
+.drill:hover::after { border-color: var(--accent); }
 .drill:hover .no { color: var(--accent); }
 .drill .arr { transition: transform 130ms var(--ease), color 130ms var(--ease); }
 .drill:hover .arr { color: var(--accent); transform: translateX(3px); }
-.drills .drill:last-child:hover { border-bottom: 1px solid var(--accent); }
+.drills .drill:last-child:hover::after { border-color: var(--accent); }
+/* rows pairing a drill with a trailing action: the separator belongs to the ROW,
+   inset back to the shared gutter bounds (the drill alone stops at the button) */
+.cv-conn-row { position: relative; }
+.cv-conn-row .drill::after { display: none; }
+.cv-conn-row::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease); pointer-events: none; }
+.cv-conn-row:hover::after { border-color: var(--accent); }
+.drills .cv-conn-row:last-child::after { border-bottom-color: transparent; }
+.drills .cv-conn-row:last-child:hover::after { border-color: var(--accent); }
 .drill .no { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); color: var(--muted-foreground); flex: none; }
 .drill .bd { flex: 1; min-width: 0; }
 .drill .tt { font-weight: 500; font-size: 13px; }
 .drill .ss { font-size: 12px; color: var(--muted-foreground); }
 .drill .arr { color: var(--muted-foreground); flex: none; }
-.drill.seealso { border-bottom-style: dashed; }
+.drill.seealso::after { border-bottom-style: dashed; }
 .drill.seealso .no { color: var(--accent); }
 .tag { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 8px 3px; border-radius: 9999px; line-height: 1; background: var(--secondary); color: var(--muted-foreground); flex: none; }
 .tag.accent { background: var(--accent-soft); color: var(--accent); }
@@ -1111,12 +1124,12 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 
 
 /* ── separator dedup: ONE hairline between any two stacked blocks, never two ── */
-.section > .drills, .section > .pf-list { border-top: none; }
+.section > .drills::before, .section > .pf-list { border-top: none; }
 .section > .anat-row:first-of-type, .section > .card:first-of-type { border-top: none; }
-.drills .drill:last-child { border-bottom: none; }
+.drills .drill:last-child::after { border-bottom-color: transparent; }
 .pf-list > *:last-child { border-bottom: none; }
 .pf-hubs .pf-hubcard:last-child { border-bottom: none; }
-.panel-body > .drills:first-child { border-top: none; }
+.panel-body > .drills:first-child::before { border-top: none; }
 .pf-alertrow .pf-pill { flex: none; }
 
 /* drill meta: flat mono, never a pill inside the row */
