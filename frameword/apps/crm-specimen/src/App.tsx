@@ -822,11 +822,12 @@ function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: s
     // hide the panel the user just opened.
     const leafEl = el.querySelector<HTMLElement>("[data-leaf]");
     if (!leafEl) { el.scrollTo({ left: el.scrollWidth, behavior: "smooth" }); return; }
+    const pad = parseFloat(getComputedStyle(el).paddingLeft) || 18;
     const sr = el.getBoundingClientRect();
     const lr = leafEl.getBoundingClientRect();
     let left = el.scrollLeft;
-    if (lr.right > sr.right - 8) left = el.scrollLeft + (lr.right - sr.right) + 16;
-    if (lr.left < sr.left + 8) left = el.scrollLeft + (lr.left - sr.left) - 16;
+    if (lr.right > sr.right - pad / 2) left = el.scrollLeft + (lr.right - sr.right) + pad;
+    if (lr.left < sr.left + pad / 2) left = el.scrollLeft + (lr.left - sr.left) - pad;
     if (left !== el.scrollLeft) el.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
   }, [count, ws.state.contextLeafId, ws.state.rootInstanceId, ws.path.length, sizes]);
 
@@ -977,10 +978,20 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
       data-leaf={id === ws.state.contextLeafId || undefined}
       onMouseDown={() => { if (!isRef && ws.state.focusedPanelId !== id) ws.focusPanel(id); }}
       style={compact ? undefined
-        : isFluid ? { flex: "0 0 100%", width: "100%", minWidth: 0 }
+        : isFluid ? { flex: "0 0 calc(100% - var(--stage-pad, 18px))", width: "calc(100% - var(--stage-pad, 18px))", minWidth: 0 }
         : isCanvas && !isRef ? { width, flex: "1 1 auto", minWidth: 520 }
         : { width }}>
-      <div className="panel-bar">
+      <div className="panel-bar"
+        onDoubleClick={(e) => {
+          if ((e.target as HTMLElement).closest("button")) return;
+          const st = (e.currentTarget as HTMLElement).closest(".stage") as HTMLElement | null;
+          if (!st) return;
+          const pad = parseFloat(getComputedStyle(st).paddingLeft) || 18;
+          const pr = (e.currentTarget as HTMLElement).parentElement!.getBoundingClientRect();
+          st.scrollTo({ left: st.scrollLeft + (pr.left - st.getBoundingClientRect().left) - pad, behavior: "smooth" });
+          if (!isRef) ws.focusPanel(id);
+        }}
+        title="Double-click: align this panel with the view">
         {compact && !isRoot && (
           <button className="bar-btn back" title="Back" onClick={() => ws.closePanel(id)}>‹</button>
         )}
