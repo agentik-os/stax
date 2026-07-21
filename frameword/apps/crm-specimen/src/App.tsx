@@ -952,8 +952,8 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
   // preference applies there too: pin mode is resizable like any panel
   const effSize: PanelSize = isRef ? (wOverride ?? "S") : (wOverride ?? (ws.registry[p.target.panelType]?.size as PanelSize) ?? "M");
   const width = panelWidth(ws.registry, p, isRef ? (wOverride ?? "S") : wOverride);
-  // XXL is fluid: the panel FLEXES to fill the remaining stage
-  const isFluid = effSize === "XXL" && !isRef;
+  // XXL is fluid everywhere — pinned references included
+  const isFluid = effSize === "XXL";
   const refIndex = ws.state.referenceRailOrder.indexOf(id);
   // per-panel search (the zip's foot search): panels with a real list get it
   const searchable = !isRef && (n.children?.length ?? 0) >= 4;

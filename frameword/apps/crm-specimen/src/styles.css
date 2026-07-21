@@ -719,9 +719,13 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .dp-clear:hover { color: var(--accent); }
 .dp-pop.tp { width: 128px; padding: 6px; }
 .tp-list { max-height: 216px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; scrollbar-width: thin; }
-.tp-slot { padding: 5px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.1); font-variant-numeric: tabular-nums; color: var(--ink-2); text-align: left; }
+/* menu items: quiet sans rows, soft accent selection with a check — never a filled slab */
+.tp-slot { display: flex; align-items: center; gap: 8px; padding: 6px 9px; border-radius: 6px; font-family: var(--font-sans); font-size: calc(var(--fz-body, 13.5px) - 1px); font-weight: 500; color: var(--ink-2); text-align: left; line-height: 1.35; }
 .tp-slot:hover { background: var(--secondary); color: var(--foreground); }
-.tp-slot.on { background: var(--accent); color: var(--accent-foreground); }
+.tp-slot.on { background: var(--accent-soft); color: var(--accent); }
+.tp-slot.on::after { content: "✓"; margin-left: auto; font-size: 11px; }
+.dt-mrow .tp-slot.on::after { content: none; }
+.dt-mrow .tp-slot { justify-content: center; }
 
 /* ══ Data — tables & pages (Airtable × Notion, panel grammar) ══════════ */
 .dt-toolbar { display: flex; align-items: center; gap: 8px; flex: none; margin-bottom: 12px; flex-wrap: wrap; }
@@ -1145,3 +1149,8 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .sheet-bg { position: fixed; inset: 0; z-index: 39; }
 .sheet { position: fixed; top: 52px; right: 0; bottom: 0; width: 440px; max-width: calc(var(--frame-w, 100vw) * 0.92); background: var(--card); border-left: 1px solid var(--border); box-shadow: var(--shadow-lg); z-index: 40; display: flex; flex-direction: column; animation: panelIn 200ms var(--ease); }
 .sheet-body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 18px 24px; display: flex; flex-direction: column; }
+
+/* menus: tighter chrome, mono group labels */
+.dp-pop { padding: 5px; border-radius: 10px; }
+.dp-pop .pop-sub { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); margin: 7px 9px 4px; }
+.dp-pop .pop-sub:first-child { margin-top: 3px; }
