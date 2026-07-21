@@ -1045,6 +1045,7 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .sb-collapse { flex: none; width: 28px; height: 28px; border-radius: 7px; color: var(--muted-foreground); display: grid; place-items: center; }
 .sb-collapse:hover { background: var(--secondary); color: var(--foreground); }
 .sb-collapse.on { color: var(--accent); background: var(--accent-soft); }
+.sb-collapse:disabled { opacity: 0.35; pointer-events: none; }
 
 /* the ROOT panel, collapsed to a slim spine on stage (UI-only) */
 .panel.root-collapsed { width: 46px; min-width: 46px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0; cursor: pointer; }

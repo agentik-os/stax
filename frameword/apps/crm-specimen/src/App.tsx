@@ -603,9 +603,10 @@ function Shell() {
                   }}>
                   {sbSpace.label}
                 </button>
-                {ws.path.length > 1 && (
+                {(
                   <button className={"sb-collapse" + (rootCollapsed ? " on" : "")} aria-pressed={rootCollapsed}
-                    title={rootCollapsed ? "Show the main panel" : "Hide the main panel"}
+                    disabled={ws.path.length <= 1 && !rootCollapsed}
+                    title={rootCollapsed ? "Show the main panel" : ws.path.length > 1 ? "Hide the main panel" : "Open a drill first — nothing to hide yet"}
                     onClick={() => setRootCollapsed((v) => !v)}>
                     {rootCollapsed ? (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /><path d="m14 9 3 3-3 3" /></svg>
