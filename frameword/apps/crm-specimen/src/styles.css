@@ -165,15 +165,13 @@ img.avatar { border: 1px solid var(--border); }
 /* drill list — flat rows, hairlines BETWEEN rows, hover fill */
 .drills { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--border); }
 .drill { display: flex; align-items: center; gap: 12px; padding: 12px 6px; border: none; border-bottom: 1px solid var(--border); border-radius: 0; cursor: pointer; text-align: left; width: 100%; }
-/* hover: an INSET rounded fill (never a full-bleed slab), arrow slides accent */
-.drill { position: relative; }
-.drill > * { position: relative; z-index: 1; }
-.drill::before { content: ""; position: absolute; inset: 2px 0; border-radius: 8px; background: transparent; transition: background 130ms var(--ease); }
-.drill:hover::before { background: var(--secondary); }
-.drill:hover { border-bottom-color: transparent; }
+/* hover: flat fill, and the row's own hairline turns ACCENT (same 1px) */
+.drill { transition: background 130ms var(--ease), border-color 130ms var(--ease); }
+.drill:hover { background: var(--secondary); border-bottom-color: var(--accent); }
 .drill:hover .no { color: var(--accent); }
 .drill .arr { transition: transform 130ms var(--ease), color 130ms var(--ease); }
 .drill:hover .arr { color: var(--accent); transform: translateX(3px); }
+.drills .drill:last-child:hover { border-bottom: 1px solid var(--accent); }
 .drill .no { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); color: var(--muted-foreground); flex: none; }
 .drill .bd { flex: 1; min-width: 0; }
 .drill .tt { font-weight: 500; font-size: 13px; }
@@ -1113,3 +1111,6 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .pf-hubs .pf-hubcard:last-child { border-bottom: none; }
 .panel-body > .drills:first-child { border-top: none; }
 .pf-alertrow .pf-pill { flex: none; }
+
+/* drill meta: flat mono, never a pill inside the row */
+.drill .tag { background: transparent; border: none; padding: 0; border-radius: 0; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }

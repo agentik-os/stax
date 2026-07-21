@@ -935,8 +935,9 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
   const isRoot = p.role === "root";
   // a root is always retention:"retained": its pin state lives in `pinned`
   const retained = isRoot ? !!p.pinned : p.retention === "retained";
-  // references are peripheral: cap them at S so L/XL root-refs never eat the stage
-  const width = panelWidth(ws.registry, p, isRef ? "S" : wOverride);
+  // references default to S (peripheral) but the user's per-panel size
+  // preference applies there too: pin mode is resizable like any panel
+  const width = panelWidth(ws.registry, p, isRef ? (wOverride ?? "S") : wOverride);
   const refIndex = ws.state.referenceRailOrder.indexOf(id);
   // per-panel search (the zip's foot search): panels with a real list get it
   const searchable = !isRef && (n.children?.length ?? 0) >= 4;
