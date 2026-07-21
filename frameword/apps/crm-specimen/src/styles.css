@@ -17,7 +17,8 @@ a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 a:hover { color: var(--accent); }
 ::selection { background: var(--accent-soft); }
 button { outline: none; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
-button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+button:focus-visible { outline: 2px solid color-mix(in oklab, var(--foreground) 40%, transparent); outline-offset: 2px; border-radius: 4px; }
+button:hover:focus-visible, button:active:focus-visible { outline: none; }
 input:focus-visible, textarea:focus-visible { outline: none; }
 [data-theme="dark"] { --ink-2: oklch(0.82 0 0); --ink-4: oklch(0.58 0 0);
   --success-soft: color-mix(in oklab, oklch(0.62 0.13 152) 18%, var(--card));
@@ -167,8 +168,9 @@ img.avatar { border: 1px solid var(--border); }
 /* hover: an INSET rounded fill (never a full-bleed slab), arrow slides accent */
 .drill { position: relative; }
 .drill > * { position: relative; z-index: 1; }
-.drill::before { content: ""; position: absolute; inset: 4px -10px; border-radius: 10px; background: transparent; transition: background 130ms var(--ease); }
+.drill::before { content: ""; position: absolute; inset: 2px 0; border-radius: 8px; background: transparent; transition: background 130ms var(--ease); }
 .drill:hover::before { background: var(--secondary); }
+.drill:hover { border-bottom-color: transparent; }
 .drill:hover .no { color: var(--accent); }
 .drill .arr { transition: transform 130ms var(--ease), color 130ms var(--ease); }
 .drill:hover .arr { color: var(--accent); transform: translateX(3px); }
@@ -590,8 +592,6 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 /* drill rows: serif lead tile + accent chevron on hover */
 /* drill number: flat mono index, accent when the row is live */
 .drill .no { width: 26px; border: none; background: transparent; border-radius: 0; display: block; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.05); font-variant-numeric: tabular-nums; color: var(--muted-foreground); flex: none; }
-.drill:hover { border-color: var(--ink-4); }
-.drill:hover .arr { color: var(--accent); }
 /* the sidebar is its own recessed surface */
 .sidebar { background: var(--sidebar); box-shadow: 1px 0 0 oklch(0.2 0.01 80 / 0.03), 7px 0 22px -10px oklch(0.2 0.01 80 / 0.10); }
 [data-theme="dark"] .sidebar { box-shadow: 1px 0 0 oklch(0 0 0 / 0.3), 7px 0 22px -10px oklch(0 0 0 / 0.45); }
@@ -1069,6 +1069,7 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .sb-item.sub .no { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); color: var(--muted-foreground); font-variant-numeric: tabular-nums; flex: none; width: 17px; }
 .sb-item.sub.on .no { color: var(--accent); }
 .sb-item.sub .sb-tt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.sb-subitem { border-radius: 6px; }
 .sb-subitem.on { background: var(--secondary); color: var(--foreground); }
 
 
@@ -1102,3 +1103,13 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .pf-hubcard { border: none; border-bottom: 1px solid var(--border); border-radius: 0; padding: 14px 2px 15px; background: transparent; }
 .pf-chart { border: none; border-radius: 0; padding: 12px 0 8px; }
 .pf-idcard { margin-bottom: 2px; }
+
+
+/* ── separator dedup: ONE hairline between any two stacked blocks, never two ── */
+.section > .drills, .section > .pf-list { border-top: none; }
+.section > .anat-row:first-of-type, .section > .card:first-of-type { border-top: none; }
+.drills .drill:last-child { border-bottom: none; }
+.pf-list > *:last-child { border-bottom: none; }
+.pf-hubs .pf-hubcard:last-child { border-bottom: none; }
+.panel-body > .drills:first-child { border-top: none; }
+.pf-alertrow .pf-pill { flex: none; }

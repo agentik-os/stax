@@ -114,7 +114,7 @@ export const DOMAIN: Record<string, DomainNode> = {
     panelType: "section", title: "One mechanic, everywhere.", eyebrow: "Overview · 01",
     subtitle: "Click anything with depth and a panel opens to the right. The parent stays. That is the entire navigation model.",
     kpis: [{ v: "1", l: "mechanic" }, { v: "7", l: "laws" }, { v: "∞", l: "depth" }],
-    blocks: [{ kind: "card", label: "01: The pitch", text: "Stax replaces pages, modals and tabs with one move: anything with depth opens as a new panel to the RIGHT of its source, and the source stays on stage. The open panels form one serializable JSON object (WorkspaceState): the same data that paints the screen is the URL hash, the persisted workspace, and an agent's working memory. Everything else in this app: the seven laws, the WhitePaper tokens, the registry, the migration engine: is discipline around that one mechanic." }],
+    blocks: [{ kind: "card", label: "01: The pitch", text: "Stax replaces pages, modals and tabs with one move: anything with depth opens as a new panel to the RIGHT of its source, and the source stays on stage. The open panels form one serializable JSON object (WorkspaceState): the same data that paints the screen is the URL hash, the persisted workspace, and an agent's working memory. Everything else in this app (the seven laws, the WhitePaper tokens, the registry, the migration engine) is discipline around that one mechanic." }],
     children: ["ov:why", "ov:vs", "depth:1", "ov:origin"],
     footActions: [{ label: "Open the model →", kind: "primary", space: "model" }],
   },
