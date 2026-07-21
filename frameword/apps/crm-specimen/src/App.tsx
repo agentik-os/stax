@@ -890,9 +890,11 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
     eyebrow: { pfkey: "console · key", pfmember: "console · member", pfproject: "console · project", pfincident: "console · incident", pflog: "console · request" }[p.target.panelType],
   } : {
     panelType: p.target.panelType,
-    title: nt || tk || isDataRow ? "" : dc ? dc.name : fd ? fd.name : be ? (be.label || "Connection") : bn?.label ?? "Node",
+    // entity panels (note, task, row, canvas node/edge) edit their identity in
+    // their OWN fs-head title block — the shell renders no h2 for them
+    title: nt || tk || isDataRow || bn || be ? "" : dc ? dc.name : fd ? fd.name : "Node",
     eyebrow: bn ? "canvas · " + bn.kind : be ? "canvas · link" : nt ? "note" : fd ? "folder" : tk ? "task" : dc ? "table" : isDataRow ? "page" : undefined,
-    subtitle: dc ? dc.rows.length + " rows · filters, sort and search live in the toolbar." : bn?.sub,
+    subtitle: dc ? dc.rows.length + " rows · filters, sort and search live in the toolbar." : undefined,
   });
   const isCanvas = p.target.panelType === "canvas";
   const isRef = p.placement === "reference";
@@ -959,10 +961,10 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
 
       <div className="panel-body" style={isCanvas ? { padding: 0, overflow: "hidden" } : undefined}>
         {isCanvas && <Suspense fallback={<div className="leaf-note">Loading the canvas…</div>}><CanvasBoard panelId={id} /></Suspense>}
-        {!isCanvas && (n.title !== "" || isRef) && <h2 className="panel-title" onClick={isRef ? () => deepLink(p.target.resourceKey, id) : undefined}
+        {!isCanvas && (n.title !== "" || isRef) && p.target.panelType !== "profile" && <h2 className="panel-title" onClick={isRef ? () => deepLink(p.target.resourceKey, id) : undefined}
           style={isRef ? { cursor: "pointer" } : undefined}
           title={isRef ? "Reopen this thread" : undefined}>{n.title || titleOfKey(p.target.resourceKey)}</h2>}
-        {!isCanvas && n.subtitle && <p className="panel-sub">{n.subtitle}</p>}
+        {!isCanvas && n.subtitle && p.target.panelType !== "profile" && <p className="panel-sub">{n.subtitle}</p>}
 
         {n.kpis && (
           <div className="stats">

@@ -98,6 +98,7 @@ pixel font-size that ignores them is a defect.
   pills, accent checks), row opens as the NEXT panel (a page) |
 | Free-form board / diagram | Canvas panel — WhitePaper nodes, 4-way handles, accent edges |
 | Wizard | Chained drills with foot CTAs |
+| Form/inspector card ("Element", "Details"…) | **The title IS the field**: the entity's name/subtitle edit in place as the panel's serif title block (`.fs-head`/`.fs-title`/`.fs-sub`, rhythm 6/12/18); every remaining group is a flat `.section` (mono label + hairline top) — form cards are FORBIDDEN |
 | Global search | ⌘K palette |
 | Chat / AI helper | Full-height drawer (⌘J) |
 

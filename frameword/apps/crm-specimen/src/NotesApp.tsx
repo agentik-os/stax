@@ -612,11 +612,12 @@ export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: str
   );
   return (
     <>
-      <div className="card">
-        <div className="lab">Task</div>
-        <div className="pop-sub" style={{ marginTop: 8 }}>Label</div>
-        <input className="d-input" autoFocus style={{ width: "100%", marginBottom: 8 }} value={t.label}
+      <div className="fs-head">
+        <input className="fs-title" autoFocus placeholder="Untitled task" aria-label="Label" value={t.label}
           onChange={(e) => patch({ label: e.target.value })} />
+      </div>
+      <div className="section">
+        <div className="lab">Status</div>
         <div className="pop-sub">Completed</div>
         <div style={{ marginTop: 4, marginBottom: 8 }}>
           <button className={"d-btn sm " + (t.done ? "" : "outline")} aria-pressed={t.done}
@@ -646,7 +647,7 @@ export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: str
           <TimePicker value={t.dueTime} onChange={(v) => patch({ dueTime: v })} />
         </div>
       </div>
-      <div className="card">
+      <div className="section">
         <div className="lab">Subtasks · {(t.subs ?? []).filter((x) => x.done).length}/{t.subs?.length ?? 0}</div>
         <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
           {(t.subs ?? []).map((f) => (
@@ -675,7 +676,7 @@ export function TaskDetail({ taskKey, panelId }: { taskKey: string; panelId: str
           <button className="d-btn outline sm" type="submit">Add</button>
         </form>
       </div>
-      <div className="card">
+      <div className="section">
         <div className="lab">Notes</div>
         <RichNotes key={id} html={t.notes ?? ""} placeholder="Context, links, next steps…"
           onChange={(h) => patch({ notes: h })} />

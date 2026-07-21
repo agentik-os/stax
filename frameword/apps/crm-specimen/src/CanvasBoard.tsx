@@ -700,27 +700,23 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
     board.update((st) => ({ ...st, nodes: st.nodes.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
   return (
     <>
-      <div className="card">
-        <div className="lab">Element</div>
-        <div className="pop-sub" style={{ marginTop: 8 }}>Label</div>
-        <input className="d-input" autoFocus style={{ width: "100%", marginBottom: 8 }} value={n.label}
+      <div className="fs-head">
+        <input className="fs-title" autoFocus placeholder="Untitled" aria-label="Label" value={n.label}
           onChange={(e) => upd({ label: e.target.value })} />
-        {n.kind === "card" && (<>
-          <div className="pop-sub">Subtitle</div>
-          <input className="d-input" style={{ width: "100%", marginBottom: 8 }} value={n.sub ?? ""}
+        {n.kind === "card" && (
+          <input className="fs-sub" placeholder="Subtitle…" aria-label="Subtitle" value={n.sub ?? ""}
             onChange={(e) => upd({ sub: e.target.value })} />
-        </>)}
-        {(n.kind === "note" || n.kind === "card") && (<>
-          <div className="pop-sub">Color — accent ramp</div>
-          <div className="swatch-row" style={{ marginTop: 4, marginBottom: 4 }}>
+        )}
+        {(n.kind === "note" || n.kind === "card") && (
+          <div className="swatch-row">
             {Object.entries(RAMP).map(([k, c]) => (
               <button key={k} className={"swatch" + ((n.color ?? "soft") === k ? " on" : "")}
                 style={{ background: c }} title={k} onClick={() => upd({ color: k })} />
             ))}
           </div>
-        </>)}
+        )}
       </div>
-      <div className="card">
+      <div className="section">
         <div className="lab">Notes — write like a blog</div>
         <RichNotes key={id} html={n.notes ?? ""}
           onChange={(h) => board.update((st) => ({ ...st, nodes: st.nodes.map((x) => (x.id === id ? { ...x, notes: h } : x)) }), false)} />
@@ -804,7 +800,7 @@ export function NodeInspector({ nodeKey, panelId }: { nodeKey: string; panelId: 
           })}
         </div>
       </div>
-      <div className="card">
+      <div className="section">
         <div className="lab">Arrange</div>
         <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
           <button className="d-btn outline sm"
@@ -841,12 +837,13 @@ export function EdgeInspector({ edgeKey, panelId }: { edgeKey: string; panelId: 
   );
   return (
     <>
-      <div className="card">
-        <div className="lab">Link</div>
-        <div className="pop-sub" style={{ marginTop: 8 }}>Label</div>
-        <input className="d-input" autoFocus style={{ width: "100%", marginBottom: 8 }} value={e.label ?? ""}
-          placeholder="Name this connection…" onChange={(ev) => upd({ label: ev.target.value })} />
-        <div className="pop-sub">Style</div>
+      <div className="fs-head">
+        <input className="fs-title" autoFocus placeholder="Name this connection…" aria-label="Label" value={e.label ?? ""}
+          onChange={(ev) => upd({ label: ev.target.value })} />
+      </div>
+      <div className="section">
+        <div className="lab">Style</div>
+        <div className="pop-sub">Line</div>
         <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
           <Tgl on={!e.dash} label="Solid" onClick={() => upd({ dash: false })} />
           <Tgl on={!!e.dash} label="Dashed" onClick={() => upd({ dash: true })} />

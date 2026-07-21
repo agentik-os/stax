@@ -85,7 +85,13 @@ export function ProfileBody() {
   };
   return (
     <>
-      <div className="card">
+      <div className="fs-head">
+        <input className="fs-title" placeholder="Your name" aria-label="Full name" value={p.name}
+          onChange={(e) => profile.set({ name: e.target.value })} />
+        <input className="fs-sub" placeholder="Your role / title…" aria-label="Role / title" value={p.title}
+          onChange={(e) => profile.set({ title: e.target.value })} />
+      </div>
+      <div className="section">
         <div className="lab">Picture</div>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 10 }}>
           <AvatarBubble size={56} />
@@ -101,21 +107,17 @@ export function ProfileBody() {
         </p>
       </div>
 
-      <div className="card">
+      <div className="section">
         <div className="lab">Identity</div>
-        <div style={{ marginTop: 10 }}>
-          <Row label="Full name" value={p.name} onChange={(v) => profile.set({ name: v })} />
+        <div style={{ marginTop: 2 }}>
           <Row label="Email" value={p.email} onChange={(v) => profile.set({ email: v })} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <Row label="Role / title" value={p.title} placeholder="e.g. Product designer" onChange={(v) => profile.set({ title: v })} />
-            <Row label="Pronouns" value={p.pronouns} placeholder="e.g. they/them" onChange={(v) => profile.set({ pronouns: v })} />
-          </div>
+          <Row label="Pronouns" value={p.pronouns} placeholder="e.g. they/them" onChange={(v) => profile.set({ pronouns: v })} />
         </div>
       </div>
 
-      <div className="card">
+      <div className="section">
         <div className="lab">About</div>
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 2 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <Row label="Company" value={p.company} onChange={(v) => profile.set({ company: v })} />
             <Row label="Location" value={p.location} placeholder="e.g. Paris, FR" onChange={(v) => profile.set({ location: v })} />

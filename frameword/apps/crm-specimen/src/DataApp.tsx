@@ -727,7 +727,7 @@ export function DataRow({ rowKey, panelId }: { rowKey: string; panelId: string }
         <input className="nt-title" autoFocus value={String(r.v[firstText.id] ?? "")} placeholder="Untitled"
           onChange={(e) => dataApp.setCell(c.id, r.id, firstText.id, e.target.value || undefined)} />
       )}
-      <div className="card">
+      <div className="section">
         <div className="lab">Fields</div>
         <div className="dt-props">
           {c.fields.filter((f) => f.id !== firstText?.id).map((f) => (
@@ -738,7 +738,7 @@ export function DataRow({ rowKey, panelId }: { rowKey: string; panelId: string }
           ))}
         </div>
       </div>
-      <div className="card">
+      <div className="section">
         <div className="lab">Page</div>
         <RichNotes key={r.id} html={r.page ?? ""} placeholder="Write the page — this row is also a document…"
           onChange={(h) => dataApp.patchRow(c.id, r.id, { page: h })} />

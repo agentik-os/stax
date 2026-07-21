@@ -620,8 +620,9 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .panel-foot .foot-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--accent-foreground); opacity: 1; }
 .panel-foot .foot-cta svg, .panel-foot .d-btn svg { flex: none; }
 /* borderless list sections — a mono label over content, never a card around cards */
-.section { margin: 0 0 18px; }
-.section > .lab { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+/* flat section — the A×F5 form grammar: hairline top, no box ever */
+.section { margin: 0; padding: 15px 0 16px; border-top: 1px solid var(--border); }
+.section > .lab { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 /* inline renaming — quiet, text-like, never a boxed input */
 .inline-edit { border: none; outline: none; box-shadow: none; background: color-mix(in oklab, var(--foreground) 6%, transparent); border-radius: 6px; padding: 2px 7px; font: inherit; font-size: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--foreground); width: 100%; min-width: 0; }
 .inline-edit:focus, .inline-edit:focus-visible { border: none; outline: none; box-shadow: none; background: color-mix(in oklab, var(--foreground) 9%, transparent); }
@@ -1057,3 +1058,17 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .sb-item.sub.on .no { color: var(--accent); }
 .sb-item.sub .sb-tt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .sb-subitem.on { background: var(--secondary); color: var(--foreground); }
+
+
+/* ── A×F5 form grammar — the title IS the field ──────────────────────
+   Entity panels (inspectors, tasks, profile, rows) edit their identity
+   directly in the panel's serif title block: no ELEMENT card, no chrome.
+   Vertical rhythm: title →6px→ subtitle →12px→ swatches →18px→ sections. */
+.fs-head { display: flex; flex-direction: column; gap: 6px; margin: 0 0 18px; }
+.fs-title { font-family: var(--font-serif); font-size: calc(var(--fz-title, 27px) * 0.96); font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; color: var(--foreground); width: 100%; border: none; background: transparent; padding: 2px 3px; border-radius: 7px; }
+.fs-title:focus { outline: none; background: var(--secondary); }
+.fs-title::placeholder { color: var(--muted-foreground); opacity: 0.5; }
+.fs-sub { font-size: var(--fz-body, 13.5px); color: var(--muted-foreground); width: 100%; border: none; background: transparent; padding: 2px 3px; border-radius: 6px; line-height: 1.5; }
+.fs-sub:focus { outline: none; background: var(--secondary); }
+.fs-sub::placeholder { color: var(--muted-foreground); opacity: 0.55; }
+.fs-head .swatch-row { margin: 12px 0 0 3px; }
