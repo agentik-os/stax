@@ -105,6 +105,13 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 .sb-subitem:hover { background: var(--secondary); color: var(--foreground); }
 /* foot — the separator bleeds edge to edge; blocks stretch wide */
 .sb-foot { margin: auto -10px 0; padding: 16px 12px 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; }
+/* the active space's KPIs above the foot: same grammar as .stats, compact.
+   Full-width hairline below it so the pipeline block keeps its own separator */
+.sb-kpi { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); margin: 0 -12px; padding: 0 14px 16px; border-bottom: 1px solid var(--border); }
+.sb-kpi > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; padding-right: 10px; }
+.sb-kpi > div + div { border-left: 1px solid var(--border); padding-left: 10px; }
+.sb-kpi .v { font-family: var(--font-mono); font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.sb-kpi .l { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .usage-block { padding: 0 2px; }
 .usage-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
 .usage-label { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); }
@@ -153,7 +160,7 @@ img.avatar { border: 1px solid var(--border); }
 .stats { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; margin: 2px 0 12px; }
 .stat { min-width: 0; border: none; border-radius: 0; padding: 2px 18px 2px 0; }
 .stat + .stat { border-left: 1px solid var(--border); padding-left: 18px; }
-.stat .lab { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); }
+.stat .lab { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stat .val { font-family: var(--font-mono); font-size: calc(var(--fz-title, 27px) * 1.0); line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; font-weight: 500; }
 
 /* section card */

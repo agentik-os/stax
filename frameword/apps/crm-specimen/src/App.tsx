@@ -240,8 +240,11 @@ function DashIcon({ id }: { id: string }) {
 function Shell() {
   const ws = useWorkspace();
   const compact = useIsCompact(640);
+  // below 900 the docked sidebar starves the stage (240px + a 640 L panel
+  // never fit): auto-close it and reopen as an overlay, like on mobile
+  const sbNarrow = useIsCompact(900);
   const [sbOpen, setSbOpen] = useState(() => window.innerWidth >= 640);
-  useEffect(() => { if (compact) setSbOpen(false); }, [compact]);
+  useEffect(() => { if (sbNarrow) setSbOpen(false); }, [sbNarrow]);
   const [dash, setDash] = useState<string>(() => localStorage.getItem("frameword-dash") ?? "framework");
   const [navOpen, setNavOpen] = useState<string | null>(null);
   useEffect(() => { localStorage.setItem("frameword-dash", dash); }, [dash]);
@@ -575,8 +578,8 @@ function Shell() {
       </div>
 
       <div className="mid">
-        {compact && sbOpen && <div className="sb-backdrop" onClick={() => setSbOpen(false)} />}
-        <aside className={"sidebar" + (sbOpen ? "" : " closed") + (compact ? " overlay" : "")} aria-label="Spaces">
+        {sbNarrow && sbOpen && <div className="sb-backdrop" onClick={() => setSbOpen(false)} />}
+        <aside className={"sidebar" + (sbOpen ? "" : " closed") + (sbNarrow ? " overlay" : "")} aria-label="Spaces">
           {compact && (
             <div className="sb-dash" role="tablist" aria-label="Dashboards">
               {DASHBOARDS.map((d) => (
@@ -651,6 +654,7 @@ function Shell() {
                       ws.openPath(sbSpace.spaceId, [sbSpace.rootKey, ...chainKeys].map(targetOf));
                     } else if (ws.state.rootInstanceId) ws.focusPanel(ws.state.rootInstanceId);
                     document.querySelector(".stage")?.scrollTo({ left: 0, behavior: "smooth" });
+                    if (sbNarrow) setSbOpen(false);
                   }}>
                   {sbSpace.label}
                 </button>
@@ -676,7 +680,7 @@ function Shell() {
                   return (
                     <div key={key}>
                       <button className={"sb-item sub" + (onPath ? " on" : "")}
-                        onClick={() => { deepLink(key); if (compact) setSbOpen(false); }}>
+                        onClick={() => { deepLink(key); if (sbNarrow) setSbOpen(false); }}>
                         <span className="no">{String(i + 1).padStart(2, "0")}</span>
                         <span className="sb-tt">{DOMAIN[key].title}</span>
                         {canExpand && (
@@ -690,7 +694,7 @@ function Shell() {
                         <div className="sb-sub">
                           {kids.map((k2) => (
                             <button key={k2} className={"sb-subitem" + (pathKeys.has(k2) ? " on" : "")}
-                              onClick={() => { deepLink(k2); if (compact) setSbOpen(false); }}>
+                              onClick={() => { deepLink(k2); if (sbNarrow) setSbOpen(false); }}>
                               {DOMAIN[k2].title}
                             </button>
                           ))}
@@ -709,7 +713,7 @@ function Shell() {
                   {g.spaces.map((sp) => (
                     <button key={sp.spaceId}
                       className={"sb-item" + (ws.state.spaceId === sp.spaceId ? " on" : "")}
-                      onClick={() => { ws.openSpace(sp.spaceId, targetOf(sp.rootKey)); setSbView("space"); if (compact) setSbOpen(false); }}>
+                      onClick={() => { ws.openSpace(sp.spaceId, targetOf(sp.rootKey)); setSbView("space"); if (sbNarrow) setSbOpen(false); }}>
                       <SpaceIcon id={sp.spaceId} />
                       {sp.label}
                       <span className="chev">›</span>
@@ -720,6 +724,19 @@ function Shell() {
             ))
           )}
           <div className="sb-foot">
+            {(() => {
+              // the active space's KPIs, mirrored from its root node: same
+              // numbers the root panel shows, always in reach above the foot
+              const rk = ws.state.rootInstanceId ? ws.state.panelsById[ws.state.rootInstanceId]?.target.resourceKey : null;
+              const kp = rk ? DOMAIN[rk]?.kpis : null;
+              return kp?.length ? (
+                <div className="sb-kpi" aria-label="Space KPIs">
+                  {kp.map((k) => (
+                    <div key={k.l}><span className="l">{k.l}</span><span className="v">{k.v}</span></div>
+                  ))}
+                </div>
+              ) : null;
+            })()}
             <div>
               <div className="usage-block">
                 <div className="usage-head">

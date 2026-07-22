@@ -163,6 +163,11 @@ outside it.
   600 row, click focuses/reopens the main; collapse toggle always rendered, disabled
   when inert; numbered children 01…, one-level expansion ≤14, active thread
   highlighted) · compact adds a 4-icon dashboard switcher row ·
+- SPACE KPIs block: when the active space's ROOT declares kpis, the sidebar
+  mirrors them right above the pipeline block (same source of truth as the panel's
+  .stats, never a second dataset): equal grid tracks, mono tabular values, mono
+  uppercase labels (ellipsised), a full-width hairline below so the pipeline keeps
+  its own separator. No kpis on the root → the block does not render ·
 - usage/pipeline block (mono label, value, hairline track) ·
 - account chip (avatar 28 + name + role/email, ⋯): menu = Profile · Settings ·
   Documentation · separator · Language accordion (inline rows, flag 18 SVGs, no
@@ -178,6 +183,30 @@ outside it.
 shortcuts) — never a page; profile = entity panel (fs-head name/role); language and
 theme are DEVICE-LOCAL prefs (localStorage), never navigation state.
 
-**Mobile ≤640 (PushHost):** one card + back, ref chips with remove ×, sidebar becomes
-an overlay carrying the dashboard switcher; ≤760 hides the topbar nav (the sidebar
-switcher takes over).
+**Responsive (three tiers):** ≥900 the sidebar is DOCKED (240px beside the stage);
+640-900 it AUTO-CLOSES and reopens as an OVERLAY with backdrop (a docked 240px
+sidebar starves the stage: a 640 L panel never fits), any nav click closes it;
+≤640 is PushHost: one card + back, ref chips with remove ×, the overlay sidebar
+carries the dashboard switcher; ≤760 hides the topbar nav (the sidebar switcher
+takes over). Fixed drawers (agent 380, sheet 440, palette 560) all clamp to 88-92%
+of the frame; stat labels ellipsise instead of clipping.
+
+**The shell at a glance:**
+
+```
+┌──────────────────── topbar h52 ────────────────────┐
+│ ☰ · nav dropdowns · spacer · GO TO ⌘K · utils · 🔔 │
+├─────────┬──────────────────────────────────────────┤
+│ sidebar │  STAGE (scrolls horizontally)            │
+│  org ⇅  │  ┌─ panel ─┐ ┌─ panel ─┐ ┌─ ref S ─┐    │
+│  ⌘K row │  │ bar h56 │ │         │ │ (rail)  │    │
+│  spaces │  │ body    │ │         │ │         │    │
+│  ────── │  │ foot    │ │         │ │         │    │
+│  KPIs*  │  └─────────┘ └─────────┘ └─────────┘    │
+│  ────── │   *KPIs: only when the space's root      │
+│  pipe   │    declares them (mirrors .stats)        │
+│  avatar │                                          │
+├─────────┴──────────────────────────────────────────┤
+│ crumbbar h34: home → crumbs · toasts · gh · theme  │
+└────────────────────────────────────────────────────┘
+```

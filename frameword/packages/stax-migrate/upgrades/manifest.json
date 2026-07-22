@@ -83,6 +83,12 @@
       "since": "0.4.3",
       "area": "design",
       "title": "Menu design v2 \u00b7 XXL exact-width semantics \u00b7 double-click panel align"
+    },
+    {
+      "id": "U-015",
+      "since": "0.4.4",
+      "area": "ux",
+      "title": "Sidebar space KPIs (root mirror) + three-tier responsive shell"
     }
   ]
 }
