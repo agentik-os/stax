@@ -89,6 +89,12 @@
       "since": "0.4.4",
       "area": "ux",
       "title": "Sidebar space KPIs (root mirror) + three-tier responsive shell"
+    },
+    {
+      "id": "U-016",
+      "since": "0.4.5",
+      "area": "ux",
+      "title": "Panel search in the bar (flat row) + quiet secondary / destructive foot buttons"
     }
   ]
 }

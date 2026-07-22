@@ -302,8 +302,12 @@ img.avatar { border: 1px solid var(--border); }
 body[data-dots="off"] .stage, body[data-dots="off"] .push-stage { background-image: none; }
 
 /* foot search (the zip's per-panel search) */
-.foot-search { flex: 1; min-width: 0; border: none; background: transparent; padding: 8px 4px; font-size: calc(var(--fz-body, 13.5px) * 0.93); font-family: var(--font-sans); color: var(--foreground); outline: none; box-shadow: none; }
-.foot-search:focus, .foot-search:focus-visible { border: none; outline: none; box-shadow: none; background: transparent; }
+/* the panel SEARCH row: chrome under the bar, flat, never in the foot */
+.panel-search { display: flex; align-items: center; gap: 8px; padding: 4px 18px; border-bottom: 1px solid var(--border); flex: none; color: var(--muted-foreground); }
+.panel-search input { flex: 1; min-width: 0; border: none; background: transparent; padding: 7px 0; font-size: calc(var(--fz-body, 13.5px) * 0.93); font-family: var(--font-sans); color: var(--foreground); outline: none; box-shadow: none; }
+.panel-search input:focus, .panel-search input:focus-visible { border: none; outline: none; box-shadow: none; background: transparent; }
+.ps-clr { width: 22px; height: 22px; border-radius: 6px; color: var(--muted-foreground); flex: none; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.ps-clr:hover { background: var(--secondary); color: var(--foreground); }
 .drill-empty { padding: 12px 4px; font-size: 12.5px; color: var(--muted-foreground); }
 
 /* settings — accent swatches */
@@ -657,12 +661,17 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .panel-foot .foot-cta, .panel-foot .d-btn {
   height: 30px; padding: 0 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--font-sans); font-size: calc(var(--fz-body, 13.5px) - 1.5px); font-weight: 500;
-  letter-spacing: 0; text-transform: none; line-height: 1;
-  background: transparent; border: 1px solid var(--accent); color: var(--accent); box-shadow: none;
+  letter-spacing: 0; text-transform: none; line-height: 1; box-shadow: none;
 }
-.panel-foot .d-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); transform: none; }
-.panel-foot .foot-cta { background: var(--accent); color: var(--accent-foreground); }
+/* ONE primary per foot (accent filled); everything else is QUIET */
+.panel-foot .foot-cta { background: var(--accent); border: 1px solid var(--accent); color: var(--accent-foreground); }
 .panel-foot .foot-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--accent-foreground); opacity: 1; }
+/* secondary: neutral hairline, ink text, secondary fill on hover — never accent */
+.panel-foot .d-btn, .panel-foot .foot-cta.ghost { background: transparent; border: 1px solid var(--border); color: var(--ink-2); }
+.panel-foot .d-btn:hover, .panel-foot .foot-cta.ghost:hover { background: var(--secondary); color: var(--foreground); border-color: var(--border); transform: none; }
+/* destructive: red TEXT button, soft red fill on hover */
+.panel-foot .d-btn.destructive { border-color: transparent; color: var(--destructive); }
+.panel-foot .d-btn.destructive:hover { background: color-mix(in oklab, var(--destructive) 10%, transparent); color: var(--destructive); border-color: transparent; }
 .panel-foot .foot-cta svg, .panel-foot .d-btn svg { flex: none; }
 /* borderless list sections — a mono label over content, never a card around cards */
 /* flat section — the A×F5 form grammar: hairline top, no box ever */

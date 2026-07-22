@@ -981,7 +981,8 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
   const isFluid = effSize === "XXL";
   const refIndex = ws.state.referenceRailOrder.indexOf(id);
   // per-panel search (the zip's foot search): panels with a real list get it
-  const searchable = !isRef && (n.children?.length ?? 0) >= 4;
+  const searchable = !isRef && ((n.children?.length ?? 0) >= 4
+    || ["datahome", "notes", "notefolder", "tasks"].includes(p.target.panelType));
   const kids = (n.children ?? []).filter((k) =>
     !q.trim() || (DOMAIN[k].title + " " + (DOMAIN[k].subtitle ?? "")).toLowerCase().includes(q.trim().toLowerCase()),
   );
@@ -1037,6 +1038,12 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
               onClick={() => { const i = ws.path.indexOf(id); if (i < ws.path.length - 1) ws.focusPanel(ws.path[i + 1]); }}>›</button>
           </>
         ) : null}
+        {searchable && (
+          <button className={"bar-btn" + (sOpen ? " on-btn" : "")} title="Search this panel"
+            onClick={() => { setSOpen((v) => !v); setQ(""); }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+          </button>
+        )}
         {!isRef && (
           <button className={"pin-btn" + (retained ? " on" : "")} aria-pressed={retained}
             title={isRoot ? "Pin: keep this Space in the rail when you switch" : "Pin: keep this panel when drilling elsewhere"}
@@ -1050,6 +1057,16 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             : "Close"}
           onClick={() => ws.closePanel(id)}>×</button>
       </div>
+
+      {sOpen && (
+        <div className="panel-search">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setSOpen(false); setQ(""); } }}
+            placeholder="Search this panel…" />
+          <button className="ps-clr" title="Close search" onClick={() => { setSOpen(false); setQ(""); }}>×</button>
+        </div>
+      )}
 
       <div className="panel-body" style={isCanvas ? { padding: 0, overflow: "hidden" } : undefined}>
         {isCanvas && <Suspense fallback={<div className="leaf-note">Loading the canvas…</div>}><CanvasBoard panelId={id} /></Suspense>}
@@ -1078,12 +1095,12 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             {p.target.panelType === "canvasedge" && <Suspense fallback={<div className="leaf-note">Loading…</div>}><EdgeInspector edgeKey={p.target.resourceKey} panelId={id} /></Suspense>}
             {p.target.panelType === "blocklive" && <BlockLive name={p.target.resourceKey} />}
             {p.target.panelType === "profile" && <ProfileBody />}
-            {p.target.panelType === "notes" && <NotesRoot panelId={id} />}
-            {p.target.panelType === "tasks" && <TasksRoot panelId={id} />}
+            {p.target.panelType === "notes" && <NotesRoot panelId={id} searchQ={q} />}
+            {p.target.panelType === "tasks" && <TasksRoot panelId={id} searchQ={q} />}
             {p.target.panelType === "note" && <NoteEditor noteKey={p.target.resourceKey} panelId={id} />}
-            {p.target.panelType === "notefolder" && <FolderPanel folderKey={p.target.resourceKey} panelId={id} />}
+            {p.target.panelType === "notefolder" && <FolderPanel folderKey={p.target.resourceKey} panelId={id} searchQ={q} />}
             {p.target.panelType.startsWith("pf") && <PlatformBody panelType={p.target.panelType} resourceKey={p.target.resourceKey} panelId={id} />}
-            {p.target.panelType === "datahome" && <DataHome panelId={id} />}
+            {p.target.panelType === "datahome" && <DataHome panelId={id} searchQ={q} />}
             {p.target.panelType === "datatable" && <DataTable colKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "datarow" && <DataRow rowKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "task" && <TaskDetail taskKey={p.target.resourceKey} panelId={id} />}
@@ -1128,6 +1145,9 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             )}
             {(n.children ?? []).length > 0 && (
               <div className="drills">
+                {q.trim() !== "" && kids.length === 0 && (
+                  <p className="drill-empty">No matches: clear the search above.</p>
+                )}
                 {kids.map((key, i) => (
                   <button key={key} className="drill"
                     onClick={() => (isRef ? deepLink(key) : ws.openDetail(id, targetOf(key)))}>
@@ -1162,18 +1182,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
       </div>
 
       <div className="panel-foot">
-        {searchable && (
-          <button className={"foot-gear" + (sOpen ? " on-btn" : "")} style={{ marginLeft: 0 }}
-            title="Search this panel"
-            onClick={() => { setSOpen((v) => !v); setQ(""); }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          </button>
-        )}
-        {sOpen ? (
-          <input className="foot-search" autoFocus value={q} onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setSOpen(false); setQ(""); } }}
-            placeholder="Search this panel…" />
-        ) : isRef ? (
+        {isRef ? (
           <span className="foot-note"><span className="sig">✶</span> Pinned: click the title or a drill to reopen</span>
         ) : n.footActions ? (
           n.footActions.map((a) => (

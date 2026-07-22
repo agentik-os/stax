@@ -263,12 +263,14 @@ const PRIO_DOT: Record<Prio, string> = {
 };
 
 /* ── root panel: notes list + task list ─────────────────────────────── */
-export function NotesRoot({ panelId }: { panelId: string }) {
+export function NotesRoot({ panelId, searchQ = "" }: { panelId: string; searchQ?: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
 
-  const folders = s.folders ?? [];
-  const loose = [...s.notes].filter((n) => !n.folder || !folders.some((f) => f.id === n.folder))
+  const q = searchQ.trim().toLowerCase();
+  const folders = (s.folders ?? []).filter((f) => !q || f.name.toLowerCase().includes(q));
+  const loose = [...s.notes].filter((n) => !n.folder || !(s.folders ?? []).some((f) => f.id === n.folder))
+    .filter((n) => !q || (n.title || "Untitled note").toLowerCase().includes(q))
     .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.ts - a.ts);
   const openNote = (id: string) =>
     ws.openDetail(panelId, { panelType: "note", resourceKey: "nte:" + id });
@@ -278,7 +280,8 @@ export function NotesRoot({ panelId }: { panelId: string }) {
   return (
     <div className="section">
       <div className="lab">Notes · {s.notes.length}</div>
-      {s.notes.length === 0 && folders.length === 0 && <p style={{ marginTop: 6 }}>No notes yet: start one from the foot.</p>}
+      {s.notes.length === 0 && (s.folders ?? []).length === 0 && <p style={{ marginTop: 6 }}>No notes yet: start one from the foot.</p>}
+      {q && folders.length === 0 && loose.length === 0 && <p style={{ marginTop: 6 }}>No matches: clear the search above.</p>}
       <div className="drills" style={{ marginTop: 8 }}>
         {folders.map((f) => {
           const count = s.notes.filter((n) => n.folder === f.id).length;
@@ -316,14 +319,16 @@ export function NotesRoot({ panelId }: { panelId: string }) {
 }
 
 /* ── folder panel: a folder opens its own panel of notes ────────────── */
-export function FolderPanel({ folderKey, panelId }: { folderKey: string; panelId: string }) {
+export function FolderPanel({ folderKey, panelId, searchQ = "" }: { folderKey: string; panelId: string; searchQ?: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
   const id = folderKey.slice(4);
   const folder = (s.folders ?? []).find((f) => f.id === id);
   const [ren, setRen] = useState<string | null>(null);
   if (!folder) return <div className="leaf-note">This folder was deleted.</div>;
+  const q = searchQ.trim().toLowerCase();
   const notes = s.notes.filter((n) => n.folder === id)
+    .filter((n) => !q || (n.title || "Untitled note").toLowerCase().includes(q))
     .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.ts - a.ts);
   return (
     <div className="section">
@@ -344,7 +349,7 @@ export function FolderPanel({ folderKey, panelId }: { folderKey: string; panelId
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
         </button>
       </div>
-      {notes.length === 0 && <p style={{ marginTop: 6 }}>Empty folder: add a note from the foot.</p>}
+      {notes.length === 0 && <p style={{ marginTop: 6 }}>{q ? "No matches: clear the search above." : "Empty folder: add a note from the foot."}</p>}
       <div className="drills" style={{ marginTop: 8 }}>
         {notes.map((n) => (
           <div key={n.id} className="cv-conn-row">
@@ -366,9 +371,11 @@ export function FolderPanel({ folderKey, panelId }: { folderKey: string; panelId
   );
 }
 
-export function TasksRoot({ panelId }: { panelId: string }) {
+export function TasksRoot({ panelId, searchQ = "" }: { panelId: string; searchQ?: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
+  const q = searchQ.trim().toLowerCase();
+  const matches = (t: Task) => !q || t.label.toLowerCase().includes(q);
   const view = s.view ?? "list";
   const [dragId, setDragId] = useState<string | null>(null);
   const [renCat, setRenCat] = useState<{ id: string; v: string } | null>(null);
@@ -461,7 +468,7 @@ export function TasksRoot({ panelId }: { panelId: string }) {
       </div>
 
       {view === "list" && s.cats.map((c) => {
-        const list = s.tasks.filter((t) => (t.cat ?? s.cats[0].id) === c.id).sort((a, b) => Number(a.done) - Number(b.done));
+        const list = s.tasks.filter((t) => (t.cat ?? s.cats[0].id) === c.id).filter(matches).sort((a, b) => Number(a.done) - Number(b.done));
         const open = list.filter((t) => !t.done).length;
         return (
           <div className="card" key={c.id}>
@@ -495,7 +502,7 @@ export function TasksRoot({ panelId }: { panelId: string }) {
       {view === "kanban" && (
         <div className="nt-kanban">
           {s.cats.map((c) => {
-            const list = s.tasks.filter((t) => (t.cat ?? s.cats[0].id) === c.id).sort((a, b) => Number(a.done) - Number(b.done));
+            const list = s.tasks.filter((t) => (t.cat ?? s.cats[0].id) === c.id).filter(matches).sort((a, b) => Number(a.done) - Number(b.done));
             const open = list.filter((t) => !t.done).length;
             return (
               <div key={c.id}

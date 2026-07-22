@@ -63,9 +63,17 @@ values in this file.
     (Safari fires :focus-visible on click); keyboard keeps it. Never accent.
   - `.anat-row` — hairline top, padding 12/0, mono accent label column 104px.
   - Popover labels `.pop-sub` — margin-bottom 6.
-- The foot is the ONLY action zone: primary CTA = accent bg + **accent border** +
-  `--accent-hover` on hover; destructive = `--destructive` text. Never object-state
-  toggles (pin/unpin) in the foot; never metadata lines.
+- The foot is the ONLY action zone, with a strict hierarchy: ONE primary CTA per
+  foot (accent bg + accent border + `--accent-hover` on hover); SECONDARY actions
+  are QUIET (hairline `--border`, ink-2 text, secondary fill on hover — never
+  accent chrome); destructive = `--destructive` TEXT on transparent chrome, soft
+  red fill on hover. Never object-state toggles (pin/unpin) in the foot; never
+  metadata lines.
+- The panel SEARCH is CHROME, never an action: list panels (a real list: 4+
+  children or an app list) get a ⌕ button in the BAR that toggles a flat search
+  row under it (borderless input, hairline bottom, autofocus; Escape closes the
+  ROW, not the panel). It live-filters the panel's lists; zero matches show a
+  one-sentence empty state with the next action.
 
 ## 2 · Type & numbers
 
@@ -121,6 +129,7 @@ pixel font-size that ignores them is a defect.
 | Inline rename / boxed edit-in-place | `.inline-edit` — text-like, zero border, zero ring |
 | Focus ring on inputs | ONE accent-tinted border; outline reserved for buttons (keyboard) |
 | Toolbar of 10+ flat buttons | Grouped smart menus (trigger shows active state) |
+| List page with a search box | Bar ⌕ + flat search row under the bar (chrome); never an input in the foot |
 | Menu / dropdown items | Sans 500 rows; MONO uppercase group labels; selected = accent-soft text + right ✓ — never a filled slab; segments keep the soft fill |
 | Record side peek (Notion-style) | Row hover reveals an `Open` chip on the title cell → the ENTITY SHEET: a fixed right drawer (agent-drawer language, 440px) with header (table eyebrow · icon actions ↗/⋯/×), serif editable title, PIPELINE PILLS derived from the first select field (click = set stage, live in the grid), underline facet tabs (Fields · Page · Activity · n) and a per-row note/task stream with a composer. `Open as panel` converts the peek into a thread panel |
 | Toast / snackbar stacks | `.toast` mono pill, bottom-center |

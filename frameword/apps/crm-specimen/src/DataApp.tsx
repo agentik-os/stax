@@ -339,15 +339,18 @@ function calcValue(rows: Row[], field: Field, op: string): string {
 }
 
 /* ── home: the list of collections ───────────────────────────────────── */
-export function DataHome({ panelId }: { panelId: string }) {
+export function DataHome({ panelId, searchQ = "" }: { panelId: string; searchQ?: string }) {
   const ws = useWorkspace();
   const s = useDataApp();
+  const q = searchQ.trim().toLowerCase();
+  const collections = s.collections.filter((c) => !q || c.name.toLowerCase().includes(q));
   return (
     <div className="section">
       <div className="lab">Tables · {s.collections.length}</div>
       {s.collections.length === 0 && <p style={{ marginTop: 6 }}>No tables yet: create one from the foot.</p>}
+      {q && collections.length === 0 && s.collections.length > 0 && <p style={{ marginTop: 6 }}>No matches: clear the search above.</p>}
       <div className="drills" style={{ marginTop: 8 }}>
-        {s.collections.map((c) => (
+        {collections.map((c) => (
           <button key={c.id} className="drill"
             onClick={() => ws.openDetail(panelId, { panelType: "datatable", resourceKey: "dtc:" + c.id })}>
             <span className="no">
