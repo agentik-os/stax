@@ -12,6 +12,7 @@
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { readFileSync } from "node:fs";
+import { parseParityCsv } from "./parity-parse.mjs";
 
 const [, , urlArg, csvArg] = process.argv;
 if (!urlArg || !csvArg) { console.error("usage: parity.mjs <url> <parity.csv>"); process.exit(2); }
@@ -32,20 +33,7 @@ async function loadPlaywright() {
 }
 const { chromium } = await loadPlaywright();
 
-const rows = readFileSync(csvArg, "utf8").split("\n").map((l) => l.trim()).filter(Boolean)
-  .filter((l, i) => !(i === 0 && l.toLowerCase().startsWith("id,")))
-  .map((l) => {
-    const first = l.indexOf(",");
-    const last = l.lastIndexOf(",");
-    const mid = l.slice(first + 1, last);
-    const probeSplit = mid.lastIndexOf(",");
-    return {
-      id: l.slice(0, first).trim(),
-      capability: mid.slice(0, probeSplit).trim(),
-      probe: mid.slice(probeSplit + 1).trim().replace(/^#/, ""),
-      expect: l.slice(last + 1).trim(),
-    };
-  });
+const rows = parseParityCsv(readFileSync(csvArg, "utf8"));
 
 const b = await chromium.launch();
 const pg = await b.newPage({ viewport: { width: 1440, height: 900 } });

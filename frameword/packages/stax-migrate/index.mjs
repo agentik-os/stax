@@ -22,6 +22,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { countDrift } from "./verify/drift.mjs";
 import readline from "node:readline/promises";
 
 const CLI_PATH = fileURLToPath(import.meta.url);
@@ -767,8 +768,7 @@ export function cmdDoctor(target) {
   for (const p of files) {
     if (/tokens?\.css$/.test(p)) continue;
     const t = fs.readFileSync(p, "utf8");
-    const h = (t.match(/#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})(?![0-9a-f])/gi) ?? []).length;
-    const z = (t.match(/font-size:\s*\d/g) ?? []).length;
+    const { hex: h, fz: z } = countDrift(t);
     if (h + z > 0) offenders.set(path.relative(target, p), h + z);
     hex += h; fz += z;
   }
