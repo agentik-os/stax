@@ -193,7 +193,6 @@ img.avatar { border: 1px solid var(--border); }
 .drill:hover .no { color: var(--accent); }
 .drill .arr { transition: transform 130ms var(--ease), color 130ms var(--ease); }
 .drill:hover .arr { color: var(--accent); transform: translateX(3px); }
-.drills .drill:last-child:hover::after { border-color: var(--accent); }
 /* rows pairing a drill with a trailing action: the separator belongs to the ROW,
    inset back to the shared gutter bounds (the drill alone stops at the button) */
 .cv-conn-row { position: relative; transition: background 130ms var(--ease); }
@@ -206,7 +205,6 @@ img.avatar { border: 1px solid var(--border); }
 .cv-conn-row:hover .arr { transform: translateX(3px); }
 .cv-conn-row:hover::after { border-color: var(--accent); left: 0; right: 0; }
 .drills .cv-conn-row:last-child::after { border-bottom-color: transparent; }
-.drills .cv-conn-row:last-child:hover::after { border-color: var(--accent); }
 .drill .no { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); color: var(--muted-foreground); flex: none; }
 .drill .bd { flex: 1; min-width: 0; }
 .drill .tt { font-weight: 500; font-size: 13px; }

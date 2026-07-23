@@ -50,7 +50,10 @@ values in this file.
     only the FILL bleeds, never a line. Hover = secondary fill + the row's own 1px
     hairline turns **accent** and EXPANDS to the fill's edges (a line narrower than
     its surface reads broken); the line above the hovered row expands too, framing
-    the fill symmetrically. Index/arrow accent, arrow slides 3px.
+    the fill symmetrically. The LAST row has no hairline at rest (the dedup law
+    gives it to whatever follows), so hover paints none there: inventing a line
+    under the cursor doubles the next block's separator. Index/arrow accent,
+    arrow slides 3px.
     Row meta tags are flat mono uppercase, never pills. A row that pairs a drill
     with a TRAILING action (pin, edit) draws the separator on the ROW wrapper, not
     the drill, so the line still reaches the shared right bound.
