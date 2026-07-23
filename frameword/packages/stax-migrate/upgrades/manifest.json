@@ -167,6 +167,12 @@
       "since": "0.13.0",
       "area": "ux",
       "title": "UX Wave 2: per-space thread memory, symmetric overlay exits, eyebrow identity, drag truth"
+    },
+    {
+      "id": "U-029",
+      "since": "0.14.0",
+      "area": "ux",
+      "title": "UX Wave 3: sheet foot+riffle, hairline slabs, digit keys, range select, crumb minimap, first-run tour"
     }
   ]
 }

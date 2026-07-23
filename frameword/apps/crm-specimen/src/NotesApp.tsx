@@ -189,7 +189,7 @@ export function DatePicker({ value, onChange }: { value?: string; onChange: (v?:
   };
   return (
     <span className="dp-wrap">
-      <button className={"d-btn sm " + (value ? "" : "outline")} onClick={(e) => { setPos(popPos(e, 330, 232)); setOpen((v) => !v); }}>
+      <button className={"d-btn sm " + (value ? "dp-has" : "outline")} onClick={(e) => { setPos(popPos(e, 330, 232)); setOpen((v) => !v); }}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ marginRight: 6 }}><rect x="3" y="4" width="18" height="17" rx="3" /><path d="M8 2v4M16 2v4M3 9h18" /></svg>
         {value ? fmtDue(value) : "Date"}
       </button>

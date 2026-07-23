@@ -571,13 +571,30 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
     </th>
   );
 
-  const toggleRow = (id: string, on: boolean) =>
-    setSelRows((prev) => { const n = new Set(prev); if (on) n.add(id); else n.delete(id); return n; });
+  const lastSel = useRef<string | null>(null);
+  const toggleRow = (id: string, on: boolean, shift = false) =>
+    setSelRows((prev) => {
+      const n = new Set(prev);
+      if (shift && lastSel.current) {
+        const order = rows.map((r) => r.id);
+        const a = order.indexOf(lastSel.current), b2 = order.indexOf(id);
+        if (a !== -1 && b2 !== -1) {
+          for (let k = Math.min(a, b2); k <= Math.max(a, b2); k++) { if (on) n.add(order[k]); else n.delete(order[k]); }
+          lastSel.current = id;
+          return n;
+        }
+      }
+      if (on) n.add(id); else n.delete(id);
+      lastSel.current = id;
+      return n;
+    });
   const BodyRow = ({ r }: { r: Row }) => (
     <tr className={selRows.has(r.id) ? "dt-selrow" : undefined}>
       <td className="dt-opentd">
         <input type="checkbox" tabIndex={-1} className={"dt-selbox" + (selRows.size > 0 ? " show" : "")}
-          checked={selRows.has(r.id)} onChange={(e) => toggleRow(r.id, e.target.checked)} />
+          checked={selRows.has(r.id)}
+          onClick={(e) => toggleRow(r.id, !selRows.has(r.id), (e as React.MouseEvent).shiftKey)}
+          onChange={() => { /* handled on click for shift detection */ }} />
         <button className="dt-open" tabIndex={-1} title="Open as a page" onClick={() => openRow(r.id)}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
         </button>
@@ -850,6 +867,7 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
         <>
           <div className="sheet-bg" onMouseDown={() => closeSheet()} />
           <RowSheet c={c} rowId={sheet} panelId={panelId}
+            siblings={rows.map((r) => r.id)} onRiffle={(rid) => setSheet(rid)}
             onOpenPanel={() => { openRow(sheet); closeSheet(); }}
             onClose={() => closeSheet()} closing={sheetOut} />
         </>
@@ -1017,8 +1035,9 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
 /* ── the row panel: a Notion-class page ─────────────────────────────── */
 /* ── the entity SHEET: rich header (title + pipeline pills from the first
    select field) · facet segments · activity — structure any table inherits ── */
-function RowSheet({ c, rowId, panelId, onOpenPanel, onClose, closing }: {
+function RowSheet({ c, rowId, panelId, onOpenPanel, onClose, closing, siblings = [], onRiffle }: {
   c: Collection; rowId: string; panelId: string; onOpenPanel: () => void; onClose: () => void; closing?: boolean;
+  siblings?: string[]; onRiffle?: (rid: string) => void;
 }) {
   const s = useDataApp();
   void s;
@@ -1041,7 +1060,15 @@ function RowSheet({ c, rowId, panelId, onOpenPanel, onClose, closing }: {
   const acts = r.activity ?? [];
   const open = acts.filter((a) => a.kind === "task" && !a.done).length;
   return (
-    <aside className={"sheet" + (closing ? " out" : "")} aria-label="Row sheet" ref={bodyRef}>
+    <aside className={"sheet" + (closing ? " out" : "")} aria-label="Row sheet" ref={bodyRef}
+      onKeyDown={(e) => {
+        const t = e.target as HTMLElement;
+        if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) return;
+        if (!onRiffle || siblings.length < 2) return;
+        const idx = siblings.indexOf(rowId);
+        if (e.key === "ArrowDown" && idx < siblings.length - 1) { e.preventDefault(); onRiffle(siblings[idx + 1]); }
+        if (e.key === "ArrowUp" && idx > 0) { e.preventDefault(); onRiffle(siblings[idx - 1]); }
+      }} tabIndex={-1}>
       <div className="sheet-head">
         <div className="sh-row">
           <span className="eyebrow">{c.name} · page</span>
@@ -1080,11 +1107,6 @@ function RowSheet({ c, rowId, panelId, onOpenPanel, onClose, closing }: {
             })}
           </div>
         )}
-        <div className="sh-tabs">
-          {([["fields", "Fields"], ["page", "Page"], ["activity", "Activity" + (acts.length ? " · " + (open || acts.length) : "")]] as const).map(([k, label]) => (
-            <button key={k} className={"sh-tab" + (facet === k ? " on" : "")} onClick={() => setFacet(k)}>{label}</button>
-          ))}
-        </div>
       </div>
       <div className="sheet-body">
         {facet === "fields" && (
@@ -1131,7 +1153,27 @@ function RowSheet({ c, rowId, panelId, onOpenPanel, onClose, closing }: {
           </>
         )}
       </div>
-    </aside>
+      <div className="sheet-foot">
+        <div className="foot-seg" role="tablist" aria-label="Facet">
+          {([["fields", "Fields"], ["page", "Page"], ["activity", "Activity" + (acts.length ? " · " + (open || acts.length) : "")]] as const).map(([k, label]) => (
+            <button key={k} role="tab" aria-selected={facet === k} className={facet === k ? "on" : undefined} onClick={() => setFacet(k)}>{label}</button>
+          ))}
+        </div>
+        <span style={{ flex: 1 }} />
+        {siblings.length > 1 && onRiffle && (() => {
+          const idx = siblings.indexOf(rowId);
+          return (
+            <>
+              <span className="foot-note">{idx + 1}/{siblings.length}</span>
+              <button className="foot-gear" style={{ marginLeft: 0 }} title="Previous record (↑)" disabled={idx <= 0}
+                onClick={() => idx > 0 && onRiffle(siblings[idx - 1])}>‹</button>
+              <button className="foot-gear" style={{ marginLeft: 0 }} title="Next record (↓)" disabled={idx >= siblings.length - 1}
+                onClick={() => idx < siblings.length - 1 && onRiffle(siblings[idx + 1])}>›</button>
+            </>
+          );
+        })()}
+      </div>
+  </aside>
   );
 }
 

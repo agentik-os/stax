@@ -467,6 +467,7 @@ function Shell() {
   const runTour = useCallback(() => {
     if (tourOn.current) return;
     tourOn.current = true;
+    try { localStorage.setItem("frameword-toured", "1"); } catch { /* private mode */ }
     const sx = (window as unknown as { stax: Record<string, (...a: never[]) => unknown> }).stax;
     const steps: [string, () => unknown][] = [
       ["A Space opens as its ROOT panel", () => (sx.openSpace as (s: string) => void)("overview")],
@@ -607,6 +608,16 @@ function Shell() {
           if (on) { ws.unpinPanel(fid!); say("Unpinned"); }
           else { ws.pinPanel(fid!); say(fp.role === "root" ? "Pinned: this root rides the rail across switches" : "Pinned: survives every page"); }
         }
+        return;
+      }
+      // digits 1-9: the painted 01/02/03 indices are KEYS — drill that row
+      if (/^[1-9]$/.test(e.key) && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const t = e.target as HTMLElement | null;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+        const fid = ws.state.focusedPanelId ?? ws.state.contextLeafId;
+        const host = fid ? document.querySelector(`.panel[data-pid="${CSS.escape(fid)}"] .drills`) : null;
+        const row = host?.querySelectorAll<HTMLElement>(".drill")[Number(e.key) - 1];
+        if (row) { e.preventDefault(); row.click(); }
         return;
       }
       // "/" opens the FOCUSED panel's foot search (inert while typing)
@@ -993,7 +1004,12 @@ function Shell() {
           <span key={id} style={{ display: "contents" }}>
             <span className="crumb-sep">›</span>
             <span className={"crumb" + (i === path.length - 1 ? " here" : "") + (id === ws.state.focusedPanelId ? " focus" : "")}
-              onClick={() => ws.navigateTo(id)}>
+              title="Click: focus · ⌥click: rewind the thread here"
+              onClick={(e) => {
+                if (e.altKey) { ws.navigateTo(id); return; }
+                ws.focusPanel(id);
+                scrollPanelIntoView(id);
+              }}>
               {titleOfKey(ws.state.panelsById[id].target.resourceKey)}
             </span>
           </span>
@@ -1444,6 +1460,11 @@ export function panelActions(
     ];
     default: {
       const out: PanelAction[] = [];
+      if (key === "sec:overview" && typeof localStorage !== "undefined" && !localStorage.getItem("frameword-toured"))
+        out.push({ id: "play-tour", label: "Play the tour", kind: "secondary", run: () => {
+          localStorage.setItem("frameword-toured", "1");
+          window.dispatchEvent(new CustomEvent("stax:tour"));
+        } });
       if (DOMAIN[key]?.body || DOMAIN[key]?.subtitle)
         out.push({ id: "ai-explain", label: "Explain this panel", kind: "ai", run: () => aiSay(panelInsight(key)) });
       if (n.composer) out.push({ id: "composer", label: n.composer.replace("…", ""), icon: AI.plus, kind: "primary", run: () => { /* demo action zone */ } });
@@ -1718,7 +1739,14 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
         ) : isRef ? (
           <span className="foot-note"><span className="sig">✶</span> Pinned: click the title or a drill to reopen</span>
         ) : n.footActions ? (
-          n.footActions.map((a) => (
+          <>
+          {p.target.resourceKey === "sec:overview" && typeof localStorage !== "undefined" && !localStorage.getItem("frameword-toured") && (
+            <button className="d-btn outline sm"
+              onClick={() => { localStorage.setItem("frameword-toured", "1"); window.dispatchEvent(new CustomEvent("stax:tour")); }}>
+              ✶ Play the tour
+            </button>
+          )}
+          {n.footActions.map((a) => (
             <button key={a.label} className={"foot-cta" + (a.kind === "outline" ? " ghost" : "")}
               onClick={() => {
                 if (a.space) {
@@ -1728,7 +1756,8 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
               }}>
               {a.label}
             </button>
-          ))
+          ))}
+          </>
         ) : p.target.panelType.startsWith("pf") ? (
           <PlatformFoot panelType={p.target.panelType} resourceKey={p.target.resourceKey} panelId={id} closePanel={() => ws.closePanel(id)} />
         ) : isCanvas ? (
@@ -2090,14 +2119,19 @@ function AgentDrawer({ onClose, inject, onInjectConsumed, closing }: { onClose: 
     if (!inject || inject.id === lastInject.current) return;
     lastInject.current = inject.id;
     onInjectConsumed?.(); // the Shell clears it: a reopen must NOT re-append
-    const msg: ChatMsg = { me: false, t: inject.text };
-    setConvos((cs) => {
-      if (activeId && cs.some((c) => c.id === activeId))
-        return cs.map((c) => (c.id === activeId ? { ...c, ts: Date.now(), msgs: [...c.msgs, msg] } : c));
-      const nid = "c" + Date.now();
-      setActiveId(nid);
-      return [{ id: nid, title: inject.text.slice(0, 34), ts: Date.now(), msgs: [msg] }, ...cs];
-    });
+    setTyping(true); // the thinking beat the drawer's own loading grammar preaches
+    const beat = window.setTimeout(() => {
+      setTyping(false);
+      const msg: ChatMsg = { me: false, t: inject.text };
+      setConvos((cs) => {
+        if (activeId && cs.some((c) => c.id === activeId))
+          return cs.map((c) => (c.id === activeId ? { ...c, ts: Date.now(), msgs: [...c.msgs, msg] } : c));
+        const nid = "c" + Date.now();
+        setActiveId(nid);
+        return [{ id: nid, title: inject.text.slice(0, 34), ts: Date.now(), msgs: [msg] }, ...cs];
+      });
+    }, 450);
+    return () => window.clearTimeout(beat);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inject]);
   const [histOpen, setHistOpen] = useState(false);

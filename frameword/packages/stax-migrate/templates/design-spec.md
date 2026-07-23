@@ -241,6 +241,18 @@ L-RHYTHM, L-FOOT, L-FLOW fail the build. `stax-migrate doctor` prints the
 adoption health report (contract, pending upgrade units, hardcoded-value
 drift) with its prescription.
 
+**The sheet speaks the full grammar:** its facets are FOOT segments (never
+underline tabs — that motif exists nowhere), and the foot riffles sibling
+records (‹ › + ArrowUp/Down, position i/n): walk records without closing.
+The LAST slabs are gone: table headers/calc bands sit on the card surface
+over one hairline; board and kanban columns are hairline GUTTERS — cards are
+the only objects. A chosen date reads as bare mono text, never a filled pill.
+
+**Power gestures:** digits 1-9 drill the focused panel's painted 01/02/03
+rows; shift-click selects a RANGE of table rows; a crumb click FOCUSES and
+scrolls (⌥-click rewinds — looking back is free, chopping is deliberate);
+the first run offers "Play the tour" in the Overview foot until played.
+
 **Thread memory:** returning to a space RESUMES its last thread (the resume
 point records on every settled path; switching spaces costs nothing). Deep
 panel eyebrows carry their PARENT ("Acme Industries › contact"), never a bare
