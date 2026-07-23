@@ -661,6 +661,10 @@ function cmdDone(target) {
   if (st.phase > LAST_PHASE) {
     const lvl = readContract(target).level;
     console.log(green(bold("✓ MIGRATION COMPLETE")) + green(` — ${LAST_PHASE}/${LAST_PHASE} phases passed at level ${bold(lvl.toUpperCase())}: every row of all`));
+
+    // BASELINE: a fresh adoption is born current — every existing catalog unit
+    // is part of the migration itself, so doctor/upgrade start from zero pending
+    for (const u of upgradeCatalog()) recordApplied(target, u.id, "baseline at adoption");
     console.log(green(`  matrices terminal, every skip cited, report at ${WS}/REPORT.md. The contract is honored, to the pixel.`));
   } else {
     console.log(green(`✓ phase ${st.phase - 1} (${ph.name}) passed`) + ` → now at phase ${bold(`${st.phase}/${LAST_PHASE}`)} — ${PHASES[st.phase - 1].name}`);
@@ -724,6 +728,64 @@ function cmdRun(target, agent, phaseFlag) {
 }
 
 /* upgrade — bring an ALREADY-STAX project up to the latest layout/design grammar */
+function walkSrc(dir, exts, out = [], depth = 0) {
+  if (depth > 6 || !fs.existsSync(dir)) return out;
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (e.name === "node_modules" || e.name === "dist" || e.name.startsWith(".")) continue;
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) walkSrc(p, exts, out, depth + 1);
+    else if (exts.some((x) => e.name.endsWith(x))) out.push(p);
+  }
+  return out;
+}
+
+/** doctor: the adoption health report — contract, pending upgrades, design drift. */
+export function cmdDoctor(target) {
+  const mig = path.join(target, "stax-migration");
+  console.log(`stax doctor · ${target}\n`);
+  if (!fs.existsSync(mig)) {
+    console.log("NOT ADOPTED: no stax-migration/ here. Start with: stax-migrate init");
+    process.exitCode = 1;
+    return;
+  }
+  // 1 — the contract
+  let level = "?", scope = null;
+  const cPath = path.join(mig, "contract.json");
+  if (fs.existsSync(cPath)) {
+    try { const c = JSON.parse(fs.readFileSync(cPath, "utf8")); level = c.level ?? "?"; scope = c.scope ?? null; } catch { /* unreadable */ }
+  }
+  console.log(`CONTRACT   level ${level}${scope ? " · scope " + scope.join(",") : ""}`);
+  // 2 — upgrades: applied vs catalog
+  const applied = new Set(readApplied(target).map((u) => u.id));
+  const catalog = upgradeCatalog();
+  const pending = catalog.filter((u) => !applied.has(u.id));
+  console.log(`UPGRADES   ${applied.size}/${catalog.length} applied${pending.length ? " · PENDING: " + pending.map((u) => u.id).join(" ") : " · up to date"}`);
+  // 3 — design drift: hardcoded values outside the token file
+  const files = walkSrc(path.join(target, "src"), [".css", ".tsx", ".ts", ".jsx", ".js"]);
+  let hex = 0, fz = 0;
+  const offenders = new Map();
+  for (const p of files) {
+    if (/tokens?\.css$/.test(p)) continue;
+    const t = fs.readFileSync(p, "utf8");
+    const h = (t.match(/#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})(?![0-9a-f])/gi) ?? []).length;
+    const z = (t.match(/font-size:\s*\d/g) ?? []).length;
+    if (h + z > 0) offenders.set(path.relative(target, p), h + z);
+    hex += h; fz += z;
+  }
+  console.log(`DRIFT      ${hex} hex literal(s) · ${fz} hardcoded font-size(s) outside tokens${offenders.size ? "\n           worst: " + [...offenders.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([p, n]) => `${p} (${n})`).join(" · ") : ""}`);
+  // 4 — the spec
+  const specHere = fs.existsSync(path.join(target, "DESIGN-SPEC.md"));
+  console.log(`SPEC       DESIGN-SPEC.md ${specHere ? "present" : "MISSING (copy it from the stax repo templates)"}`);
+  // 5 — prescription
+  const rx = [];
+  if (pending.length) rx.push(`stax-migrate upgrade run        # applies ${pending[0].id}${pending.length > 1 ? " (+" + (pending.length - 1) + " more)" : ""}`);
+  if (hex + fz > 0) rx.push("re-run the M7 token sweep       # zero hardcoded hex/font-size is the bar");
+  if (!specHere) rx.push("restore DESIGN-SPEC.md          # the contract must live in the repo");
+  rx.push("stax-migrate verify --url <live> --themes light,dark");
+  console.log(`\nPRESCRIPTION\n  ${rx.join("\n  ")}`);
+  if (pending.length || hex + fz > 0 || !specHere) process.exitCode = 1;
+}
+
 async function cmdTheme(flags) {
   const from = flags.from;
   if (!from) {
@@ -740,19 +802,19 @@ async function cmdTheme(flags) {
 function cmdVerify(flags) {
   const url = flags.url;
   if (!url) {
-    console.log("Usage: stax-migrate verify --url <live-or-local-url> [--drills N]");
+    console.log("Usage: stax-migrate verify --url <url> [--drills N] [--themes light,dark]");
     console.log("Runs the design-law gate on the LIVE app: L-ALIGN (separator bounds),");
     console.log("L-RHYTHM (edge-to-edge stacking), L-FOOT (one primary), L-FLOW (no x-overflow).");
     process.exit(2);
   }
   const scan = new URL("./verify/scan.mjs", import.meta.url).pathname;
-  const r = spawnSync("node", [scan, url, String(flags.drills ?? 4)], { encoding: "utf8" });
+  const r = spawnSync("node", [scan, url, String(flags.drills ?? 4), String(flags.themes ?? "light")], { encoding: "utf8" });
   if (r.status === 2 || !r.stdout.trim()) {
     process.stderr.write(r.stderr || r.stdout || "verify: scan failed\n");
     process.exit(2);
   }
   const rep = JSON.parse(r.stdout);
-  console.log(`stax verify · ${rep.url} · ${rep.checked} view(s)`);
+  console.log(`stax verify · ${rep.url} · ${rep.checked} view(s) · themes: ${(rep.themes ?? ["light"]).join("+")}`);
   if (rep.pass) { console.log("PASS: every scanned view honors the design laws."); return; }
   console.log(`FAIL: ${rep.violations.length} violation(s)\n`);
   for (const v of rep.violations) console.log(`  [${v.law}] ${v.where}: ${v.detail}`);
@@ -905,6 +967,9 @@ async function main() {
         break;
       case "theme":
         await cmdTheme(flags);
+        break;
+      case "doctor":
+        cmdDoctor(resolveTarget(pos[0]));
         break;
       case "contract":
         cmdContract(resolveTarget(pos[0]));

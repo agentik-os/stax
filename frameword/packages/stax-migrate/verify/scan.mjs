@@ -9,7 +9,8 @@
  */
 const urlArg = process.argv[2];
 const drillMax = Number(process.argv[3] ?? 4);
-if (!urlArg) { console.error("usage: scan.mjs <url> [drillMax]"); process.exit(2); }
+const themes = (process.argv[4] ?? "light").split(",").map((t) => t.trim()).filter(Boolean);
+if (!urlArg) { console.error("usage: scan.mjs <url> [drillMax] [themes]"); process.exit(2); }
 
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
@@ -31,8 +32,19 @@ async function loadPlaywright() {
 const { chromium } = await loadPlaywright();
 
 const b = await chromium.launch();
-const pg = await b.newPage({ viewport: { width: 1440, height: 900 } });
+const allViolations = [];
+let checked = 0;
+for (const theme of themes) {
+const pg = await b.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: theme === "dark" ? "dark" : "light" });
+if (theme === "dark") {
+  // an init script survives cross-document navigations (drills as real links,
+  // goBack reloads): every document gets the attribute, not just the first
+  await pg.addInitScript(() => document.documentElement.setAttribute("data-theme", "dark"));
+}
 await pg.goto(urlArg, { waitUntil: "networkidle" });
+if (theme === "dark") {
+  await pg.evaluate(() => document.documentElement.setAttribute("data-theme", "dark"));
+}
 await pg.waitForTimeout(700);
 
 const scanOnce = (tag) => pg.evaluate((tagIn) => {
@@ -97,7 +109,7 @@ const scanOnce = (tag) => pg.evaluate((tagIn) => {
 }, tag);
 
 await pg.mouse.move(0, 0); // hover expands separators BY DESIGN: scan at rest
-const violations = [...await scanOnce("root")];
+const violations = [...await scanOnce(theme + "/root")];
 const nDrills = await pg.locator(".panel .drill").count();
 for (let i = 0; i < Math.min(nDrills, drillMax); i++) {
   try {
@@ -105,13 +117,17 @@ for (let i = 0; i < Math.min(nDrills, drillMax); i++) {
     await pg.waitForTimeout(500);
     await pg.mouse.move(0, 0);
     await pg.waitForTimeout(150);
-    violations.push(...await scanOnce("drill-" + i));
+    violations.push(...await scanOnce(theme + "/drill-" + i));
     await pg.mouse.move(0, 0);
     await pg.waitForTimeout(150);
     await pg.goBack();
     await pg.waitForTimeout(400);
   } catch { break; }
 }
+checked += 1 + Math.min(nDrills, drillMax);
+allViolations.push(...violations);
+await pg.close();
+}
 await b.close();
-console.log(JSON.stringify({ url: urlArg, checked: 1 + Math.min(nDrills, drillMax), violations, pass: violations.length === 0 }, null, 1));
-process.exit(violations.length === 0 ? 0 : 1);
+console.log(JSON.stringify({ url: urlArg, themes, checked, violations: allViolations, pass: allViolations.length === 0 }, null, 1));
+process.exit(allViolations.length === 0 ? 0 : 1);

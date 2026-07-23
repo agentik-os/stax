@@ -131,6 +131,12 @@
       "since": "0.7.0",
       "area": "ux",
       "title": "Devtools time travel + shareable #ws links + the ? keyboard map"
+    },
+    {
+      "id": "U-023",
+      "since": "0.8.0",
+      "area": "ux",
+      "title": "Exit ghosts on close gestures + far-left foot search + drill row virtualization"
     }
   ]
 }

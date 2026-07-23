@@ -1,4 +1,4 @@
-import { createContext, lazy, Suspense, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createContext, lazy, Suspense, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, useCallback } from "react";
 import type { PanelInstance, PanelTarget } from "@frameword/panels-core";
 import {
   WorkspaceProvider,
@@ -303,9 +303,11 @@ function Shell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const sayTimer = useRef(0);
   const say = (msg: string) => {
     setToast(msg);
-    window.setTimeout(() => setToast(null), 2200);
+    window.clearTimeout(sayTimer.current); // a stale clear must not blank the NEW toast
+    sayTimer.current = window.setTimeout(() => setToast(null), 2200);
   };
   const setTheme = (m: string) => {
     setThemeState(m);
@@ -447,6 +449,41 @@ function Shell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // the SELF-DRIVING TOUR: the bridge demonstrates the grammar on itself,
+  // narrated by toasts; Escape stops it. Triggered from ⌘K or the drawer's /tour.
+  const tourOn = useRef(false);
+  const runTour = useCallback(() => {
+    if (tourOn.current) return;
+    tourOn.current = true;
+    const sx = (window as unknown as { stax: Record<string, (...a: never[]) => unknown> }).stax;
+    const steps: [string, () => unknown][] = [
+      ["A Space opens as its ROOT panel", () => (sx.openSpace as (s: string) => void)("overview")],
+      ["Drilling opens the child BESIDE its parent: context stays", () => (sx.open as (k: string) => void)("ov:why")],
+      ["PIN keeps this panel across every page", () => (sx.pin as () => void)()],
+      ["Switch space: the pinned panel rides the reference rail", () => (sx.openSpace as (s: string) => void)("crm")],
+      ["Every list drills the same way: one mechanic", () => (sx.open as (k: string) => void)("acc:acme")],
+      ["× closes the leaf…", () => (sx.close as () => void)()],
+      ["…and ⌘Z brings it back: every move is undoable", () => (sx.undo as () => void)()],
+      ["The URL carried every step. That's Stax.", () => (sx.openSpace as (s: string) => void)("overview")],
+    ];
+    let i = 0;
+    const tick = () => {
+      if (!tourOn.current) { say("Tour stopped"); return; }
+      if (i >= steps.length) { tourOn.current = false; return; }
+      const [msg, act] = steps[i++];
+      say("✶ " + msg);
+      try { act(); } catch { /* a missing key never derails the tour */ }
+      window.setTimeout(tick, 1800);
+    };
+    tick();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const h = () => runTour();
+    window.addEventListener("stax:tour", h);
+    return () => window.removeEventListener("stax:tour", h);
+  }, [runTour]);
+
   // kind "ai" registry actions open the drawer with their computed insight
   const [aiInject, setAiInject] = useState<{ id: number; text: string } | null>(null);
   useEffect(() => {
@@ -500,7 +537,7 @@ function Shell() {
       },
       pin: (pid?: string) => { const { ws } = bridgeRef.current!; const id = pid ?? ws.state.focusedPanelId; if (id) ws.pinPanel(id); },
       unpin: (pid?: string) => { const { ws } = bridgeRef.current!; const id = pid ?? ws.state.focusedPanelId; if (id) ws.unpinPanel(id); },
-      close: (pid?: string) => { const { ws } = bridgeRef.current!; const id = pid ?? ws.state.focusedPanelId ?? ws.state.contextLeafId; if (id) ws.closePanel(id); },
+      close: (pid?: string) => { const { ws } = bridgeRef.current!; const id = pid ?? ws.state.focusedPanelId ?? ws.state.contextLeafId; if (id) { animateExit(id); ws.closePanel(id); } },
       focus: (pid: string) => bridgeRef.current!.ws.focusPanel(pid),
       undo: () => bridgeRef.current!.ws.undo(),
       redo: () => bridgeRef.current!.ws.redo(),
@@ -595,10 +632,11 @@ function Shell() {
         const t = e.target as HTMLElement | null;
         if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
         const fid = ws.state.focusedPanelId ?? ws.state.contextLeafId;
-        if (fid && ws.state.panelsById[fid]) { e.preventDefault(); ws.closePanel(fid); }
+        if (fid && ws.state.panelsById[fid]) { e.preventDefault(); animateExit(fid); ws.closePanel(fid); }
         return;
       }
       if (e.key !== "Escape") return;
+      if (tourOn.current) { tourOn.current = false; return; }
       if (document.querySelector(".nf-menu")) return; // the notification bell closes itself
       // an open in-panel popover (table menus, date pickers, cell flys…) always
       // mounts a .pop-bg backdrop: Escape closes IT, never the panel behind it
@@ -619,8 +657,8 @@ function Shell() {
         return;
       }
       const leaf = ws.state.contextLeafId;
-      if (leaf && ws.state.panelsById[leaf]?.role !== "root") ws.closePanel(leaf);
-      else if (ws.state.rootInstanceId) ws.closePanel(ws.state.rootInstanceId);
+      if (leaf && ws.state.panelsById[leaf]?.role !== "root") { animateExit(leaf); ws.closePanel(leaf); }
+      else if (ws.state.rootInstanceId) { animateExit(ws.state.rootInstanceId); ws.closePanel(ws.state.rootInstanceId); }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
@@ -1105,6 +1143,39 @@ async function decodeShare<T>(str: string): Promise<T | null> {
   } catch { return null; }
 }
 
+/* ── EXIT TRANSITIONS: an explicit close gesture (×, ctrl+X, Escape on the
+   leaf) leaves a 150ms ghost — object permanence for departures. Engine-driven
+   removals (space switches, promotion) stay instant: those are navigations. ── */
+function animateExit(id: string) {
+  if (typeof window === "undefined" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const el = document.querySelector(`.panel[data-pid="${CSS.escape(id)}"]:not(.panel-exit)`) as HTMLElement | null;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  if (r.width === 0) return;
+  const ghost = el.cloneNode(true) as HTMLElement;
+  ghost.classList.add("panel-exit");
+  // body zoom re-scales fixed children: divide the visual rect back out
+  const z = parseFloat(document.body.style.zoom) / 100 || 1;
+  Object.assign(ghost.style, {
+    position: "fixed", left: r.left / z + "px", top: r.top / z + "px",
+    width: r.width / z + "px", height: r.height / z + "px", margin: "0",
+    zIndex: "30", pointerEvents: "none",
+  });
+  document.body.appendChild(ghost);
+  // cloneNode drops scroll positions: copy them so the ghost shows what WAS there
+  const srcAll = el.querySelectorAll<HTMLElement>("*");
+  const dstAll = ghost.querySelectorAll<HTMLElement>("*");
+  srcAll.forEach((n, i) => {
+    if ((n.scrollTop || n.scrollLeft) && dstAll[i]) { dstAll[i].scrollTop = n.scrollTop; dstAll[i].scrollLeft = n.scrollLeft; }
+  });
+  const anim = ghost.animate(
+    [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(0.98)" }],
+    { duration: 150, easing: "cubic-bezier(0.32,0.72,0,1)" },
+  );
+  anim.onfinish = () => ghost.remove();
+  anim.oncancel = () => ghost.remove();
+}
+
 /* ── recent threads + saved layouts: device-local, palette-surfaced ──────
    A thread signature is spaceId + the key chain; a layout is a full validated
    WorkspaceState snapshot restored via ws.restore(). */
@@ -1372,7 +1443,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
       </section>
     );
   return (
-    <section className={"panel" + (isRef ? " ref" : "") + (retained && !isRef ? " pinned" : "") + (id === ws.state.focusedPanelId ? " focused" : "")} aria-label={n.title || titleOfKey(p.target.resourceKey)}
+    <section className={"panel" + (isRef ? " ref" : "") + (retained && !isRef ? " pinned" : "") + (id === ws.state.focusedPanelId ? " focused" : "")} data-pid={id} aria-label={n.title || titleOfKey(p.target.resourceKey)}
       data-leaf={id === ws.state.contextLeafId || undefined}
       onMouseDown={() => { if (!isRef && ws.state.focusedPanelId !== id) ws.focusPanel(id); }}
       style={compact ? undefined
@@ -1391,7 +1462,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
         }}
         title="Double-click: align this panel with the view">
         {compact && !isRoot && (
-          <button className="bar-btn back" title="Back" onClick={() => ws.closePanel(id)}>‹</button>
+          <button className="bar-btn back" title="Back" onClick={() => { animateExit(id); ws.closePanel(id); }}>‹</button>
         )}
         <span className="eyebrow">{n.eyebrow ?? n.panelType}</span>
         {isRef && <span className="badge-ref">Ref</span>}
@@ -1421,7 +1492,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
           title={isRef ? "Remove reference" : isRoot
             ? (ws.path.length > 1 ? "Close panel: the next panel takes the lead" : "Close space")
             : "Close"}
-          onClick={() => ws.closePanel(id)}>×</button>
+          onClick={() => { animateExit(id); ws.closePanel(id); }}>×</button>
       </div>
 
       <div className="panel-body" style={isCanvas ? { padding: 0, overflow: "hidden" } : undefined}>
@@ -1539,6 +1610,12 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
       </div>
 
       <div className="panel-foot">
+        {searchable && !sOpen && (
+          <button className="foot-gear" style={{ marginLeft: 0 }} title="Search this panel"
+            onClick={() => { setSOpen(true); setQ(""); }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+          </button>
+        )}
         {sOpen && !isRef ? (
           <div className="foot-search-row">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
@@ -1584,13 +1661,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             <span className="foot-note">Read-only</span>
           );
         })()}
-        {searchable && !sOpen && (
-          <button className="foot-gear" style={{ marginLeft: "auto" }} title="Search this panel"
-            onClick={() => { setSOpen(true); setQ(""); }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          </button>
-        )}
-        <button className="foot-gear" style={searchable && !sOpen ? { marginLeft: 0 } : undefined} title="Panel settings" onClick={() => setGear((v) => !v)}>
+        <button className="foot-gear" title="Panel settings" onClick={() => setGear((v) => !v)}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
         </button>
         {gear && (
@@ -1793,6 +1864,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
     if (layouts.length)
       out.push({ tag: "action", label: "Clear saved layouts", run: () => { localStorage.removeItem(LAYOUTS_KEY); say("Layouts cleared"); } });
     out.push({ tag: "action", label: "Open devtools", run: () => ws.openSpace("devtools", targetOf("sys:devtools")) });
+    out.push({ tag: "action", label: "Play the tour", run: () => window.dispatchEvent(new CustomEvent("stax:tour")) });
     if (ws.state.rootInstanceId)
       out.push({ tag: "action", label: "Copy workspace link", run: () => {
         void encodeShare(ws.state).then(async (b64) => {
@@ -1998,12 +2070,13 @@ function AgentDrawer({ onClose, inject, onInjectConsumed }: { onClose: () => voi
         if (!arg) return "Usage: /run <actionId> (see /actions)";
         return (sx.act as (i: string) => boolean)(arg) ? `Ran ${arg}.` : `No action "${arg}" on the focused panel.`;
       }
+      case "tour": { window.dispatchEvent(new CustomEvent("stax:tour")); return "Rolling the tour: watch the workspace drive itself (Escape stops it)."; }
       case "pin": { (sx.pin as () => void)(); return "Pinned the focused panel."; }
       case "close": { (sx.close as () => void)(); return "Closed the focused panel."; }
       case "undo": { (sx.undo as () => void)(); return "Undone."; }
       case "redo": { (sx.redo as () => void)(); return "Redone."; }
       default:
-        return "I drive the workspace through window.stax. Try: /open <title> · /actions · /run <id> · /pin · /close · /undo · /redo";
+        return "I drive the workspace through window.stax. Try: /tour · /open <title> · /actions · /run <id> · /pin · /close · /undo · /redo";
     }
   };
   const send = (text: string) => {

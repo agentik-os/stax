@@ -1,6 +1,6 @@
 {
   "name": "stax-migrate",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Migration engine: any legacy web app \u2192 the Stax panel grammar, at a contracted integration level (full/standard/starter/shell), with feature, element AND data matrices gated mechanically.",
   "type": "module",
   "bin": {
@@ -9,7 +9,10 @@
   "files": [
     "index.mjs",
     "templates",
-    "README.md"
+    "README.md",
+    "upgrades",
+    "verify",
+    "theme.mjs"
   ],
   "engines": {
     "node": ">=18"

@@ -462,7 +462,7 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
   const ws = useWorkspace();
   const s = useDataApp();
   const c = s.collections.find((x) => x.id === colKey.slice(4));
-  const q = searchQ; // the panel's bar ⌕ drives the row query
+  const q = searchQ; // the panel's foot ⌕ drives the row query
   const [selRows, setSelRows] = useState<ReadonlySet<string>>(new Set());
   const [menu, setMenu] = useState<null | string>(null);
   const [sheet, setSheet] = useState<null | string>(null); // rowId: the quick peek

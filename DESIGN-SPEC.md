@@ -64,6 +64,10 @@ values in this file.
     into the gutter draws its lines inset back to those bounds.
   - **Focus ring** — neutral (foreground mix), suppressed while hovered/active
     (Safari fires :focus-visible on click); keyboard keeps it. Never accent.
+  - **Exit transitions** — an EXPLICIT close gesture (×, the compact back ‹,
+    ctrl+X, Escape on the leaf, the bridge's close()) leaves a 150ms ghost of the panel (opacity + 0.98 scale, the panel's
+    own ease; `prefers-reduced-motion` skips it). Engine-driven removals (space
+    switches, promotion) stay instant: those are navigations, not departures.
   - **A11y baseline** — toasts announce via a `role="status"` aria-live region;
     ArrowUp/Down walk the drill rows of the list the focus is in; overlays
     (sheet, drawer) move focus inside on open and RETURN it to the opener on
@@ -80,10 +84,11 @@ values in this file.
   accent-SOFT chip (never accent-filled: the one-primary law counts fills); its
   run computes a REAL insight from the panel's data and hands it to the agent
   surface (stax:ai). The palette and the bridge list them like any action.
-- The panel SEARCH lives in the FOOT: list panels (a real list: 4+ children or
-  an app list) get a quiet icon-only ⌕ beside the gear; clicking it swaps the
-  foot content into a borderless search row (same 44px height, autofocus, a
-  quiet ×; Escape restores the actions, never closes the panel). It
+- The panel SEARCH lives in the FOOT, FAR LEFT: the quiet icon-only ⌕ is the
+  foot's FIRST element, and its active input starts from the same left edge
+  (passive and active states share the anchor). Clicking it swaps the foot
+  content into a borderless search row (same 44px height, autofocus, a quiet
+  ×; Escape restores the actions, never closes the panel). It
   live-filters the panel's lists; zero matches show a one-sentence empty state
   with the next action.
 
@@ -152,7 +157,7 @@ pixel font-size that ignores them is a defect.
   Views carry their OWN settings via the active tab's menu (rename, duplicate,
   Cozy/Compact density per view, reset, delete); the ⋯ menu exports a real CSV
   (visible fields, filtered+sorted rows); the row menu inserts a row below; the
-  foot's New row adds IN PLACE (reveals the row, never opens a panel). The bar ⌕
+  foot's New row adds IN PLACE (reveals the row, never opens a panel). The foot ⌕
   drives the row quick-search; rows multi-select via quiet hover checkboxes
   (header = select-all-visible) and a selection shows a BULK BAR in the toolbar
   (count · Duplicate · Delete red-text · clear) |
@@ -217,8 +222,11 @@ the intent history (each entry = the state an intent replaced), Jump =
 time travel through ws.restore (undoable). The keyboard map ships as the "?"
 overlay (palette chrome, Escape closes it first).
 
-**The design laws are CI:** `stax-migrate verify --url` runs on every push/PR
-(build → preview → scan): L-ALIGN, L-RHYTHM, L-FOOT, L-FLOW fail the build.
+**The design laws are CI:** `stax-migrate verify --url --themes light,dark`
+runs on every push/PR (build → preview → scan, BOTH themes): L-ALIGN,
+L-RHYTHM, L-FOOT, L-FLOW fail the build. `stax-migrate doctor` prints the
+adoption health report (contract, pending upgrade units, hardcoded-value
+drift) with its prescription.
 
 **The copilot bridge:** the shell exposes `window.stax` (serializable state,
 intents, the action registry) so agents DRIVE the workspace instead of faking

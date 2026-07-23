@@ -115,7 +115,8 @@ bunx stax-migrate theme --from "#e11d48"   # full OKLCH ramp, both themes
 ## Verify the design laws on any live app
 
 ```bash
-bunx stax-migrate verify --url https://your-app.example   # exit 1 on violations
+bunx stax-migrate verify --url https://your-app.example --themes light,dark
+bunx stax-migrate doctor          # adoption health: contract, pending upgrades, drift
 ```
 
 Playwright-scans the real page: separator alignment (L-ALIGN), vertical rhythm
@@ -146,7 +147,9 @@ own Convex/Supabase project and credentials.
 history (each entry is the state an intent replaced; Jump is undoable).
 ⌘K → "Copy workspace link" gzips the FULL arrangement into `#ws=…` — a
 colleague opens the link (cold or pasted live) and gets your exact workspace.
-Press `?` anywhere for the keyboard map. AI actions (✶, accent-soft) live in
+Press `?` anywhere for the keyboard map; ⌘K → "Play the tour" (or `/tour` in
+the drawer) lets the bridge demonstrate the grammar on itself, narrated step
+by step (Escape stops it). AI actions (✶, accent-soft) live in
 the same action registry as everything else and hand computed insights to the
 agent drawer. The design laws run in CI on every push.
 

@@ -30,4 +30,4 @@ jobs:
           for i in $(seq 1 30); do curl -sf http://localhost:4173 >/dev/null && exit 0; sleep 1; done
           echo "preview never came up" && exit 1
       - name: The design laws are a GATE, not prose
-        run: node packages/stax-migrate/index.mjs verify --url http://localhost:4173 --drills 4
+        run: node packages/stax-migrate/index.mjs verify --url http://localhost:4173 --drills 4 --themes light,dark
