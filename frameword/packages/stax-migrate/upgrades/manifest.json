@@ -107,6 +107,18 @@
       "since": "0.5.0",
       "area": "a11y",
       "title": "A11y baseline: aria-live toasts, arrow-key drill nav, overlay focus land/return"
+    },
+    {
+      "id": "U-019",
+      "since": "0.6.0",
+      "area": "ux",
+      "title": "Action registry (foot = palette = bridge) + recent threads + saved layouts"
+    },
+    {
+      "id": "U-020",
+      "since": "0.6.0",
+      "area": "agent",
+      "title": "Copilot bridge: window.stax drives the workspace (state + intents + registry actions)"
     }
   ]
 }

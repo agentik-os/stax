@@ -390,8 +390,12 @@ export const DOMAIN: Record<string, DomainNode> = {
   "sec:prompts": {
     panelType: "section", title: "Prompt pack", eyebrow: "Prompt pack · 06",
     subtitle: "P0-P3 teach and build. M1-M6 are the MASTER KIT: paste-ready prompts that let any coding agent decompose an existing app, map it to the panel grammar, migrate it, build new on it, wire an agent, and audit against the laws.",
-    children: ["pr:p0", "pr:p1", "pr:p2", "pr:p3", "pr:m-decompose", "pr:m-map", "pr:m-design", "pr:m-migrate", "pr:m-build", "pr:m-agent", "pr:m-laws"],
+    children: ["pr:p0", "pr:p1", "pr:p2", "pr:p3", "pr:m-decompose", "pr:m-map", "pr:m-design", "pr:m-migrate", "pr:m-build", "pr:m-agent", "pr:m-laws", "pr:m-bridge"],
     blocks: [{ kind: "card", label: "How to use", text: "Paste one prompt into any coding agent as-is. For a full migration, prefer the stax-migrate CLI (Architecture · 05): it drives the same protocols as 9 gated phases with mechanical, level-aware exit gates (integration contract: full / standard / starter / shell). Always demand citations: file:line, screenshots, or test output: for every material claim." }],
+  },
+  "pr:m-bridge": {
+    panelType: "prompt", title: "M8: Drive the workspace (agent bridge)", subtitle: "The UI is an API: window.stax exposes the state and every intent.", meta: "runtime",
+    blocks: [{ kind: "code", label: "MASTER PROMPT: give your agent runtime control", code: "You can DRIVE this Stax workspace at runtime through window.stax:\n  getState()            -> the full serializable WorkspaceState\n  path()                -> the current thread as resourceKeys\n  find(text)            -> [{key, title}] fuzzy title matches\n  open(key)             -> deep-link any resource (chain auto-rebuilt)\n  openSpace(spaceId)    -> start a space thread\n  actions(panelId?)     -> the focused panel's registry actions [{id,label,kind}]\n  act(actionId, panelId?) -> run one (same actions the foot and ⌘K show)\n  pin()/unpin()/close()/focus(id) -> panel intents\n  undo()/redo()         -> workspace history\nRules: read getState() before acting; prefer act() over synthetic clicks;\nnever fabricate ids: they come from getState()/find(). The agent drawer's\n/commands (/open /actions /run /pin /close /undo) are this bridge, spoken." }],
   },
   "pr:p0": {
     panelType: "prompt", title: "P0: Concept explainer", subtitle: "Brand-agnostic. Teaches the paradigm in five lines.", meta: "concept",

@@ -14,6 +14,26 @@ prefer the CLI: `node frameword/packages/stax-migrate/index.mjs init . --level f
 Key references: [README.md](README.md) · [PANEL-LOGIC.md](PANEL-LOGIC.md) ·
 [DESIGN-SPEC.md](DESIGN-SPEC.md) · [frameword/packages/stax-migrate/README.md](frameword/packages/stax-migrate/README.md)
 
+## M8: Drive the workspace (agent bridge)
+
+*The UI is an API: window.stax exposes the state and every intent.*
+
+```text
+You can DRIVE this Stax workspace at runtime through window.stax:
+  getState()            -> the full serializable WorkspaceState
+  path()                -> the current thread as resourceKeys
+  find(text)            -> [{key, title}] fuzzy title matches
+  open(key)             -> deep-link any resource (chain auto-rebuilt)
+  openSpace(spaceId)    -> start a space thread
+  actions(panelId?)     -> the focused panel's registry actions [{id,label,kind}]
+  act(actionId, panelId?) -> run one (same actions the foot and ⌘K show)
+  pin()/unpin()/close()/focus(id) -> panel intents
+  undo()/redo()         -> workspace history
+Rules: read getState() before acting; prefer act() over synthetic clicks;
+never fabricate ids: they come from getState()/find(). The agent drawer's
+/commands (/open /actions /run /pin /close /undo) are this bridge, spoken.
+```
+
 ## M1: Decompose the existing
 
 *Forensic inventory of every route, modal, tab, and flow before a single panel is drawn.*

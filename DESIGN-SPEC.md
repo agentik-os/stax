@@ -200,6 +200,10 @@ outside it.
   spacer · transient toasts (inline text, never floating pills over the UI) ·
   repo/GitHub link · theme toggle — both as bare 24px icons, menus open UPWARD.
 
+**The copilot bridge:** the shell exposes `window.stax` (serializable state,
+intents, the action registry) so agents DRIVE the workspace instead of faking
+clicks; the agent drawer's /commands speak it. Contract: agents.md M8.
+
 **Panels-only surfaces:** settings = a sys PANEL (appearance, fonts, accent, zoom,
 shortcuts) — never a page; profile = entity panel (fs-head name/role); language and
 theme are DEVICE-LOCAL prefs (localStorage), never navigation state.

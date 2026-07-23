@@ -98,6 +98,42 @@ navigateTo · openPath`. Style with the WhitePaper tokens (`tokens.css`) and the
 interior spacings from [DESIGN-SPEC.md](DESIGN-SPEC.md); the specimen app is the living
 reference for every pattern (tables, canvas, notes, pickers, popovers).
 
+## Drive it from an agent (the copilot bridge)
+
+The workspace is an API. `window.stax` exposes the serializable state and every
+intent — `getState() · find(text) · open(key) · actions() · act(id) · pin/close ·
+undo/redo` — the same action registry the foot and ⌘K read. Paste `agents.md`'s
+M8 prompt into any agent and it can drive the UI; the demo drawer's `/commands`
+(`/open acme`, `/actions`, `/run new-row`, `/undo`) are the bridge, spoken.
+
+## Verify the design laws on any live app
+
+```bash
+bunx stax-migrate verify --url https://your-app.example   # exit 1 on violations
+```
+
+Playwright-scans the real page: separator alignment (L-ALIGN), vertical rhythm
+(L-RHYTHM), one-primary-per-foot (L-FOOT), no horizontal overflow (L-FLOW).
+This repo's prod passes it: the contract is enforced, not aspirational.
+
+## Writing a sync adapter (multi-device / multiplayer)
+
+`storageKey` is just the built-in localStorage adapter. Pass `storage` for a
+backend — async loads reconcile UNDER the current URL (the URL's thread wins):
+
+```ts
+import type { StorageAdapter } from "@frameword/panels-react";
+// Convex example: one row per user; last write wins, debounce as needed
+const convexAdapter = (client: ConvexClient, userId: string): StorageAdapter => ({
+  load: () => client.query(api.workspace.get, { userId }),         // async is fine
+  save: (state) => void client.mutation(api.workspace.put, { userId, state }),
+});
+<WorkspaceProvider registry={REGISTRY} urlSync="push" storage={convexAdapter(client, me)} />
+```
+
+Presence and merge strategies stay app-side; a live shared backend needs your
+own Convex/Supabase project and credentials.
+
 ## Adopt Stax in ANY legacy project — structure AND design
 
 `stax-migrate` is a program, not a prompt. It rebuilds a legacy app on the panel grammar

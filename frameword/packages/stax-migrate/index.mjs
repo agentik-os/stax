@@ -724,6 +724,29 @@ function cmdRun(target, agent, phaseFlag) {
 }
 
 /* upgrade — bring an ALREADY-STAX project up to the latest layout/design grammar */
+function cmdVerify(flags) {
+  const url = flags.url;
+  if (!url) {
+    console.log("Usage: stax-migrate verify --url <live-or-local-url> [--drills N]");
+    console.log("Runs the design-law gate on the LIVE app: L-ALIGN (separator bounds),");
+    console.log("L-RHYTHM (edge-to-edge stacking), L-FOOT (one primary), L-FLOW (no x-overflow).");
+    process.exit(2);
+  }
+  const scan = new URL("./verify/scan.mjs", import.meta.url).pathname;
+  const r = spawnSync("node", [scan, url, String(flags.drills ?? 4)], { encoding: "utf8" });
+  if (r.status === 2 || !r.stdout.trim()) {
+    process.stderr.write(r.stderr || r.stdout || "verify: scan failed\n");
+    process.exit(2);
+  }
+  const rep = JSON.parse(r.stdout);
+  console.log(`stax verify · ${rep.url} · ${rep.checked} view(s)`);
+  if (rep.pass) { console.log("PASS: every scanned view honors the design laws."); return; }
+  console.log(`FAIL: ${rep.violations.length} violation(s)\n`);
+  for (const v of rep.violations) console.log(`  [${v.law}] ${v.where}: ${v.detail}`);
+  console.log("\nLaws: DESIGN-SPEC.md (separator alignment, vertical rhythm, foot hierarchy).");
+  process.exitCode = 1;
+}
+
 function cmdUpgrade(target, pos, flags) {
   const catalog = upgradeCatalog();
   if (catalog.length === 0) die("the package ships no upgrade catalog — reinstall stax-migrate");
@@ -863,6 +886,9 @@ async function main() {
         break;
       case "status":
         cmdStatus(resolveTarget(pos[0]));
+        break;
+      case "verify":
+        cmdVerify(flags);
         break;
       case "contract":
         cmdContract(resolveTarget(pos[0]));

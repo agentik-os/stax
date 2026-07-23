@@ -412,6 +412,66 @@ function Shell() {
     if (fromRefId && (sp?.rootKey === key || SYS_ROOTS.includes(key))) ws.closePanel(fromRefId);
   };
 
+  // every settled thread becomes a RECENT (palette: Recent threads)
+  const pathSig = ws.path.map((pid) => ws.state.panelsById[pid]?.target.resourceKey).join(">");
+  useEffect(() => {
+    const st = ws.state;
+    if (!st.spaceId || !st.rootInstanceId || ws.path.length === 0) return;
+    const chain = ws.path.map((pid) => st.panelsById[pid]).filter(Boolean);
+    const path = chain.map((p) => ({ t: p.target.panelType, k: p.target.resourceKey }));
+    const leaf = chain[chain.length - 1];
+    noteRecent({ sig: st.spaceId + "|" + pathSig, spaceId: st.spaceId, path, title: titleOfKey(leaf.target.resourceKey), ts: Date.now() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathSig]);
+
+  /* ── the COPILOT BRIDGE: the workspace is DRIVABLE. window.stax exposes the
+     serializable state and the intent surface — the same action registry the
+     foot and the palette read. Contract: M8 in the Prompt pack / agents.md. ── */
+  const bridgeRef = useRef<{ ws: typeof ws; deepLink: typeof deepLink } | null>(null);
+  useEffect(() => { bridgeRef.current = { ws, deepLink }; });
+  useEffect(() => {
+    const PERSONAL: Record<string, string> = { data: "sec:data", notes: "sec:notes", tasks: "sec:tasks", canvas: "sec:canvas", profile: "sys:profile", settings: "sys:settings" };
+    (window as unknown as { stax?: unknown }).stax = {
+      getState: () => bridgeRef.current!.ws.state,
+      path: () => bridgeRef.current!.ws.path.map((pid) => bridgeRef.current!.ws.state.panelsById[pid]?.target.resourceKey),
+      find: (text: string) =>
+        Object.keys(DOMAIN).filter((k) => (DOMAIN[k].title ?? "").toLowerCase().includes(text.toLowerCase()))
+          .map((k) => ({ key: k, title: DOMAIN[k].title })).slice(0, 12),
+      open: (key: string) => bridgeRef.current!.deepLink(key),
+      openSpace: (spaceId: string) => {
+        const { ws } = bridgeRef.current!;
+        const sp = SPACES.find((x) => x.spaceId === spaceId);
+        const rk = sp?.rootKey ?? PERSONAL[spaceId];
+        if (rk) ws.openSpace(spaceId, targetOf(rk));
+        return !!rk;
+      },
+      actions: (pid?: string) => {
+        const { ws } = bridgeRef.current!;
+        const id = pid ?? ws.state.focusedPanelId ?? ws.state.contextLeafId;
+        const p = id ? ws.state.panelsById[id] : null;
+        if (!p) return [];
+        return panelActions(p, DOMAIN[p.target.resourceKey] ?? {}, id!, ws).map((a) => ({ id: a.id, label: a.label, kind: a.kind }));
+      },
+      act: (actionId: string, pid?: string) => {
+        const { ws } = bridgeRef.current!;
+        const id = pid ?? ws.state.focusedPanelId ?? ws.state.contextLeafId;
+        const p = id ? ws.state.panelsById[id] : null;
+        if (!p) return false;
+        const a = panelActions(p, DOMAIN[p.target.resourceKey] ?? {}, id!, ws).find((x) => x.id === actionId);
+        if (a) a.run();
+        return !!a;
+      },
+      pin: (pid?: string) => { const { ws } = bridgeRef.current!; const id = pid ?? ws.state.focusedPanelId; if (id) ws.pinPanel(id); },
+      unpin: (pid?: string) => { const { ws } = bridgeRef.current!; const id = pid ?? ws.state.focusedPanelId; if (id) ws.unpinPanel(id); },
+      close: (pid?: string) => { const { ws } = bridgeRef.current!; const id = pid ?? ws.state.focusedPanelId ?? ws.state.contextLeafId; if (id) ws.closePanel(id); },
+      focus: (pid: string) => bridgeRef.current!.ws.focusPanel(pid),
+      undo: () => bridgeRef.current!.ws.undo(),
+      redo: () => bridgeRef.current!.ws.redo(),
+    };
+    return () => { delete (window as unknown as { stax?: unknown }).stax; };
+  }, []);
+
+
   /* Escape precedence : palette → drawer → menus → active panel */
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -960,6 +1020,109 @@ function PushHost({ deepLink }: { deepLink: (k: string, fromRefId?: string) => v
 
 /* ═══ Panel: bar 56 · body · foot ════════════════════════════════════ */
 
+/* ── recent threads + saved layouts: device-local, palette-surfaced ──────
+   A thread signature is spaceId + the key chain; a layout is a full validated
+   WorkspaceState snapshot restored via ws.restore(). */
+const RECENTS_KEY = "frameword-recents";
+const LAYOUTS_KEY = "frameword-layouts";
+type RecentThread = { sig: string; spaceId: string; path: { t: string; k: string }[]; title: string; ts: number };
+type SavedLayout = { name: string; state: unknown; ts: number };
+const readJSON = <T,>(k: string): T[] => { try { return JSON.parse(localStorage.getItem(k) || "[]") as T[]; } catch { return []; } };
+const noteRecent = (e: RecentThread) => {
+  const list = readJSON<RecentThread>(RECENTS_KEY).filter((x) => x.sig !== e.sig);
+  list.unshift(e);
+  try { localStorage.setItem(RECENTS_KEY, JSON.stringify(list.slice(0, 8))); } catch { /* quota */ }
+};
+const saveLayout = (name: string, state: unknown) => {
+  const list = readJSON<SavedLayout>(LAYOUTS_KEY).filter((x) => x.name !== name);
+  list.unshift({ name, state, ts: Date.now() });
+  try { localStorage.setItem(LAYOUTS_KEY, JSON.stringify(list.slice(0, 6))); } catch { /* quota */ }
+};
+
+/* ── the ACTION REGISTRY: one declaration per panel type. The foot, the ⌘K
+   palette (contextual section) and the window.stax bridge all read THIS —
+   kind maps to the foot hierarchy: primary accent · secondary quiet ·
+   destructive red text. ── */
+export type PanelAction = { id: string; label: string; icon?: React.ReactNode; kind: "primary" | "secondary" | "destructive"; run: () => void };
+const AI = {
+  plus: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>,
+  trash: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>,
+  dup: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>,
+  folder: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.2 3.9A2 2 0 0 0 7.5 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /><path d="M12 10v6M9 13h6" /></svg>,
+  play: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg>,
+};
+export function panelActions(
+  p: { target: { panelType: string; resourceKey: string } },
+  n: { composer?: string },
+  id: string,
+  ws: ReturnType<typeof useWorkspace>,
+): PanelAction[] {
+  const key = p.target.resourceKey;
+  switch (p.target.panelType) {
+    case "canvasnode": return [
+      { id: "dup-node", label: "Duplicate: ⌘D", icon: AI.dup, kind: "secondary", run: () => {
+        const nid = key.slice(4); const src = board.node(nid);
+        if (src) board.update((st) => ({ ...st, seq: st.seq + 1, nodes: [...st.nodes, { ...src, id: "n" + (st.seq + 1), x: src.x + 24, y: src.y + 24 }] }));
+      } },
+      { id: "del-node", label: "Delete element", icon: AI.trash, kind: "destructive", run: () => {
+        const nid = key.slice(4);
+        board.update((st) => ({ ...st, nodes: st.nodes.filter((x) => x.id !== nid), edges: st.edges.filter((e) => e.source !== nid && e.target !== nid) }));
+        ws.closePanel(id);
+      } },
+    ];
+    case "canvasedge": return [
+      { id: "del-edge", label: "Delete link", icon: AI.trash, kind: "destructive", run: () => {
+        const eid = key.slice(4);
+        board.update((st) => ({ ...st, edges: st.edges.filter((x) => x.id !== eid) }));
+        ws.closePanel(id);
+      } },
+    ];
+    case "note": return [
+      { id: "del-note", label: "Delete note", icon: AI.trash, kind: "destructive", run: () => { notesApp.removeNote(key.slice(4)); ws.closePanel(id); } },
+    ];
+    case "notes": return [
+      { id: "new-note", label: "New note", icon: AI.plus, kind: "primary", run: () => ws.openDetail(id, { panelType: "note", resourceKey: "nte:" + notesApp.addNote() }) },
+      { id: "new-folder", label: "New folder", icon: AI.folder, kind: "secondary", run: () => notesApp.addFolder() },
+    ];
+    case "notefolder": return [
+      { id: "new-note-here", label: "New note here", icon: AI.plus, kind: "primary", run: () => ws.openDetail(id, { panelType: "note", resourceKey: "nte:" + notesApp.addNote(key.slice(4)) }) },
+      { id: "del-folder", label: "Delete folder", icon: AI.trash, kind: "destructive", run: () => { notesApp.removeFolder(key.slice(4)); ws.closePanel(id); } },
+    ];
+    case "datahome": return [
+      { id: "new-table", label: "New table", icon: AI.plus, kind: "primary", run: () => ws.openDetail(id, { panelType: "datatable", resourceKey: "dtc:" + dataApp.addCollection() }) },
+    ];
+    case "datatable": return [
+      { id: "new-row", label: "New row", icon: AI.plus, kind: "primary", run: () => {
+        dataApp.addRow(key.slice(4));
+        // keep the stage still: just reveal the new row inside the table
+        requestAnimationFrame(() => {
+          const sc = document.querySelector(".panel.focused .dt-scroll, .dt-scroll");
+          if (sc) sc.scrollTop = sc.scrollHeight;
+        });
+      } },
+      { id: "del-table", label: "Delete table", icon: AI.trash, kind: "destructive", run: () => { dataApp.removeCollection(key.slice(4)); ws.closePanel(id); } },
+    ];
+    case "datarow": return [
+      { id: "del-row", label: "Delete row", icon: AI.trash, kind: "destructive", run: () => {
+        const [, cid, rid] = key.split(":");
+        dataApp.removeRow(cid, rid);
+        ws.closePanel(id);
+      } },
+    ];
+    case "task": return [
+      { id: "del-task", label: "Delete task", icon: AI.trash, kind: "destructive", run: () => { notesApp.removeTask(key.slice(4)); ws.closePanel(id); } },
+    ];
+    case "tasks": return [
+      { id: "new-category", label: "New category", icon: AI.plus, kind: "primary", run: () => notesApp.addCategory() },
+    ];
+    case "block": return [
+      { id: "live-demo", label: "Live demo: full width", icon: AI.play, kind: "primary", run: () => ws.openDetail(id, { panelType: "blocklive", resourceKey: key }) },
+    ];
+    default:
+      return n.composer ? [{ id: "composer", label: n.composer.replace("…", ""), icon: AI.plus, kind: "primary", run: () => { /* demo action zone */ } }] : [];
+  }
+}
+
 function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; deepLink: (k: string, fromRefId?: string) => void; compact?: boolean; collapsed?: boolean; onExpand?: () => void }) {
   const ws = useWorkspace();
   const [gear, setGear] = useState(false);
@@ -1226,118 +1389,25 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
           <PlatformFoot panelType={p.target.panelType} resourceKey={p.target.resourceKey} panelId={id} closePanel={() => ws.closePanel(id)} />
         ) : isCanvas ? (
           <span className="foot-note">Canvas: click a node to inspect · drag a handle to connect</span>
-        ) : p.target.panelType === "canvasnode" ? (
-          <div className="foot-actions">
-            <button className="d-btn outline sm"
-              onClick={() => {
-                const nid = p.target.resourceKey.slice(4);
-                const src = board.node(nid);
-                if (src) board.update((st) => ({ ...st, seq: st.seq + 1, nodes: [...st.nodes, { ...src, id: "n" + (st.seq + 1), x: src.x + 24, y: src.y + 24 }] }));
-              }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg> Duplicate: ⌘D
-            </button>
-            <button className="d-btn destructive sm"
-              onClick={() => {
-                const nid = p.target.resourceKey.slice(4);
-                board.update((st) => ({ ...st, nodes: st.nodes.filter((x) => x.id !== nid), edges: st.edges.filter((e) => e.source !== nid && e.target !== nid) }));
-                ws.closePanel(id);
-              }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete element
-            </button>
-          </div>
-        ) : p.target.panelType === "canvasedge" ? (
-          <div className="foot-actions">
-            <button className="d-btn destructive sm"
-              onClick={() => {
-                const eid = p.target.resourceKey.slice(4);
-                board.update((st) => ({ ...st, edges: st.edges.filter((x) => x.id !== eid) }));
-                ws.closePanel(id);
-              }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete link
-            </button>
-          </div>
-        ) : p.target.panelType === "note" ? (
-          <div className="foot-actions">
-            <button className="d-btn destructive sm"
-              onClick={() => { notesApp.removeNote(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete note
-            </button>
-          </div>
-        ) : p.target.panelType === "notes" ? (
-          <div className="foot-actions">
-            <button className="foot-cta"
-              onClick={() => ws.openDetail(id, { panelType: "note", resourceKey: "nte:" + notesApp.addNote() })}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New note
-            </button>
-            <button className="d-btn outline sm" onClick={() => notesApp.addFolder()}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.2 3.9A2 2 0 0 0 7.5 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /><path d="M12 10v6M9 13h6" /></svg> New folder</button>
-          </div>
-        ) : p.target.panelType === "notefolder" ? (
-          <div className="foot-actions">
-            <button className="foot-cta"
-              onClick={() => ws.openDetail(id, { panelType: "note", resourceKey: "nte:" + notesApp.addNote(p.target.resourceKey.slice(4)) })}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New note here
-            </button>
-            <button className="d-btn destructive sm"
-              onClick={() => { notesApp.removeFolder(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete folder
-            </button>
-          </div>
-        ) : p.target.panelType === "datahome" ? (
-          <div className="foot-actions">
-            <button className="foot-cta"
-              onClick={() => ws.openDetail(id, { panelType: "datatable", resourceKey: "dtc:" + dataApp.addCollection() })}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New table
-            </button>
-          </div>
-        ) : p.target.panelType === "datatable" ? (
-          <div className="foot-actions">
-            <button className="foot-cta"
-              onClick={() => {
-                dataApp.addRow(p.target.resourceKey.slice(4));
-                // keep the stage still: just reveal the new row inside the table
-                requestAnimationFrame(() => {
-                  const sc = document.querySelector(".panel.focused .dt-scroll, .dt-scroll");
-                  if (sc) sc.scrollTop = sc.scrollHeight;
-                });
-              }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New row
-            </button>
-            <button className="d-btn destructive sm"
-              onClick={() => { dataApp.removeCollection(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete table
-            </button>
-          </div>
-        ) : p.target.panelType === "datarow" ? (
-          <div className="foot-actions">
-            <button className="d-btn destructive sm"
-              onClick={() => {
-                const [, cid, rid] = p.target.resourceKey.split(":");
-                dataApp.removeRow(cid, rid);
-                ws.closePanel(id);
-              }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete row
-            </button>
-          </div>
-        ) : p.target.panelType === "task" ? (
-          <div className="foot-actions">
-            <button className="d-btn destructive sm"
-              onClick={() => { notesApp.removeTask(p.target.resourceKey.slice(4)); ws.closePanel(id); }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg> Delete task
-            </button>
-          </div>
-        ) : p.target.panelType === "tasks" ? (
-          <button className="foot-cta" onClick={() => notesApp.addCategory()}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> New category</button>
-        ) : p.target.panelType === "block" ? (
-          <button className="foot-cta" onClick={() => ws.openDetail(id, { panelType: "blocklive", resourceKey: p.target.resourceKey })}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg> Live demo: full width
-          </button>
         ) : p.target.panelType === "blocklive" ? (
           <span className="foot-note">Live demo: real size, live tokens; change the accent in Settings and watch it follow</span>
-        ) : n.composer ? (
-          <button className="foot-cta" onClick={() => { /* demo action zone */ }}>{n.composer.replace("…", "")}</button>
-        ) : (
-          <span className="foot-note">Read-only</span>
-        )}
+        ) : (() => {
+          // ONE source of truth: the registry feeds the foot, the palette and the bridge
+          const acts = panelActions(p, n, id, ws);
+          return acts.length ? (
+            <div className="foot-actions">
+              {acts.map((a) => (
+                <button key={a.id}
+                  className={a.kind === "primary" ? "foot-cta" : a.kind === "destructive" ? "d-btn destructive sm" : "d-btn outline sm"}
+                  onClick={a.run}>
+                  {a.icon} {a.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span className="foot-note">Read-only</span>
+          );
+        })()}
         <button className="foot-gear" title="Panel settings" onClick={() => setGear((v) => !v)}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
         </button>
@@ -1518,6 +1588,28 @@ function Palette({ onClose, deepLink, say, setTheme }: {
 
   const items = useMemo<PaletteItem[]>(() => {
     const out: PaletteItem[] = [];
+    // CONTEXT FIRST: the focused panel's registry actions, addressable by name
+    const fid = ws.state.focusedPanelId ?? ws.state.contextLeafId;
+    const fp = fid ? ws.state.panelsById[fid] : null;
+    if (fp && fp.placement === "context") {
+      const fn = DOMAIN[fp.target.resourceKey] ?? { title: titleOfKey(fp.target.resourceKey) };
+      for (const a of panelActions(fp, fn, fid!, ws))
+        out.push({ tag: "action", label: (fn.title || titleOfKey(fp.target.resourceKey)) + ": " + a.label, run: a.run });
+    }
+    const curSig = ws.state.spaceId + "|" + ws.path.map((pid) => ws.state.panelsById[pid]?.target.resourceKey).join(">");
+    for (const r of readJSON<RecentThread>(RECENTS_KEY))
+      if (r.sig !== curSig)
+        out.push({ tag: "recent", label: "Recent: " + r.title, run: () => ws.openPath(r.spaceId, r.path.map((x) => ({ panelType: x.t, resourceKey: x.k }))) });
+    const layouts = readJSON<SavedLayout>(LAYOUTS_KEY);
+    for (const l of layouts)
+      out.push({ tag: "layout", label: "Layout: " + l.name, run: () => ws.restore(l.state as Parameters<typeof ws.restore>[0]) });
+    if (ws.state.rootInstanceId) {
+      const leaf = ws.state.contextLeafId ? ws.state.panelsById[ws.state.contextLeafId] : null;
+      const nm = (leaf ? titleOfKey(leaf.target.resourceKey) : "Workspace") + " · " + new Date().toTimeString().slice(0, 5);
+      out.push({ tag: "action", label: "Save current layout", run: () => { saveLayout(nm, ws.state); say("Layout saved: " + nm); } });
+    }
+    if (layouts.length)
+      out.push({ tag: "action", label: "Clear saved layouts", run: () => { localStorage.removeItem(LAYOUTS_KEY); say("Layouts cleared"); } });
     for (const sp of SPACES)
       out.push({ tag: "space", label: sp.label, run: () => ws.openSpace(sp.spaceId, targetOf(sp.rootKey)) });
     for (const [key, n] of Object.entries(DOMAIN))
@@ -1678,12 +1770,43 @@ function AgentDrawer({ onClose }: { onClose: () => void }) {
   };
 
   const [typing, setTyping] = useState(false);
+  // /commands run against the copilot bridge: the agent DRIVES the workspace
+  const runCommand = (t: string): string | null => {
+    const sx = (window as unknown as { stax?: Record<string, (...a: never[]) => unknown> }).stax;
+    if (!t.startsWith("/") || !sx) return null;
+    const [cmd, ...rest] = t.slice(1).split(/\s+/);
+    const arg = rest.join(" ");
+    switch (cmd) {
+      case "open": {
+        if (!arg) return "Usage: /open <title>";
+        const hits = (sx.find as (q: string) => { key: string; title: string }[])(arg);
+        if (!hits.length) return `Nothing titled "${arg}".`;
+        (sx.open as (k: string) => void)(hits[0].key);
+        return `Opened ${hits[0].title} (via window.stax.open("${hits[0].key}")).`;
+      }
+      case "actions": {
+        const acts = (sx.actions as () => { id: string; label: string }[])();
+        return acts.length ? "This panel can: " + acts.map((a) => `${a.label} (/run ${a.id})`).join(" · ") : "No registry actions on this panel.";
+      }
+      case "run": {
+        if (!arg) return "Usage: /run <actionId> (see /actions)";
+        return (sx.act as (i: string) => boolean)(arg) ? `Ran ${arg}.` : `No action "${arg}" on the focused panel.`;
+      }
+      case "pin": { (sx.pin as () => void)(); return "Pinned the focused panel."; }
+      case "close": { (sx.close as () => void)(); return "Closed the focused panel."; }
+      case "undo": { (sx.undo as () => void)(); return "Undone."; }
+      case "redo": { (sx.redo as () => void)(); return "Redone."; }
+      default:
+        return "I drive the workspace through window.stax. Try: /open <title> · /actions · /run <id> · /pin · /close · /undo · /redo";
+    }
+  };
   const send = (text: string) => {
     const t = text.trim();
     if (!t && atts.length === 0) return;
     const sent = atts;
+    const cmdReply = runCommand(t);
     const userMsg: ChatMsg = { me: true, t: t || "(attachment)", atts: sent };
-    const botMsg: ChatMsg = { me: false, t: answer(t, sent) };
+    const botMsg: ChatMsg = { me: false, t: cmdReply ?? answer(t, sent) };
     const deliver = (cid: string) => {
       setTyping(true);
       window.setTimeout(() => {

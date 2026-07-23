@@ -69,6 +69,8 @@ export interface WorkspaceApi {
   openPath: (spaceId: string, targets: PanelTarget[]) => void;
   resumeReference: (id: string, rebuild: (target: PanelTarget) => void) => void;
   moveReference: (id: string, dir: -1 | 1) => void;
+  /** replace the whole workspace with a saved snapshot (validated; undoable) */
+  restore: (snapshot: WorkspaceState) => void;
   /** step the workspace back to the state before the last intent (bounded stack) */
   undo: () => void;
   /** re-apply the last undone intent */
@@ -255,6 +257,14 @@ export function WorkspaceProvider({
           const { state: s2, target } = resumeReference(s, id);
           if (target) queueMicrotask(() => rebuild(target));
           return s2;
+        }),
+      restore: (snap) =>
+        setState((s) => {
+          if (!snap || snap.schemaVersion !== 1 || validate(snap).length > 0) return s;
+          undoStack.current.push(s);
+          if (undoStack.current.length > 50) undoStack.current.shift();
+          redoStack.current = [];
+          return snap;
         }),
       undo: () =>
         setState((s) => {
