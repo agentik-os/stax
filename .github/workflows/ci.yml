@@ -31,3 +31,5 @@ jobs:
           echo "preview never came up" && exit 1
       - name: The design laws are a GATE, not prose
         run: node packages/stax-migrate/index.mjs verify --url http://localhost:4173 --drills 4 --themes light,dark
+      - name: The committed regression specs (rail, chrome, ladder, seams)
+        run: cd apps/crm-specimen && BASE=http://localhost:4173 bunx playwright test -c e2e/playwright.config.ts
