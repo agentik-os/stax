@@ -57,7 +57,7 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .drill:hover .arr { color: var(--accent); transform: translateX(3px); }
 
 /* the foot: the ONLY action zone — one accent primary, quiet secondaries */
-.panel-foot { flex: none; display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: var(--secondary); border-top: 1px solid var(--border); }
+.panel-foot { flex: none; display: flex; align-items: center; gap: 7px; padding: 7px 14px; background: var(--secondary); border-top: 1px solid var(--border); }
 .foot-cta { height: 30px; padding: 0 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; background: var(--accent); border: 1px solid var(--accent); color: var(--accent-foreground); }
 .foot-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .foot-note { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }

@@ -221,7 +221,7 @@ img.avatar { border: 1px solid var(--border); }
 .leaf-note { border: none; border-top: 1px solid var(--border); border-radius: 0; padding: 13px 0 0; font-size: 13px; line-height: 1.6; color: var(--ink-2); text-wrap: pretty; }
 
 /* foot — the single action zone */
-.panel-foot { flex: none; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; padding: 11px 14px; position: relative; }
+.panel-foot { flex: none; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 14px; position: relative; }
 .foot-cta { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-foreground); border-radius: 7px; padding: 9px 14px 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1; flex: none; }
 .foot-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .foot-cta.ghost { border: 1px solid var(--border); background: transparent; color: var(--ink-2); }
@@ -302,10 +302,11 @@ img.avatar { border: 1px solid var(--border); }
 body[data-dots="off"] .stage, body[data-dots="off"] .push-stage { background-image: none; }
 
 /* foot search (the zip's per-panel search) */
-/* the panel SEARCH row: chrome under the bar, flat, never in the foot */
-.panel-search { display: flex; align-items: center; gap: 8px; padding: 4px 18px; border-bottom: 1px solid var(--border); flex: none; color: var(--muted-foreground); }
-.panel-search input { flex: 1; min-width: 0; border: none; background: transparent; padding: 7px 0; font-size: calc(var(--fz-body, 13.5px) * 0.93); font-family: var(--font-sans); color: var(--foreground); outline: none; box-shadow: none; }
-.panel-search input:focus, .panel-search input:focus-visible { border: none; outline: none; box-shadow: none; background: transparent; }
+/* the panel SEARCH lives in the FOOT: a quiet ⌕ beside the gear; active
+   search swaps the foot content into a borderless row, same height */
+.foot-search-row { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; color: var(--muted-foreground); }
+.foot-search-row input { flex: 1; min-width: 0; border: none; background: transparent; padding: 6px 0; font-size: calc(var(--fz-body, 13.5px) * 0.93); font-family: var(--font-sans); color: var(--foreground); outline: none; box-shadow: none; }
+.foot-search-row input:focus, .foot-search-row input:focus-visible { border: none; outline: none; box-shadow: none; background: transparent; }
 .ps-clr { width: 22px; height: 22px; border-radius: 6px; color: var(--muted-foreground); flex: none; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .ps-clr:hover { background: var(--secondary); color: var(--foreground); }
 .drill-empty { padding: 12px 4px; font-size: 12.5px; color: var(--muted-foreground); }

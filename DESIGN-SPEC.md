@@ -18,7 +18,7 @@ values in this file.
 │                margin 4px 0 8px                                               │
 │   .panel-sub   0.96 × fz-body · muted · margin 0 0 18px · max 54ch           │
 │   content …                                                                   │
-│ .panel-foot    padding 11px 14px · gap 8 · 1px top border · bg secondary      │
+│ .panel-foot    padding 7px 14px  · gap 8 · 1px top border · bg secondary      │
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -77,11 +77,12 @@ values in this file.
   accent-SOFT chip (never accent-filled: the one-primary law counts fills); its
   run computes a REAL insight from the panel's data and hands it to the agent
   surface (stax:ai). The palette and the bridge list them like any action.
-- The panel SEARCH is CHROME, never an action: list panels (a real list: 4+
-  children or an app list) get a ⌕ button in the BAR that toggles a flat search
-  row under it (borderless input, hairline bottom, autofocus; Escape closes the
-  ROW, not the panel). It live-filters the panel's lists; zero matches show a
-  one-sentence empty state with the next action.
+- The panel SEARCH lives in the FOOT: list panels (a real list: 4+ children or
+  an app list) get a quiet icon-only ⌕ beside the gear; clicking it swaps the
+  foot content into a borderless search row (same 44px height, autofocus, a
+  quiet ×; Escape restores the actions, never closes the panel). It
+  live-filters the panel's lists; zero matches show a one-sentence empty state
+  with the next action.
 
 ## 2 · Type & numbers
 
@@ -137,7 +138,7 @@ pixel font-size that ignores them is a defect.
 | Inline rename / boxed edit-in-place | `.inline-edit` — text-like, zero border, zero ring |
 | Focus ring on inputs | ONE accent-tinted border; outline reserved for buttons (keyboard) |
 | Toolbar of 10+ flat buttons | Grouped smart menus (trigger shows active state) |
-| List page with a search box | Bar ⌕ + flat search row under the bar (chrome); never an input in the foot |
+| List page with a search box | Foot ⌕ toggle: the foot swaps into a borderless search row (same height); Escape restores the actions |
 | Menu / dropdown items | Sans 500 rows; MONO uppercase group labels; selected = accent-soft text + right ✓ — never a filled slab; segments keep the soft fill |
 | Record side peek (Notion-style) | Row hover reveals an `Open` chip on the title cell → the ENTITY SHEET: a fixed right drawer (agent-drawer language, 440px) with header (table eyebrow · icon actions ↗/⋯/×), serif editable title, PIPELINE PILLS derived from the first select field (click = set stage, live in the grid), underline facet tabs (Fields · Page · Activity · n) and a per-row note/task stream with a composer. `Open as panel` converts the peek into a thread panel |
 | Toast / snackbar stacks | `.toast` mono pill, bottom-center |
