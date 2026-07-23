@@ -1,6 +1,7 @@
 /* Starter styles: the Stax grammar in ~180 lines. Tokens first (tokens.css),
-   hairlines over boxes, ONE accent, separators share the head hairline's exact
-   bounds (only the hover fill bleeds). Full contract: DESIGN-SPEC.md */
+   hairlines over boxes, ONE accent, and the ZERO-BLEED RAIL: the hover fill,
+   the separators and the text share exactly the same bounds — nothing ever
+   overhangs; hovered edge content breathes by transform. Contract: DESIGN-SPEC.md */
 html, body, #root { margin: 0; height: 100%; overflow: hidden; background: var(--background); }
 body { font-family: var(--font-sans); font-size: var(--fz-body, 13.5px); color: var(--foreground); line-height: 1.55; }
 * { box-sizing: border-box; }
@@ -34,29 +35,30 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .stat { min-width: 0; padding: 2px 18px 2px 0; }
 .stat + .stat { border-left: 1px solid var(--border); padding-left: 18px; }
 .stat .lab { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stat .val { font-family: var(--font-mono); font-size: 27px; line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; font-weight: 500; }
+.stat .val { font-family: var(--font-mono); font-size: 17px; line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; font-weight: 500; }
 
-/* drills: the list bleeds 12px so the hover fill breathes; separators are
-   12px-INSET pseudo hairlines — every line shares the head hairline's bounds */
-.drills { display: flex; flex-direction: column; position: relative; margin: 0 -12px; }
-.drills::before { content: ""; position: absolute; left: 12px; right: 12px; top: 0; border-top: 1px solid var(--border); transition: left 130ms var(--ease), right 130ms var(--ease); }
-.drill { display: flex; align-items: center; gap: 12px; padding: 12px; text-align: left; width: 100%; position: relative; border-radius: 0; transition: background 130ms var(--ease); }
-.drill::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease), left 130ms var(--ease), right 130ms var(--ease); pointer-events: none; }
+/* drills: the ZERO-BLEED RAIL — rows sit ON the text rail (margin 0, padding
+   12px 0, hairlines at left/right 0): fill == separators == text, exactly.
+   Hover turns the row's own hairline accent IN PLACE, and the edge content
+   breathes INSIDE the fill (index +10px, arrow -10px, transform only). */
+.drills { display: flex; flex-direction: column; position: relative; margin: 0; }
+.drills::before { content: ""; position: absolute; left: 0; right: 0; top: 0; border-top: 1px solid var(--border); }
+.drill { display: flex; align-items: center; gap: 12px; padding: 12px 0; text-align: left; width: 100%; position: relative; border-radius: 0; transition: background 130ms var(--ease); }
+.drill::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease); pointer-events: none; }
 .drill:hover { background: var(--secondary); }
-.drill:hover::after { border-color: var(--accent); left: 0; right: 0; }
-.drill:has(+ .drill:hover)::after { left: 0; right: 0; }
-.drills:has(> .drill:first-child:hover)::before { left: 0; right: 0; }
+.drill:hover::after { border-color: var(--accent); }
 .drills .drill:last-child::after { border-bottom-color: transparent; }
-.drill .no { font-family: var(--font-mono); font-size: 10px; color: var(--muted-foreground); width: 26px; flex: none; }
-.drill:hover .no { color: var(--accent); }
+.drill .no { font-family: var(--font-mono); font-size: 10px; color: var(--muted-foreground); width: 26px; flex: none; transition: transform 130ms var(--ease), color 130ms var(--ease); }
+.drill:hover .no { color: var(--accent); transform: translateX(10px); }
 .drill .bd { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .drill .tt { font-weight: 500; font-size: 13px; }
 .drill .ss { font-size: 12px; color: var(--muted-foreground); }
 .drill .arr { color: var(--muted-foreground); flex: none; transition: transform 130ms var(--ease), color 130ms var(--ease); }
-.drill:hover .arr { color: var(--accent); transform: translateX(3px); }
+.drill:hover .arr { color: var(--accent); transform: translateX(-10px); }
+.drill:active .arr { transform: translateX(-6px); }
 
 /* the foot: the ONLY action zone — one accent primary, quiet secondaries */
-.panel-foot { flex: none; display: flex; align-items: center; gap: 7px; padding: 7px 14px; background: var(--secondary); border-top: 1px solid var(--border); }
+.panel-foot { flex: none; min-height: 44px; display: flex; align-items: center; gap: 7px; padding: 6px 14px; background: var(--secondary); border-top: 1px solid var(--border); }
 .foot-cta { height: 30px; padding: 0 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; background: var(--accent); border: 1px solid var(--accent); color: var(--accent-foreground); }
 .foot-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .foot-note { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }
