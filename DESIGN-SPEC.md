@@ -73,6 +73,10 @@ values in this file.
   accent chrome); destructive = `--destructive` TEXT on transparent chrome, soft
   red fill on hover. Never object-state toggles (pin/unpin) in the foot; never
   metadata lines.
+- AI actions are REGISTRY citizens: kind "ai" renders as the ✶ signature on an
+  accent-SOFT chip (never accent-filled: the one-primary law counts fills); its
+  run computes a REAL insight from the panel's data and hands it to the agent
+  surface (stax:ai). The palette and the bridge list them like any action.
 - The panel SEARCH is CHROME, never an action: list panels (a real list: 4+
   children or an app list) get a ⌕ button in the BAR that toggles a flat search
   row under it (borderless input, hairline bottom, autofocus; Escape closes the
@@ -199,6 +203,18 @@ outside it.
 - home glyph → thread crumbs (mono, focused = accent, click = navigateTo rewind) ·
   spacer · transient toasts (inline text, never floating pills over the UI) ·
   repo/GitHub link · theme toggle — both as bare 24px icons, menus open UPWARD.
+
+**Shareable workspaces:** "Copy workspace link" carries the FULL state
+(gzip+base64url in `#ws=…`, no backend); a receiver restores it at boot OR on
+live hash paste, then the hash rewrites to the normal thread encoding.
+
+**Devtools (sys panel):** the workspace inspected by itself — live state JSON,
+the intent history (each entry = the state an intent replaced), Jump =
+time travel through ws.restore (undoable). The keyboard map ships as the "?"
+overlay (palette chrome, Escape closes it first).
+
+**The design laws are CI:** `stax-migrate verify --url` runs on every push/PR
+(build → preview → scan): L-ALIGN, L-RHYTHM, L-FOOT, L-FLOW fail the build.
 
 **The copilot bridge:** the shell exposes `window.stax` (serializable state,
 intents, the action registry) so agents DRIVE the workspace instead of faking

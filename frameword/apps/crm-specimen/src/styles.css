@@ -669,6 +669,18 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 /* secondary: neutral hairline, ink text, secondary fill on hover — never accent */
 .panel-foot .d-btn, .panel-foot .foot-cta.ghost { background: transparent; border: 1px solid var(--border); color: var(--ink-2); }
 .panel-foot .d-btn:hover, .panel-foot .foot-cta.ghost:hover { background: var(--secondary); color: var(--foreground); border-color: var(--border); transform: none; }
+.kb-map { width: 460px; }
+.kb-rows { padding: 8px 6px 10px; }
+.kb-row { display: flex; align-items: baseline; gap: 14px; padding: 7px 12px; }
+.kb-row + .kb-row { border-top: 1px solid var(--border); }
+.kb-key { font-family: var(--font-mono); font-size: 11px; color: var(--accent); flex: none; width: 84px; font-variant-numeric: tabular-nums; }
+.kb-desc { font-size: 12.5px; color: var(--ink-2); }
+.dev-json { max-height: 300px; overflow: auto; font-size: 10.5px; line-height: 1.5; margin-top: 8px; }
+/* AI actions: the ✶ signature on an accent-soft chip (never accent-FILLED:
+   the one-primary law counts filled accents) */
+.panel-foot .d-btn.ai { border-color: transparent; background: var(--accent-soft); color: var(--accent); }
+.panel-foot .d-btn.ai:hover { background: color-mix(in oklab, var(--accent) 18%, var(--accent-soft)); color: var(--accent); border-color: transparent; }
+.panel-foot .d-btn.ai .sig { font-size: 11px; }
 /* destructive: red TEXT button, soft red fill on hover */
 .panel-foot .d-btn.destructive { border-color: transparent; color: var(--destructive); }
 .panel-foot .d-btn.destructive:hover { background: color-mix(in oklab, var(--destructive) 10%, transparent); color: var(--destructive); border-color: transparent; }

@@ -724,6 +724,19 @@ function cmdRun(target, agent, phaseFlag) {
 }
 
 /* upgrade — bring an ALREADY-STAX project up to the latest layout/design grammar */
+async function cmdTheme(flags) {
+  const from = flags.from;
+  if (!from) {
+    console.log("Usage: stax-migrate theme --from \"#e11d48\"");
+    console.log("Emits the full OKLCH accent ramp (both themes) for your brand color.");
+    process.exit(2);
+  }
+  const { themeBlock } = await import(new URL("./theme.mjs", import.meta.url).href);
+  const block = themeBlock(String(from));
+  if (!block) { console.error(`theme: "${from}" is not a #rrggbb color`); process.exit(2); }
+  console.log(block);
+}
+
 function cmdVerify(flags) {
   const url = flags.url;
   if (!url) {
@@ -889,6 +902,9 @@ async function main() {
         break;
       case "verify":
         cmdVerify(flags);
+        break;
+      case "theme":
+        await cmdTheme(flags);
         break;
       case "contract":
         cmdContract(resolveTarget(pos[0]));

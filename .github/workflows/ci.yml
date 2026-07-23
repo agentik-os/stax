@@ -14,3 +14,20 @@ jobs:
       - run: bun test packages/panels-core packages/stax-migrate
       - run: cd apps/crm-specimen && bunx tsc --noEmit
       - run: bun run build
+
+  design-gate:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frameword } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run build
+      - name: Serve the built app (wait until it answers)
+        run: |
+          (cd apps/crm-specimen && bunx vite preview --strictPort --port 4173 &)
+          for i in $(seq 1 30); do curl -sf http://localhost:4173 >/dev/null && exit 0; sleep 1; done
+          echo "preview never came up" && exit 1
+      - name: The design laws are a GATE, not prose
+        run: node packages/stax-migrate/index.mjs verify --url http://localhost:4173 --drills 4

@@ -10,5 +10,8 @@
     "build": "cd apps/crm-specimen && bunx vite build",
     "dev": "cd apps/crm-specimen && bunx vite --port 5799",
     "build:packages": "cd packages/panels-core && bun run build && cd ../panels-react && bun run build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0"
   }
 }

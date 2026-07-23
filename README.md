@@ -106,6 +106,12 @@ undo/redo` — the same action registry the foot and ⌘K read. Paste `agents.md
 M8 prompt into any agent and it can drive the UI; the demo drawer's `/commands`
 (`/open acme`, `/actions`, `/run new-row`, `/undo`) are the bridge, spoken.
 
+## Generate your brand's accent ramp
+
+```bash
+bunx stax-migrate theme --from "#e11d48"   # full OKLCH ramp, both themes
+```
+
 ## Verify the design laws on any live app
 
 ```bash
@@ -133,6 +139,16 @@ const convexAdapter = (client: ConvexClient, userId: string): StorageAdapter => 
 
 Presence and merge strategies stay app-side; a live shared backend needs your
 own Convex/Supabase project and credentials.
+
+## Inspect, replay, share
+
+⌘K → "Open devtools" inspects the live state and TIME-TRAVELS the intent
+history (each entry is the state an intent replaced; Jump is undoable).
+⌘K → "Copy workspace link" gzips the FULL arrangement into `#ws=…` — a
+colleague opens the link (cold or pasted live) and gets your exact workspace.
+Press `?` anywhere for the keyboard map. AI actions (✶, accent-soft) live in
+the same action registry as everything else and hand computed insights to the
+agent drawer. The design laws run in CI on every push.
 
 ## Adopt Stax in ANY legacy project — structure AND design
 

@@ -71,6 +71,8 @@ export interface WorkspaceApi {
   moveReference: (id: string, dir: -1 | 1) => void;
   /** replace the whole workspace with a saved snapshot (validated; undoable) */
   restore: (snapshot: WorkspaceState) => void;
+  /** the undo stack, oldest first: each entry is the state BEFORE an intent */
+  history: () => WorkspaceState[];
   /** step the workspace back to the state before the last intent (bounded stack) */
   undo: () => void;
   /** re-apply the last undone intent */
@@ -195,7 +197,7 @@ export function WorkspaceProvider({
       const encoded = encodeLocation(state);
       const current = location.hash.slice(1);
       if (encoded !== current) {
-        if (urlMode === "push" && !popApply.current && current !== "" && encoded !== "") {
+        if (urlMode === "push" && !popApply.current && current !== "" && encoded) {
           history.pushState(null, "", "#" + encoded);
         } else {
           history.replaceState(null, "", encoded ? "#" + encoded : location.pathname);
@@ -258,6 +260,7 @@ export function WorkspaceProvider({
           if (target) queueMicrotask(() => rebuild(target));
           return s2;
         }),
+      history: () => [...undoStack.current],
       restore: (snap) =>
         setState((s) => {
           if (!snap || snap.schemaVersion !== 1 || validate(snap).length > 0) return s;

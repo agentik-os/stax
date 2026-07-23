@@ -48,6 +48,7 @@ const REGISTRY: PanelRegistry = {
   profile: { size: "M" },
   notes: { size: "M" },
   datahome: { size: "M" },
+  devtools: { size: "L" },
   datatable: { size: "XL" },
   datarow: { size: "L" },
   notefolder: { size: "M" },
@@ -280,6 +281,7 @@ function Shell() {
   const prof = useProfile();
   const [drawer, setDrawer] = useState(false);
   const [palette, setPalette] = useState(false);
+  const [kbMap, setKbMap] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [theme, setThemeState] = useState<string>(() => localStorage.getItem("frameword-theme") ?? "system");
 
@@ -384,7 +386,7 @@ function Shell() {
     return null;
   };
 
-  const SYS_ROOTS = ["sec:canvas", "sec:data", "sec:notes", "sec:tasks", "sys:profile", "sys:settings"];
+  const SYS_ROOTS = ["sec:canvas", "sec:data", "sec:notes", "sec:tasks", "sys:profile", "sys:settings", "sys:devtools"];
   /* the user closed the space's MAIN panel (a promoted child leads): true when
      the active root exists in this space but is NOT the space's root target */
   const mainClosed = (spaceId: string, rootKey: string) => {
@@ -424,13 +426,48 @@ function Shell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathSig]);
 
+  // a #ws= link carries a FULL shared workspace: restore it once, then the
+  // provider rewrites the hash to the normal thread encoding
+  const consumeShareHash = () => {
+    if (!location.hash.startsWith("#ws=")) return;
+    const payload = location.hash.slice(4);
+    // neutralize the #ws entry NOW: Back must never land on it again
+    history.replaceState(null, "", location.pathname);
+    void decodeShare<Parameters<typeof ws.restore>[0]>(payload).then((snap) => {
+      if (snap && snap.schemaVersion === 1 && snap.panelsById && typeof snap.panelsById === "object") {
+        ws.restore(snap);
+        say("Shared workspace restored");
+      } else say("That workspace link could not be read");
+    });
+  };
+  useEffect(() => {
+    consumeShareHash(); // a #ws= link at boot…
+    window.addEventListener("hashchange", consumeShareHash); // …or pasted into a LIVE session
+    return () => window.removeEventListener("hashchange", consumeShareHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // kind "ai" registry actions open the drawer with their computed insight
+  const [aiInject, setAiInject] = useState<{ id: number; text: string } | null>(null);
+  useEffect(() => {
+    const h = (e: Event) => {
+      const d = (e as CustomEvent<{ insight: string }>).detail;
+      setDrawer(true);
+      setAiInject({ id: Date.now(), text: d.insight });
+    };
+    const sayH = (e: Event) => say((e as CustomEvent<string>).detail);
+    window.addEventListener("stax:ai", h);
+    window.addEventListener("stax:say", sayH);
+    return () => { window.removeEventListener("stax:ai", h); window.removeEventListener("stax:say", sayH); };
+  }, []);
+
   /* ── the COPILOT BRIDGE: the workspace is DRIVABLE. window.stax exposes the
      serializable state and the intent surface — the same action registry the
      foot and the palette read. Contract: M8 in the Prompt pack / agents.md. ── */
   const bridgeRef = useRef<{ ws: typeof ws; deepLink: typeof deepLink } | null>(null);
   useEffect(() => { bridgeRef.current = { ws, deepLink }; });
   useEffect(() => {
-    const PERSONAL: Record<string, string> = { data: "sec:data", notes: "sec:notes", tasks: "sec:tasks", canvas: "sec:canvas", profile: "sys:profile", settings: "sys:settings" };
+    const PERSONAL: Record<string, string> = { data: "sec:data", notes: "sec:notes", tasks: "sec:tasks", canvas: "sec:canvas", profile: "sys:profile", settings: "sys:settings", devtools: "sys:devtools" };
     (window as unknown as { stax?: unknown }).stax = {
       getState: () => bridgeRef.current!.ws.state,
       path: () => bridgeRef.current!.ws.path.map((pid) => bridgeRef.current!.ws.state.panelsById[pid]?.target.resourceKey),
@@ -519,6 +556,14 @@ function Shell() {
         }
         return;
       }
+      // "?" shows the keyboard map (inert while typing)
+      if (e.key === "?" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const t = e.target as HTMLElement | null;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+        e.preventDefault();
+        setKbMap((v) => !v);
+        return;
+      }
       // ArrowUp/Down walk the drill rows of the list the focus is inside
       if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !e.metaKey && !e.ctrlKey && !e.altKey) {
         const t = e.target as HTMLElement | null;
@@ -557,6 +602,7 @@ function Shell() {
       if (document.querySelector(".nf-menu")) return; // the notification bell closes itself
       // an open in-panel popover (table menus, date pickers, cell flys…) always
       // mounts a .pop-bg backdrop: Escape closes IT, never the panel behind it
+      if (kbMap) return setKbMap(false);
       const popBg = document.querySelector(".pop-bg, .sheet-bg");
       if (popBg) {
         popBg.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
@@ -578,7 +624,7 @@ function Shell() {
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [palette, drawer, themeMenu, acctMenu, navOpen, orgMenu, ws]);
+  }, [palette, drawer, themeMenu, acctMenu, navOpen, orgMenu, kbMap, ws]);
 
   const path = ws.path;
   const refs = ws.state.referenceRailOrder;
@@ -907,7 +953,29 @@ function Shell() {
         </button>
       </div>}
 
-      {drawer && <AgentDrawer onClose={() => setDrawer(false)} />}
+      {drawer && <AgentDrawer onClose={() => setDrawer(false)} inject={aiInject} onInjectConsumed={() => setAiInject(null)} />}
+      {kbMap && (
+        <div className="palette-bg" onMouseDown={() => setKbMap(false)}>
+          <div className="palette kb-map" role="dialog" aria-label="Keyboard map" onMouseDown={(e) => e.stopPropagation()}>
+            <div className="palette-head"><span className="sig">✶</span><strong style={{ fontSize: 13 }}>Keyboard</strong><span style={{ flex: 1 }} /><span className="palette-esc">esc</span></div>
+            <div className="kb-rows">
+              {[["⌘K", "Quick open: spaces, panels, actions, layouts"],
+                ["⌘J", "Agent drawer (speaks /commands via window.stax)"],
+                ["⌘B", "Toggle the sidebar"],
+                ["⌘1-3", "Switch organization"],
+                ["[ · ]", "Move panel focus along the thread"],
+                ["↑ · ↓", "Walk the rows of a drill list"],
+                ["P", "Pin / unpin the focused panel"],
+                ["ctrl+X", "Close the focused panel"],
+                ["⌘Z · ⇧⌘Z", "Undo / redo the last workspace move"],
+                ["esc", "Close: overlay → palette → drawer → menus → leaf panel"],
+                ["?", "This map"]].map(([k, d]) => (
+                <div key={k} className="kb-row"><span className="kb-key">{k}</span><span className="kb-desc">{d}</span></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {palette && <Palette onClose={() => setPalette(false)} deepLink={deepLink} say={say} setTheme={setTheme} />}
       {toast && !prefs.crumb && <div className="toast">{toast}</div>}
     </div>
@@ -1020,6 +1088,23 @@ function PushHost({ deepLink }: { deepLink: (k: string, fromRefId?: string) => v
 
 /* ═══ Panel: bar 56 · body · foot ════════════════════════════════════ */
 
+/* ── shareable workspace links: the FULL state, gzip+base64url in #ws=…
+   (no backend, no deps: CompressionStream). The receiver restores it and the
+   provider immediately rewrites the hash to the normal thread encoding. ── */
+const b64uFromBuf = (buf: ArrayBuffer) => btoa(String.fromCharCode(...new Uint8Array(buf))).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+async function encodeShare(state: unknown): Promise<string> {
+  const stream = new Blob([JSON.stringify(state)]).stream().pipeThrough(new CompressionStream("gzip"));
+  return b64uFromBuf(await new Response(stream).arrayBuffer());
+}
+async function decodeShare<T>(str: string): Promise<T | null> {
+  try {
+    const bin = atob(str.replaceAll("-", "+").replaceAll("_", "/"));
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+    return JSON.parse(await new Response(stream).text()) as T;
+  } catch { return null; }
+}
+
 /* ── recent threads + saved layouts: device-local, palette-surfaced ──────
    A thread signature is spaceId + the key chain; a layout is a full validated
    WorkspaceState snapshot restored via ws.restore(). */
@@ -1033,17 +1118,98 @@ const noteRecent = (e: RecentThread) => {
   list.unshift(e);
   try { localStorage.setItem(RECENTS_KEY, JSON.stringify(list.slice(0, 8))); } catch { /* quota */ }
 };
+/** copy with an HONEST toast: resolves false when the Clipboard API is absent
+ *  (non-secure origin) or the write is denied */
+async function copyText(t: string): Promise<boolean> {
+  try {
+    if (!navigator.clipboard) return false;
+    await navigator.clipboard.writeText(t);
+    return true;
+  } catch { return false; }
+}
 const saveLayout = (name: string, state: unknown) => {
   const list = readJSON<SavedLayout>(LAYOUTS_KEY).filter((x) => x.name !== name);
   list.unshift({ name, state, ts: Date.now() });
   try { localStorage.setItem(LAYOUTS_KEY, JSON.stringify(list.slice(0, 6))); } catch { /* quota */ }
 };
 
+/* ── DEVTOOLS: the workspace inspected by itself. STATE is the live JSON;
+   HISTORY is the undo stack (each entry = the state BEFORE an intent);
+   Jump = ws.restore(entry) — validated and itself undoable. ── */
+function DevtoolsBody() {
+  const ws = useWorkspace();
+  const [, force] = useState(0);
+  const hist = ws.history();
+  const json = JSON.stringify(ws.state, null, 1);
+  const leafOf = (st: typeof ws.state) => {
+    const leaf = st.contextLeafId ? st.panelsById[st.contextLeafId] : null;
+    return leaf ? titleOfKey(leaf.target.resourceKey) : "(empty)";
+  };
+  return (
+    <>
+      <div className="section">
+        <div className="lab">State · {Object.keys(ws.state.panelsById).length} panels · {(json.length / 1024).toFixed(1)} KB</div>
+        <pre className="codeblock dev-json">{json}</pre>
+      </div>
+      <div className="section">
+        <div className="lab">History · {hist.length} intents recorded</div>
+        {hist.length === 0 && <p style={{ marginTop: 6 }}>No history yet: every intent records the state it replaced.</p>}
+        <div className="drills" style={{ marginTop: 8 }}>
+          {hist.map((st, i) => (
+            <div key={i} className="cv-conn-row">
+              <button className="drill" onClick={() => { ws.restore(st); force((x) => x + 1); }} title="Time-travel to this state (undoable)">
+                <span className="no">{String(i + 1).padStart(2, "0")}</span>
+                <span className="bd">
+                  <span className="tt" style={{ display: "block" }}>{leafOf(st)}</span>
+                  <span className="ss" style={{ display: "block" }}>{Object.keys(st.panelsById).length} panels · space {st.spaceId ?? "—"}</span>
+                </span>
+                <span className="arr">↩</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </>
+  );
+}
+
 /* ── the ACTION REGISTRY: one declaration per panel type. The foot, the ⌘K
    palette (contextual section) and the window.stax bridge all read THIS —
    kind maps to the foot hierarchy: primary accent · secondary quiet ·
    destructive red text. ── */
-export type PanelAction = { id: string; label: string; icon?: React.ReactNode; kind: "primary" | "secondary" | "destructive"; run: () => void };
+export type PanelAction = { id: string; label: string; icon?: React.ReactNode; kind: "primary" | "secondary" | "destructive" | "ai"; run: () => void };
+/* kind "ai" actions compute a REAL insight from the panel's data and hand it
+   to the agent drawer (stax:ai event) — deterministic in the specimen; an app
+   plugs its own LLM behind the same event. */
+const aiSay = (insight: string) => window.dispatchEvent(new CustomEvent("stax:ai", { detail: { insight } }));
+function tableInsight(colId: string): string {
+  const c = dataApp.col(colId);
+  if (!c) return "That table is gone.";
+  const cells = c.rows.length * c.fields.length;
+  const filled = c.rows.reduce((a, r) => a + c.fields.filter((f) => { const v = r.v[f.id]; return Array.isArray(v) ? v.length > 0 : v !== undefined && v !== "" && v !== false; }).length, 0);
+  const sel = c.fields.find((f) => f.type === "select" && (f.options?.length ?? 0) > 1);
+  let dist = "";
+  if (sel && c.rows.length > 0) {
+    const counts = new Map<string, number>();
+    for (const r of c.rows) { const v = String(r.v[sel.id] ?? "—"); counts.set(v, (counts.get(v) ?? 0) + 1); }
+    dist = " " + sel.name + ": " + [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(" · ") + ".";
+  }
+  return `${c.name}: ${c.rows.length} rows · ${c.fields.length} fields · ${c.views.length} view${c.views.length > 1 ? "s" : ""}; ${cells ? Math.round((100 * filled) / cells) : 0}% of cells filled.${dist}`;
+}
+function noteInsight(noteId: string): string {
+  const n = notesApp.note(noteId);
+  if (!n) return "That note is gone.";
+  const text = (n.body ?? "").replace(/<[^>]+>/g, " ");
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return `"${n.title || "Untitled note"}": ${words} words, last touched ${new Date(n.ts).toLocaleDateString()}. Opening line: ${text.trim().slice(0, 110) || "(empty)"}…`;
+}
+function panelInsight(key: string): string {
+  const n = DOMAIN[key];
+  if (!n) return "Nothing to explain here.";
+  const kids = n.children?.length ?? 0;
+  return `${n.title}${n.subtitle ? " — " + n.subtitle : ""}${kids ? ` It drills into ${kids} child panel${kids > 1 ? "s" : ""}.` : ""}${n.body ? " " + n.body.slice(0, 160) : ""}`.replace(" — ", ": ");
+}
 const AI = {
   plus: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>,
   trash: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>,
@@ -1078,6 +1244,7 @@ export function panelActions(
       } },
     ];
     case "note": return [
+      { id: "ai-recap", label: "Recap this note", kind: "ai", run: () => aiSay(noteInsight(key.slice(4))) },
       { id: "del-note", label: "Delete note", icon: AI.trash, kind: "destructive", run: () => { notesApp.removeNote(key.slice(4)); ws.closePanel(id); } },
     ];
     case "notes": return [
@@ -1092,6 +1259,7 @@ export function panelActions(
       { id: "new-table", label: "New table", icon: AI.plus, kind: "primary", run: () => ws.openDetail(id, { panelType: "datatable", resourceKey: "dtc:" + dataApp.addCollection() }) },
     ];
     case "datatable": return [
+      { id: "ai-summarize", label: "Summarize table", kind: "ai", run: () => aiSay(tableInsight(key.slice(4))) },
       { id: "new-row", label: "New row", icon: AI.plus, kind: "primary", run: () => {
         dataApp.addRow(key.slice(4));
         // keep the stage still: just reveal the new row inside the table
@@ -1115,11 +1283,26 @@ export function panelActions(
     case "tasks": return [
       { id: "new-category", label: "New category", icon: AI.plus, kind: "primary", run: () => notesApp.addCategory() },
     ];
+    case "devtools": return [
+      { id: "copy-state", label: "Copy state JSON", icon: AI.dup, kind: "secondary", run: () => {
+        void copyText(JSON.stringify(ws.state, null, 1)).then((ok) =>
+          window.dispatchEvent(new CustomEvent("stax:say", { detail: ok ? "State copied as JSON" : "Clipboard unavailable" })));
+      } },
+      { id: "copy-url", label: "Copy thread URL", icon: AI.dup, kind: "secondary", run: () => {
+        void copyText(location.href).then((ok) =>
+          window.dispatchEvent(new CustomEvent("stax:say", { detail: ok ? "URL copied" : "Clipboard unavailable" })));
+      } },
+    ];
     case "block": return [
       { id: "live-demo", label: "Live demo: full width", icon: AI.play, kind: "primary", run: () => ws.openDetail(id, { panelType: "blocklive", resourceKey: key }) },
     ];
-    default:
-      return n.composer ? [{ id: "composer", label: n.composer.replace("…", ""), icon: AI.plus, kind: "primary", run: () => { /* demo action zone */ } }] : [];
+    default: {
+      const out: PanelAction[] = [];
+      if (DOMAIN[key]?.body || DOMAIN[key]?.subtitle)
+        out.push({ id: "ai-explain", label: "Explain this panel", kind: "ai", run: () => aiSay(panelInsight(key)) });
+      if (n.composer) out.push({ id: "composer", label: n.composer.replace("…", ""), icon: AI.plus, kind: "primary", run: () => { /* demo action zone */ } });
+      return out;
+    }
   }
 }
 
@@ -1290,6 +1473,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             {p.target.panelType === "notefolder" && <FolderPanel folderKey={p.target.resourceKey} panelId={id} searchQ={q} />}
             {p.target.panelType.startsWith("pf") && <PlatformBody panelType={p.target.panelType} resourceKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "datahome" && <DataHome panelId={id} searchQ={q} />}
+            {p.target.panelType === "devtools" && <DevtoolsBody />}
             {p.target.panelType === "datatable" && <DataTable colKey={p.target.resourceKey} panelId={id} searchQ={q} />}
             {p.target.panelType === "datarow" && <DataRow rowKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "task" && <TaskDetail taskKey={p.target.resourceKey} panelId={id} />}
@@ -1398,9 +1582,9 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             <div className="foot-actions">
               {acts.map((a) => (
                 <button key={a.id}
-                  className={a.kind === "primary" ? "foot-cta" : a.kind === "destructive" ? "d-btn destructive sm" : "d-btn outline sm"}
+                  className={a.kind === "primary" ? "foot-cta" : a.kind === "destructive" ? "d-btn destructive sm" : a.kind === "ai" ? "d-btn ai sm" : "d-btn outline sm"}
                   onClick={a.run}>
-                  {a.icon} {a.label}
+                  {a.kind === "ai" ? <span className="sig">✶</span> : a.icon} {a.label}
                 </button>
               ))}
             </div>
@@ -1610,6 +1794,14 @@ function Palette({ onClose, deepLink, say, setTheme }: {
     }
     if (layouts.length)
       out.push({ tag: "action", label: "Clear saved layouts", run: () => { localStorage.removeItem(LAYOUTS_KEY); say("Layouts cleared"); } });
+    out.push({ tag: "action", label: "Open devtools", run: () => ws.openSpace("devtools", targetOf("sys:devtools")) });
+    if (ws.state.rootInstanceId)
+      out.push({ tag: "action", label: "Copy workspace link", run: () => {
+        void encodeShare(ws.state).then(async (b64) => {
+          const ok = await copyText(location.origin + location.pathname + "#ws=" + b64);
+          say(ok ? "Workspace link copied: the FULL arrangement travels with it" : "Clipboard unavailable: copy blocked on this origin");
+        });
+      } });
     for (const sp of SPACES)
       out.push({ tag: "space", label: sp.label, run: () => ws.openSpace(sp.spaceId, targetOf(sp.rootKey)) });
     for (const [key, n] of Object.entries(DOMAIN))
@@ -1714,12 +1906,28 @@ function loadAgentStore(): { size: DrawerSize; convos: Convo[]; activeId: string
   return { size: "M", convos: [], activeId: null };
 }
 
-function AgentDrawer({ onClose }: { onClose: () => void }) {
+function AgentDrawer({ onClose, inject, onInjectConsumed }: { onClose: () => void; inject?: { id: number; text: string } | null; onInjectConsumed?: () => void }) {
   const ws = useWorkspace();
   const init = useRef(loadAgentStore()).current;
   const [size, setSize] = useState<DrawerSize>(init.size);
   const [convos, setConvos] = useState<Convo[]>(init.convos);
   const [activeId, setActiveId] = useState<string | null>(init.activeId ?? init.convos[0]?.id ?? null);
+  // an AI registry action hands us its computed insight: append it ONCE
+  const lastInject = useRef(0);
+  useEffect(() => {
+    if (!inject || inject.id === lastInject.current) return;
+    lastInject.current = inject.id;
+    onInjectConsumed?.(); // the Shell clears it: a reopen must NOT re-append
+    const msg: ChatMsg = { me: false, t: inject.text };
+    setConvos((cs) => {
+      if (activeId && cs.some((c) => c.id === activeId))
+        return cs.map((c) => (c.id === activeId ? { ...c, ts: Date.now(), msgs: [...c.msgs, msg] } : c));
+      const nid = "c" + Date.now();
+      setActiveId(nid);
+      return [{ id: nid, title: inject.text.slice(0, 34), ts: Date.now(), msgs: [msg] }, ...cs];
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inject]);
   const [histOpen, setHistOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [atts, setAtts] = useState<ChatAtt[]>([]);

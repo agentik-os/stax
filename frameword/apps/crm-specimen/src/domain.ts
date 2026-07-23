@@ -770,6 +770,10 @@ export const SHADCN_ALL = [
 
 export const compKey = (name: string) => "cmp:" + name.toLowerCase().replace(/\s+/g, "-");
 
+DOMAIN["sys:devtools"] = {
+  panelType: "devtools", title: "Devtools.", eyebrow: "sys · dev",
+  subtitle: "The workspace, inspected by itself: live state, intent history, time travel. Everything here reads the same serializable state the URL carries.",
+};
 DOMAIN["sec:components"] = {
   panelType: "section", title: "Components", eyebrow: "Components · 07",
   subtitle: "The complete shadcn/ui catalog rendered with the WhitePaper tokens: every component is a drill; its demo opens beside the list.",

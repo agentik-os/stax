@@ -119,6 +119,18 @@
       "since": "0.6.0",
       "area": "agent",
       "title": "Copilot bridge: window.stax drives the workspace (state + intents + registry actions)"
+    },
+    {
+      "id": "U-021",
+      "since": "0.7.0",
+      "area": "agent",
+      "title": "AI actions in the registry: kind ai, accent-soft chip, computed insights via stax:ai"
+    },
+    {
+      "id": "U-022",
+      "since": "0.7.0",
+      "area": "ux",
+      "title": "Devtools time travel + shareable #ws links + the ? keyboard map"
     }
   ]
 }
