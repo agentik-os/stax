@@ -7,6 +7,7 @@
  * panel and every inspector panel stay in sync.
  */
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { K, mk } from "./keys";
 import {
   ReactFlow,
   Background,
@@ -609,10 +610,10 @@ function BoardInner({ panelId }: { panelId: string }) {
         <button title="Auto layout: tidy the graph" onClick={autoLayout}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="6" height="6" rx="1.5" /><rect x="15" y="4" width="6" height="6" rx="1.5" /><rect x="9" y="14" width="6" height="6" rx="1.5" /><path d="M6 10v2a2 2 0 0 0 2 2h1M18 10v2a2 2 0 0 1-2 2h-1" /></svg>
         </button>
-        <button title="Undo: ⌘Z" disabled={!board.canUndo()} onClick={() => board.undo()}>
+        <button title={"Undo: " + mk("Z")} disabled={!board.canUndo()} onClick={() => board.undo()}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 0 12h-3" /></svg>
         </button>
-        <button title="Redo: ⇧⌘Z" disabled={!board.canRedo()} onClick={() => board.redo()}>
+        <button title={"Redo: " + K.shiftMod + "Z"} disabled={!board.canRedo()} onClick={() => board.redo()}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14l5-5-5-5" /><path d="M20 9H10a6 6 0 0 0 0 12h3" /></svg>
         </button>
         <span className="cv-sep" />

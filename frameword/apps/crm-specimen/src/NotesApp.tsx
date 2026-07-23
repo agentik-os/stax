@@ -257,7 +257,8 @@ function ago(ts: number): string {
   return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 const stripHtml = (html: string) =>
-  html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  html.replace(/<\/(p|h[1-6]|li|blockquote|pre)>/gi, " · ").replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ").replace(/(?: ?· ?)+/g, " · ").replace(/^ ?· ?| ?· ?$/g, "").trim();
 const fmtDue = (due: string) => {
   const d = new Date(due + "T00:00:00");
   return isNaN(d.getTime()) ? due : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -315,7 +316,7 @@ export function NotesRoot({ panelId, searchQ = "" }: { panelId: string; searchQ?
               </span>
               <span className="arr">→</span>
             </button>
-            <button className="cv-conn-edit" title={n.pinned ? "Unpin" : "Pin to top"}
+            <button className={"drill-act" + (n.pinned ? " on" : "")} title={n.pinned ? "Unpin" : "Pin to top"}
               onClick={() => notesApp.patchNote(n.id, { pinned: !n.pinned })}>✶</button>
           </div>
         ))}
@@ -368,7 +369,7 @@ export function FolderPanel({ folderKey, panelId, searchQ = "" }: { folderKey: s
               </span>
               <span className="arr">→</span>
             </button>
-            <button className="cv-conn-edit" title={n.pinned ? "Unpin" : "Pin to top"}
+            <button className={"drill-act" + (n.pinned ? " on" : "")} title={n.pinned ? "Unpin" : "Pin to top"}
               onClick={() => notesApp.patchNote(n.id, { pinned: !n.pinned })}>✶</button>
           </div>
         ))}
@@ -390,6 +391,7 @@ export function TasksRoot({ panelId, searchQ = "", me }: { panelId: string; sear
   const view = s.view ?? "list";
   const group: TaskGroup = s.taskGroup ?? "cat";
   const [fly, setFly] = useState<null | "group" | "person" | "prio" | "project">(null);
+  const [composing, setComposing] = useState<string | null>(null);
   const [flyPos, setFlyPos] = useState<React.CSSProperties>({});
   const openFly = (id: typeof fly, e: { currentTarget: EventTarget & Element }) => { setFlyPos(popPos(e, 200, 170)); setFly(fly === id ? null : id); };
   // the group DRIVES both layouts: each entry knows how to WRITE itself on drop
@@ -471,7 +473,7 @@ export function TasksRoot({ panelId, searchQ = "", me }: { panelId: string; sear
     ) : null
   );
 
-  const QuickAdd = ({ cat }: { cat?: string }) => (
+  const QuickAdd = ({ cat, onClose }: { cat?: string; onClose?: () => void }) => (
     <form style={{ display: "flex", gap: 6 }}
       onSubmit={(e) => {
         e.preventDefault();
@@ -481,7 +483,8 @@ export function TasksRoot({ panelId, searchQ = "", me }: { panelId: string; sear
         notesApp.addTask(v, cat);
         inp.value = "";
       }}>
-      <input name="qtask" className="d-input" style={{ flex: 1, minWidth: 0 }} placeholder="Add a task…" />
+      <input name="qtask" className="d-input" style={{ flex: 1, minWidth: 0 }} placeholder="Add a task…" autoFocus={!!onClose}
+        onKeyDown={(e) => { if (e.key === "Escape" && onClose) { e.stopPropagation(); onClose(); } }} />
       <button className="d-btn outline sm" type="submit">Add</button>
     </form>
   );
@@ -574,7 +577,9 @@ export function TasksRoot({ panelId, searchQ = "", me }: { panelId: string; sear
               ))}
               {list.length === 0 && <p style={{ margin: 0 }}>Nothing here.</p>}
             </div>
-            {c ? <QuickAdd cat={c.id} /> : null}
+            {c ? (composing === c.id
+              ? <QuickAdd cat={c.id} onClose={() => setComposing(null)} />
+              : <button className="nt-ladd" onClick={() => setComposing(c.id)}>+ Add a task</button>) : null}
           </div>
         );
       })}

@@ -11,6 +11,7 @@ import {
 import { DOMAIN, SPACES, DASHBOARDS, dashboardOfSpace, chainOf, spaceOf } from "./domain";
 const ComponentDemo = lazy(() => import("./ComponentDemo").then((m) => ({ default: m.ComponentDemo })));
 import { BlockDemo } from "./BlockDemo";
+import { K, mk } from "./keys";
 import { board, boardFromPrompt } from "./boardStore";
 // the canvas renderer (React Flow + dagre) loads lazily: it is the heaviest
 // module in the app and only two panel types ever need it
@@ -287,6 +288,7 @@ function Shell() {
   const [paletteOut, setPaletteOut] = useState(false);
   const [drawerOut, setDrawerOut] = useState(false);
   const [kbMap, setKbMap] = useState(false);
+  const [touring, setTouring] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [toastOut, setToastOut] = useState(false);
   const [theme, setThemeState] = useState<string>(() => localStorage.getItem("frameword-theme") ?? "system");
@@ -468,7 +470,7 @@ function Shell() {
   const runTour = useCallback(() => {
     if (tourOn.current) return;
     tourOn.current = true;
-    try { localStorage.setItem("frameword-toured", "1"); } catch { /* private mode */ }
+    setTouring(true);
     const sx = (window as unknown as { stax: Record<string, (...a: never[]) => unknown> }).stax;
     const steps: [string, () => unknown][] = [
       ["A Space opens as its ROOT panel", () => (sx.openSpace as (s: string) => void)("overview")],
@@ -477,17 +479,23 @@ function Shell() {
       ["Switch space: the pinned panel rides the reference rail", () => (sx.openSpace as (s: string) => void)("crm")],
       ["Every list drills the same way: one mechanic", () => (sx.open as (k: string) => void)("acc:acme")],
       ["× closes the leaf…", () => (sx.close as () => void)()],
-      ["…and ⌘Z brings it back: every move is undoable", () => (sx.undo as () => void)()],
+      [`…and ${mk("Z")} brings it back: every move is undoable`, () => (sx.undo as () => void)()],
       ["The URL carried every step. That's Stax.", () => (sx.openSpace as (s: string) => void)("overview")],
     ];
     let i = 0;
     const tick = () => {
-      if (!tourOn.current) { say("Tour stopped"); return; }
-      if (i >= steps.length) { tourOn.current = false; say("Tour done · ⌘K anytime · ? for keys"); return; }
+      if (!tourOn.current) { setTouring(false); say("Tour stopped"); return; }
+      if (i >= steps.length) {
+        tourOn.current = false;
+        setTouring(false);
+        try { localStorage.setItem("frameword-toured", "1"); } catch { /* private mode */ }
+        say(`Tour done · ${mk("K")} anytime · ? for keys`);
+        return;
+      }
       const [msg, act] = steps[i++];
       say(`✶ TOUR ${i}/${steps.length} · ${msg} · ESC STOPS`);
       try { act(); } catch { /* a missing key never derails the tour */ }
-      window.setTimeout(tick, 1800);
+      window.setTimeout(tick, 2400);
     };
     tick();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -672,7 +680,7 @@ function Shell() {
         return;
       }
       if (e.key !== "Escape") return;
-      if (tourOn.current) { tourOn.current = false; return; }
+      if (tourOn.current) { tourOn.current = false; setTouring(false); return; }
       if (document.querySelector(".nf-menu")) return; // the notification bell closes itself
       // an open in-panel popover (table menus, date pickers, cell flys…) always
       // mounts a .pop-bg backdrop: Escape closes IT, never the panel behind it
@@ -708,7 +716,7 @@ function Shell() {
     <PrefsCtx.Provider value={{ prefs, set: setPrefs, reset: () => setPrefsState(DEFAULT_PREFS), theme, setTheme }}>
     <div className="frame">
       <div className="topbar">
-        <button className="tb-icon" title="Toggle sidebar: ⌘B" onClick={() => setSbOpen((v) => !v)}>
+        <button className="tb-icon" title={"Toggle sidebar: " + mk("B")} onClick={() => setSbOpen((v) => !v)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /></svg>
         </button>
         <span className="tb-sep" aria-hidden />
@@ -778,7 +786,7 @@ function Shell() {
             </div>
           </>
         )}
-        <button className="tb-btn agent" title="Agent: ⌘J" onClick={() => setDrawer((v) => !v)}>✶</button>
+        <button className="tb-btn agent" title={"Agent: " + mk("J")} onClick={() => setDrawer((v) => !v)}>✶</button>
       </div>
 
       <div className="mid">
@@ -818,7 +826,7 @@ function Shell() {
                       onClick={() => { setOrg(o); setOrgMenu(false); say(`Switched to ${o.name}`); }}>
                       <span className="org-ico"><OrgIcon id={o.id} /></span>
                       <span style={{ flex: 1, textAlign: "left" }}>{o.name}</span>
-                      <span className="kbd" style={{ minWidth: 0 }}>⌘{i + 1}</span>
+                      <span className="kbd" style={{ minWidth: 0 }}>{K.mod}{i + 1}</span>
                     </button>
                   ))}
                   <div className="menu-sep" />
@@ -835,7 +843,7 @@ function Shell() {
             <button className="sb-cta" onClick={() => setPalette(true)}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
               Quick open
-              <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 9.5, opacity: 0.7 }}>⌘K</span>
+              <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 9.5, opacity: 0.7 }}>{mk("K")}</span>
             </button>
           </div>
           {sbSpace ? (
@@ -994,8 +1002,15 @@ function Shell() {
       </div>
 
       {prefs.crumb && <div className="crumbbar">
-        <span className="crumb" title={activeDash.label + ": home"} style={{ display: "inline-flex", alignItems: "center" }}
-          onClick={() => ws.state.rootInstanceId && ws.closePanel(ws.state.rootInstanceId)}>
+        <span className="crumb" title={activeDash.label + ": home · click focuses the root · ⌥click rewinds"} style={{ display: "inline-flex", alignItems: "center" }}
+          onClick={(e) => {
+            const st = ws.state;
+            if (!st.rootInstanceId) return;
+            if (e.altKey) { ws.navigateTo(st.rootInstanceId); return; }
+            setRootCollapsed(false);
+            ws.focusPanel(st.rootInstanceId);
+            document.querySelector(".stage")?.scrollTo({ left: 0, behavior: "smooth" });
+          }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9.5 9-7 9 7" /><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10" /></svg>
         </span>
         {compact && path.length > 2 && (
@@ -1022,14 +1037,16 @@ function Shell() {
         {refs.length > 0 && (
           <>
             <span style={{ flex: 1 }} />
-            <span className="crumb" style={{ color: "var(--accent)" }}>
+            <span className="crumb" style={{ color: "var(--accent)" }}
+              title={refs.length > 1 ? "Pinned references: show the rail" : "Pinned reference: show the rail"}
+              onClick={() => { ws.focusPanel(refs[0]); scrollPanelIntoView(refs[0]); }}>
               {refs.length} pinned ref{refs.length > 1 ? "s" : ""}
             </span>
           </>
         )}
         <span style={{ flex: 1 }} />
-        <span role="status" aria-live="polite" style={{ display: "contents" }}>{toast && <span className={"crumb-toast" + (toastOut ? " out" : "")}>{toast}</span>}</span>
-        <button className="crumb-goto" title="Go to anything · ⌘K" onClick={() => setPalette(true)}>⌘K</button>
+        <span role="status" aria-live="polite" style={{ display: "contents" }}>{toast && !touring && <span className={"crumb-toast" + (toastOut ? " out" : "")}>{toast}</span>}</span>
+        <button className="crumb-goto" title={"Go to anything · " + mk("K")} onClick={() => setPalette(true)}>{mk("K")}</button>
         <a className="crumb-theme crumb-gh" href="https://github.com/agentik-os/stax" target="_blank" rel="noreferrer" title="GitHub: source & docs">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" /><path d="M9 18c-4.51 2-5-2-7-2" /></svg>
         </a>
@@ -1044,15 +1061,15 @@ function Shell() {
           <div className="palette kb-map" role="dialog" aria-label="Keyboard map" onMouseDown={(e) => e.stopPropagation()}>
             <div className="palette-head"><span className="sig">✶</span><strong style={{ fontSize: 13 }}>Keyboard</strong><span style={{ flex: 1 }} /><span className="palette-esc">esc</span></div>
             <div className="kb-rows">
-              {[["⌘K", "Quick open: spaces, panels, actions, layouts"],
-                ["⌘J", "Agent drawer (speaks /commands via window.stax)"],
-                ["⌘B", "Toggle the sidebar"],
-                ["⌘1-3", "Switch organization"],
+              {[[mk("K"), "Quick open: spaces, panels, actions, layouts"],
+                [mk("J"), "Agent drawer (speaks /commands via window.stax)"],
+                [mk("B"), "Toggle the sidebar"],
+                [`${K.mod}1-3`, "Switch organization"],
                 ["[ · ]", "Move panel focus along the thread"],
                 ["↑ · ↓", "Walk the rows of a drill list"],
                 ["P", "Pin / unpin the focused panel"],
-                ["ctrl+X", "Close the focused panel"],
-                ["⌘Z · ⇧⌘Z", "Undo / redo the last workspace move"],
+                [`${K.ctrl}X`, "Close the focused panel"],
+                [`${mk("Z")} · ${K.shiftMod}Z`, "Undo / redo the last workspace move"],
                 ["esc", "Close: overlay → palette → drawer → menus → leaf panel"],
                 ["?", "This map"]].map(([k, d]) => (
                 <div key={k} className="kb-row"><span className="kb-key">{k}</span><span className="kb-desc">{d}</span></div>
@@ -1062,7 +1079,7 @@ function Shell() {
         </div>
       )}
       {palette && <Palette closing={paletteOut} onClose={() => { setPaletteOut(true); window.setTimeout(() => { setPalette(false); setPaletteOut(false); }, 140); }} deepLink={deepLink} say={say} setTheme={setTheme} />}
-      {toast && !prefs.crumb && <div className="toast">{toast}</div>}
+      {toast && (!prefs.crumb || touring) && <div className={"toast" + (touring ? " tour" : "")} role="status">{toast}</div>}
     </div>
     </PrefsCtx.Provider>
   );
@@ -1095,6 +1112,28 @@ function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: s
     if (left !== el.scrollLeft) el.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
   }, [count, ws.state.contextLeafId, ws.state.rootInstanceId, ws.path.length, sizes]);
 
+  // a PLAIN vertical wheel translates the horizontal stage (mouse users have no
+  // trackpad gesture); anything that scrolls natively keeps its wheel untouched
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.defaultPrevented || e.ctrlKey) return;
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      if (el.scrollWidth <= el.clientWidth) return;
+      const t = e.target as Element | null;
+      if (t?.closest(".react-flow, .sheet, .sheet-bg")) return;
+      for (let n = t as HTMLElement | null; n && n !== el; n = n.parentElement) {
+        const oy = getComputedStyle(n).overflowY;
+        if ((oy === "auto" || oy === "scroll") && n.scrollHeight > n.clientHeight + 1) return;
+      }
+      e.preventDefault();
+      el.scrollBy({ left: e.deltaY * (e.deltaMode === 1 ? 24 : e.deltaMode === 2 ? el.clientWidth : 1), behavior: "instant" });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [ws.state.rootInstanceId == null]);
+
   if (!ws.state.rootInstanceId)
     return (
       <main className="stage" ref={stageRef} aria-label="Workspace stage">
@@ -1103,7 +1142,7 @@ function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: s
             <div className="glyph"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="8" height="16" rx="2" /><rect x="14" y="4" width="7" height="16" rx="2" opacity="0.45" /></svg></div>
             <b>Open a space to begin.</b>
             <br />
-            Click anything that has depth and a panel opens to the right. The parent stays. <span className="kbd">⌘K</span> goes anywhere.
+            Click anything that has depth and a panel opens to the right. The parent stays. <span className="kbd">{mk("K")}</span> goes anywhere.
           </div>
         ) : (
           ws.state.referenceRailOrder.map((id) => (
@@ -1319,7 +1358,7 @@ function DevtoolsBody() {
       <div className="section">
         <div className="lab">History · {hist.length} intents recorded</div>
         {hist.length === 0 && <p style={{ marginTop: 6 }}>No history yet: every intent records the state it replaced.</p>}
-        <div className="drills" style={{ marginTop: 8 }}>
+        <div className="drills">
           {hist.map((st, i) => (
             <div key={i} className="cv-conn-row">
               <button className="drill" onClick={() => { ws.restore(st); force((x) => x + 1); }} title="Time-travel to this state (undoable)">
@@ -1391,7 +1430,7 @@ export function panelActions(
   const key = p.target.resourceKey;
   switch (p.target.panelType) {
     case "canvasnode": return [
-      { id: "dup-node", label: "Duplicate: ⌘D", icon: AI.dup, kind: "secondary", run: () => {
+      { id: "dup-node", label: "Duplicate: " + mk("D"), icon: AI.dup, kind: "secondary", run: () => {
         const nid = key.slice(4); const src = board.node(nid);
         if (src) board.update((st) => ({ ...st, seq: st.seq + 1, nodes: [...st.nodes, { ...src, id: "n" + (st.seq + 1), x: src.x + 24, y: src.y + 24 }] }));
       } },
@@ -1468,7 +1507,6 @@ export function panelActions(
       const out: PanelAction[] = [];
       if (key === "sec:overview" && typeof localStorage !== "undefined" && !localStorage.getItem("frameword-toured"))
         out.push({ id: "play-tour", label: "Play the tour", kind: "secondary", run: () => {
-          localStorage.setItem("frameword-toured", "1");
           window.dispatchEvent(new CustomEvent("stax:tour"));
         } });
       if (DOMAIN[key]?.body || DOMAIN[key]?.subtitle)
@@ -1510,7 +1548,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
     // entity panels (note, task, row, canvas node/edge) edit their identity in
     // their OWN fs-head title block: the shell renders no h2 for them
     title: nt || tk || isDataRow || bn || be ? "" : dc ? dc.name : fd ? fd.name : "Node",
-    eyebrow: bn ? "canvas · " + bn.kind : be ? "canvas · link" : nt ? "note" : fd ? "folder" : tk ? "task" : dc ? "table" : isDataRow ? "page" : undefined,
+    eyebrow: bn ? "canvas · " + bn.kind : be ? "canvas · link" : undefined,
     subtitle: dc ? dc.rows.length + " rows · filters, sort and search live in the toolbar." : undefined,
   });
   const isCanvas = p.target.panelType === "canvas";
@@ -1573,11 +1611,19 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
         {compact && !isRoot && (
           <button className="bar-btn back" title="Back" onClick={() => { animateExit(id); ws.closePanel(id); }}>‹</button>
         )}
-        <span className="eyebrow">{n.eyebrow ?? (() => {
+        {(() => {
+          if (n.eyebrow != null) return <span className="eyebrow">{n.eyebrow}</span>;
           const par = p.parentInstanceId ? ws.state.panelsById[p.parentInstanceId] : null;
           const pt = par ? titleOfKey(par.target.resourceKey) : null;
-          return pt ? `${pt} › ${n.panelType}` : n.panelType;
-        })()}</span>
+          const word = ({ datarow: "page", datatable: "table", notefolder: "folder" } as Record<string, string>)[n.panelType] ?? n.panelType;
+          if (!pt) return <span className="eyebrow">{word}</span>;
+          return (
+            <span className="eyebrow split">
+              <span className="eb-parent">{pt}</span>
+              <span className="eb-type">{"› " + word}</span>
+            </span>
+          );
+        })()}
         {isRef && <span className="badge-ref">Ref</span>}
         <div style={{ flex: 1 }} />
         {isRef ? (
@@ -1754,7 +1800,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
           <>
           {p.target.resourceKey === "sec:overview" && typeof localStorage !== "undefined" && !localStorage.getItem("frameword-toured") && (
             <button className="d-btn outline sm"
-              onClick={() => { localStorage.setItem("frameword-toured", "1"); window.dispatchEvent(new CustomEvent("stax:tour")); }}>
+              onClick={() => window.dispatchEvent(new CustomEvent("stax:tour"))}>
               ✶ Play the tour
             </button>
           )}
@@ -1940,12 +1986,12 @@ function SettingsBody() {
       <div className="card">
         <div className="lab">Shortcuts</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 8, fontSize: "calc(var(--fz-body, 13.5px) - 1px)", color: "var(--ink-2)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌘K</span>Command palette</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌘B</span>Toggle sidebar</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">{mk("K")}</span>Command palette</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">{mk("B")}</span>Toggle sidebar</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">esc</span>Palette → drawer → menus → panel</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">P</span>Pin the focused panel: keeps it across pages</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌘J</span>Open / close the Agent</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌘1–3</span>Switch organization</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">{mk("J")}</span>Open / close the Agent</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">{K.mod}1–3</span>Switch organization</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span className="kbd">⌫</span>Canvas: delete the selected element</div>
         </div>
       </div>
@@ -2036,10 +2082,10 @@ function Palette({ onClose, deepLink, say, setTheme, closing }: {
     for (const m of pfApp.get().members)
       out.push({ tag: "member", label: m.name, run: () => deepLink("pfm:" + m.id) });
     out.push({ tag: "action", label: "Copy stack link", run: () => { navigator.clipboard?.writeText(location.href); say("Stack link copied"); } });
-    out.push({ tag: "action", label: "Toggle sidebar: ⌘B", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true })) });
+    out.push({ tag: "action", label: "Toggle sidebar: " + mk("B"), run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true })) });
     out.push({ tag: "action", label: "Open Settings", run: () => ws.openSpace("settings", targetOf("sys:settings")) });
     out.push({ tag: "action", label: "Open Canvas board", run: () => resumeOrOpen(ws, say, "canvas", "sec:canvas") });
-    out.push({ tag: "action", label: "Open Agent: ⌘J", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", metaKey: true })) });
+    out.push({ tag: "action", label: "Open Agent: " + mk("J"), run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", metaKey: true })) });
     out.push({ tag: "action", label: "Open Profile", run: () => ws.openSpace("profile", targetOf("sys:profile")) });
     out.push({ tag: "action", label: "Open Data: tables & pages", run: () => resumeOrOpen(ws, say, "data", "sec:data") });
     out.push({ tag: "action", label: "Open Notes", run: () => resumeOrOpen(ws, say, "notes", "sec:notes") });
@@ -2096,7 +2142,7 @@ function Palette({ onClose, deepLink, say, setTheme, closing }: {
             </div>
           )}
         </div>
-        <div className="palette-foot">searches spaces · rows · tasks · notes · actions&nbsp;&nbsp;·&nbsp;&nbsp;↵ open · ⌘↵ open pinned · ? keys</div>
+        <div className="palette-foot">searches spaces · rows · tasks · notes · actions&nbsp;&nbsp;·&nbsp;&nbsp;{"↵ open · " + K.mod + "↵ open pinned · ? keys"}</div>
       </div>
     </div>
   );

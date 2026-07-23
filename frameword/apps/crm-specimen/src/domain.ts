@@ -118,7 +118,7 @@ export const DOMAIN: Record<string, DomainNode> = {
     subtitle: "Click anything with depth and a panel opens to the right. The parent stays. That is the entire navigation model.",
     kpis: [{ v: "1", l: "mechanic" }, { v: "7", l: "laws" }, { v: "∞", l: "depth" }],
     blocks: [{ kind: "card", label: "01: The pitch", text: "Stax replaces pages, modals and tabs with one move: anything with depth opens as a new panel to the RIGHT of its source, and the source stays on stage. The open panels form one serializable JSON object (WorkspaceState): the same data that paints the screen is the URL hash, the persisted workspace, and an agent's working memory. Everything else in this app (the seven laws, the WhitePaper tokens, the registry, the migration engine) is discipline around that one mechanic." }],
-    children: ["ov:why", "ov:vs", "depth:1", "ov:origin"],
+    children: ["depth:1", "ov:why", "ov:vs", "ov:origin"],
     footActions: [{ label: "Open the model →", kind: "primary", space: "model" }],
   },
   "depth:1": {
@@ -357,7 +357,7 @@ export const DOMAIN: Record<string, DomainNode> = {
 
   /* ═══ FRAMEWORK · Architecture ═══ */
   "sec:architecture": {
-    panelType: "section", title: "Architecture", eyebrow: "Architecture · 05",
+    panelType: "section", title: "Architecture.", eyebrow: "Architecture · 05",
     subtitle: "Two packages for the algebra, one specimen for the pixels, one engine for migrations.",
     blocks: [
       { kind: "card", label: "1: @frameword/panels-core", text: "packages/panels-core: the pure reducer. Zero React, zero DOM, zero dependencies. WorkspaceState + the intent commands, the branch policy, validate() (the engine invariants), and the URL codec (encodeLocation / decodeLocation / reconcileLocation). 33 laws tests green in test/laws.test.ts." },
@@ -391,7 +391,7 @@ export const DOMAIN: Record<string, DomainNode> = {
 
   /* ═══ FRAMEWORK · Prompt pack ═══ */
   "sec:prompts": {
-    panelType: "section", title: "Prompt pack", eyebrow: "Prompt pack · 06",
+    panelType: "section", title: "Prompt pack.", eyebrow: "Prompt pack · 06",
     subtitle: "P0-P3 teach and build. M1-M6 are the MASTER KIT: paste-ready prompts that let any coding agent decompose an existing app, map it to the panel grammar, migrate it, build new on it, wire an agent, and audit against the laws.",
     children: ["pr:p0", "pr:p1", "pr:p2", "pr:p3", "pr:m-decompose", "pr:m-map", "pr:m-design", "pr:m-migrate", "pr:m-build", "pr:m-agent", "pr:m-laws", "pr:m-bridge", "pr:m-anydash", "pr:m-enterprise"],
     blocks: [{ kind: "card", label: "How to use", text: "Paste one prompt into any coding agent as-is. For a full migration, prefer the stax-migrate CLI (Architecture · 05): it drives the same protocols as 9 gated phases with mechanical, level-aware exit gates (integration contract: full / standard / starter / shell). Always demand citations: file:line, screenshots, or test output: for every material claim." }],
@@ -739,15 +739,15 @@ export const DOMAIN: Record<string, DomainNode> = {
   },
 
   "pf:terminal": {
-    panelType: "pfterm", title: "Terminal.", eyebrow: "Studio · CLI",
+    panelType: "pfterm", title: "Terminal", eyebrow: "Studio · CLI",
     subtitle: "The workspace as a command line: the same intents the foot, palette and bridge speak — typed. `help` lists the verbs; `open acme` really opens the panel.",
   },
   "pf:chat": {
-    panelType: "pfchat", title: "Chat session.", eyebrow: "Studio · LLM",
+    panelType: "pfchat", title: "Chat session", eyebrow: "Studio · LLM",
     subtitle: "A conversation as CONTENT: the thread lives in the panel body, the composer in the foot. Slash commands drive the workspace through the bridge.",
   },
   "arch:legacy": {
-    panelType: "legacy", title: "The strangler.", eyebrow: "Architecture · embed",
+    panelType: "legacy", title: "The strangler", eyebrow: "Architecture · embed",
     subtitle: "Day 1 of an enterprise migration: the WHOLE legacy app runs INSIDE the shell as embed panels — 100% capability before a single screen is rebuilt. Then each screen is replaced in place and parity-gated; the embed shrinks until it is gone.",
     embed: `<style>body{font-family:Arial,sans-serif;margin:0;background:#eef1f6;color:#1a2733}
 .hd{background:#354a5f;color:#fff;padding:10px 14px;font-size:13px;font-weight:bold}
@@ -807,11 +807,11 @@ export const SHADCN_ALL = [
 export const compKey = (name: string) => "cmp:" + name.toLowerCase().replace(/\s+/g, "-");
 
 DOMAIN["sys:devtools"] = {
-  panelType: "devtools", title: "Devtools.", eyebrow: "sys · dev",
+  panelType: "devtools", title: "Devtools", eyebrow: "sys · dev",
   subtitle: "The workspace, inspected by itself: live state, intent history, time travel. Everything here reads the same serializable state the URL carries.",
 };
 DOMAIN["sec:components"] = {
-  panelType: "section", title: "Components", eyebrow: "Components · 07",
+  panelType: "section", title: "Components.", eyebrow: "Components · 07",
   subtitle: "The complete shadcn/ui catalog rendered with the WhitePaper tokens: every component is a drill; its demo opens beside the list.",
   kpis: [{ v: String(SHADCN_ALL.length), l: "components" }, { v: String(SHADCN_NEW.length), l: "new" }, { v: "1", l: "token map" }],
   children: SHADCN_ALL.map(compKey),
@@ -836,7 +836,7 @@ const catSubs: Record<string, string> = {
   native: "What exists nowhere else: the framework's own primitives.",
 };
 DOMAIN["sec:blocks"] = {
-  panelType: "section", title: "Blocks", eyebrow: "Blocks · 08",
+  panelType: "section", title: "Blocks.", eyebrow: "Blocks · 08",
   subtitle: "Every dashboard element the framework ships: each in 3 versions, with its panel-grammar integration table and a full-width live demo.",
   kpis: [{ v: String(Object.keys(BLOCKS).length), l: "blocks" }, { v: "3", l: "versions each" }, { v: String(BLOCK_CATS.length), l: "families" }],
   children: BLOCK_CATS.map((c) => "blkcat:" + c.key),

@@ -3,6 +3,7 @@
  * data-row pages, block demos and the canvas inspectors.
  */
 import { useState } from "react";
+import { K, mk } from "./keys";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -75,9 +76,9 @@ export function RichNotes({ html, onChange, placeholder }: { html: string; onCha
           )}
         </span>
         <Sep />
-        <B on={editor.isActive("bold")} label="B" title="Bold: ⌘B" run={() => editor.chain().focus().toggleBold().run()} />
-        <B on={editor.isActive("italic")} label="I" title="Italic: ⌘I" run={() => editor.chain().focus().toggleItalic().run()} />
-        <B on={editor.isActive("underline")} label="U" title="Underline: ⌘U" run={() => editor.chain().focus().toggleUnderline().run()} />
+        <B on={editor.isActive("bold")} label="B" title={"Bold: " + mk("B")} run={() => editor.chain().focus().toggleBold().run()} />
+        <B on={editor.isActive("italic")} label="I" title={"Italic: " + mk("I")} run={() => editor.chain().focus().toggleItalic().run()} />
+        <B on={editor.isActive("underline")} label="U" title={"Underline: " + mk("U")} run={() => editor.chain().focus().toggleUnderline().run()} />
         <span className="tt-dd">
           <button className={"tt-trigger" + (editor.isActive("strike") || editor.isActive("highlight") || editor.isActive("link") ? " on" : "")}
             title="More formatting"

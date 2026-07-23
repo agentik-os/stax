@@ -1189,6 +1189,12 @@ export function PlatformFoot({ panelType, resourceKey, panelId, closePanel }: { 
   const s = usePfApp();
   const ws = useWorkspace();
   const id = resourceKey.split(":")[1] ?? "";
+  const termRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (panelType !== "pfterm") return;
+    if ((ws.state.focusedPanelId ?? ws.state.contextLeafId) === panelId) termRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const plus = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>;
   const trash = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>;
   switch (panelType) {
@@ -1202,7 +1208,7 @@ export function PlatformFoot({ panelType, resourceKey, panelId, closePanel }: { 
             inp.value = "";
           }}>
           <span style={{ color: "var(--accent)", flex: "none", fontSize: 12 }}>❯</span>
-          <input name="tcmd" autoComplete="off" spellCheck={false} placeholder="help · status · open acme · undo…"
+          <input name="tcmd" ref={termRef} autoComplete="off" spellCheck={false} placeholder="help · status · open acme · undo…"
             style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}
             onKeyDown={(e) => {
               if (e.key === "Escape") { e.stopPropagation(); (e.target as HTMLElement).blur(); }

@@ -80,7 +80,19 @@ values in this file.
     text follows the accent's lightness per theme — a dark theme brightens the
     accent (L≈0.7), so its text goes NEAR-BLACK (white by inertia measures
     ~2.5:1, illegible); contrast is MEASURED (canvas oklch→sRGB, ≥4.5:1), not
-    eyeballed.
+    eyeballed. REDUCED MOTION covers EVERY entry-animated surface (panels,
+    menus, palette, drawer, sheet, dropdowns, backdrops, toasts…), never a
+    partial list — but infinite FUNCTIONAL indicators (recording, typing,
+    skeletons) keep their opacity beats: freezing them loses information.
+    COARSE POINTERS inflate hit areas invisibly (::after insets) to ~44px
+    without moving a pixel of chrome; zones tile without overlap so a mis-tap
+    never lands on Close. Shortcut HINTS are platform-aware (⌘/⌃ on mac,
+    Ctrl+ elsewhere) via one keys module — bindings never change, only glyphs.
+  - **Title punctuation** — SECTION titles end with a period ("Blocks.");
+    LEAF titles never do ("Terminal"). The period is the section's voice.
+  - **Row-revealed actions** — a trailing per-row action (pin, edit) is a
+    QUIET 24px icon at opacity 0, revealed by row hover or :focus-within,
+    accent when active — never a bordered full-height capsule in the row.
   - `.anat-row` — hairline top, padding 12/0, mono accent label column 104px.
   - Popover labels `.pop-sub` — margin-bottom 6.
 - The foot is the ONLY action zone, with a strict hierarchy: ONE primary CTA per
@@ -229,8 +241,15 @@ outside it.
   the profile store instantly.
 
 **Crumbbar (h 34):**
-- home glyph → thread crumbs (mono, focused = accent, click = navigateTo rewind) ·
-  spacer · transient toasts (inline text, never floating pills over the UI) ·
+- home glyph (click FOCUSES the space root and scrolls the stage back — it never
+  closes anything; ⌥click rewinds the thread to the root) → thread crumbs (mono,
+  FOCUSED = the one accent crumb — the leaf is bold ink, never a second accent;
+  click = focus + scroll, ⌥click = rewind; the "n pinned refs" crumb clicks
+  through to the rail's first reference) ·
+  spacer · transient toasts (inline text, never floating pills over the UI —
+  sole exception: the SELF-DRIVING TOUR narrates via the bottom-center .toast
+  pill in a larger subtitle size, because tour eyes are on the stage, not the
+  corner) ·
   **⌘K chip** (the palette's ONLY chrome: a bare mono "⌘K" at 11px, borderless,
   bottom-right, just LEFT of GitHub — never a labeled pill in the topbar,
   never a boxed kbd chip) ·
@@ -271,12 +290,18 @@ the only objects. A chosen date reads as bare mono text, never a filled pill.
 **Power gestures:** digits 1-9 drill the focused panel's painted 01/02/03
 rows; shift-click selects a RANGE of table rows; a crumb click FOCUSES and
 scrolls (⌥-click rewinds — looking back is free, chopping is deliberate);
-the first run offers "Play the tour" in the Overview foot until played.
+the first run offers "Play the tour" in the Overview foot until COMPLETED —
+an early Escape never consumes the offer (the toured flag writes at the tour's
+END, not its start). A plain vertical mouse WHEEL translates the horizontal
+stage when nothing under the cursor scrolls natively (trackpads and scrollable
+descendants keep their gestures).
 
 **Thread memory:** returning to a space RESUMES its last thread (the resume
 point records on every settled path; switching spaces costs nothing). Deep
 panel eyebrows carry their PARENT ("Acme Industries › contact"), never a bare
-type. Floating surfaces (palette, drawer, sheet) exit in 140ms mirrors of
+type — dynamic entities use friendly words (page, table, folder), and the
+eyebrow SPLITS so the parent segment ellipsizes while the type token never
+truncates (RR-7 applied to the bar). Floating surfaces (palette, drawer, sheet) exit in 140ms mirrors of
 their entries — nothing blinks out.
 
 **The copilot bridge:** the shell exposes `window.stax` (serializable state,

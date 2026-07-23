@@ -191,6 +191,12 @@
       "since": "0.17.0",
       "area": "a11y",
       "title": "Dark-accent legibility law (fg follows accent lightness) + main landmark + canvas-measured contrast"
+    },
+    {
+      "id": "U-033",
+      "since": "0.18.0",
+      "area": "ux",
+      "title": "UX Wave 4: wayfinding truth (home/refs/accent crumbs, split eyebrows), first-run care (tour pill + flag-on-completion, push foot), platform conventions (reduced-motion, coarse pointers, platform keys, wheel)"
     }
   ]
 }
