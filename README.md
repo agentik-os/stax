@@ -26,12 +26,13 @@ pinned references that survive navigation, URL-synced state, and a registry that
 
 | Path | What it is |
 |---|---|
-| `frameword/packages/panels-core` | The pure TypeScript engine — reducer, intent commands, laws (33 tests) |
+| `frameword/packages/panels-core` | The pure TypeScript engine — reducer, intent commands, laws (37 tests) |
 | `frameword/packages/panels-react` | React bindings — provider, registry, URL sync, persistence |
 | `frameword/apps/crm-specimen` | The full specimen app — WhitePaper design system, 65-component gallery ×3 structural versions, 43 dashboard blocks with full-width live demos, Figma/Miro-class canvas (multi-board, 4-way handles, movable links, right-click menus, AI board builder), notes + tasks (kanban, subtasks), **Data: Airtable-class tables where every row opens as a Notion-class page**, agent drawer, master-prompt kit |
 | `frameword/packages/stax-migrate` | **The migration engine** — a zero-dependency CLI that drives a complete refonte of ANY legacy app to the panel grammar via Claude Code or Codex, with a mechanical no-feature-left-behind guarantee |
 | `DESIGN-SPEC.md` | **The pixel contract** — panel anatomy and interior margins, type & number laws, the accent ramp, icon spec, and the old-element → Stax conversion table |
-| `PANEL-LOGIC.md` · `CONCEPT-BRIEF.md` · `agents.md` / `llms.txt` | The concept, the laws, and the six generated master prompts for coding agents (source of truth: the in-app Prompt pack) |
+| `PANEL-LOGIC.md` · `CONCEPT-BRIEF.md` · `agents.md` / `llms.txt` | The concept, the laws, and the TEN generated master prompts for coding agents, M1-M10 (source of truth: the in-app Prompt pack) |
+| `frameword/apps/crm-specimen/e2e` | The committed regression suite — the design laws as Playwright specs (rail geometry both themes, chrome contract, responsive rules, lazy seams), run in CI |
 | `demo/panel-logic-demo.html` | Standalone pedagogical demo — open in a browser, zero build |
 
 ## Install & run
@@ -40,7 +41,7 @@ pinned references that survive navigation, URL-synced state, and a registry that
 git clone https://github.com/agentik-os/stax
 cd stax/frameword
 bun install                       # workspaces: panels-core, panels-react, crm-specimen, stax-migrate
-bun test                          # the 25 engine-law tests
+bun test                          # 37 engine-law tests + 17 CLI cases (parity parser, drift, exit codes)
 bun run dev                       # the specimen → http://127.0.0.1:5799
 ```
 
@@ -219,8 +220,23 @@ node ../stax/frameword/packages/stax-migrate/index.mjs contract .             # 
 | 8 Coverage gate | Adversarial re-crawl of the old app + design audit of the new one + data re-crawl (schema drift, exercised bindings, legacy-endpoint leaks) | zero gaps in a full pass |
 | 9 Acceptance | Golden-path sweep, laws audit, six-states check, old-URL redirects, report | `REPORT.md` |
 
-The same intelligence is browsable inside the app: **Prompt pack → M1-M7** — and
+The same intelligence is browsable inside the app: **Prompt pack → M1-M10** — and
 generated into [`agents.md`](agents.md) for coding agents.
+
+### The 100% transfer — embed first, replace in place, machine-gated
+
+Enterprise migrations never gamble on a rewrite. Day 1, the WHOLE legacy app runs
+INSIDE the Stax shell as `legacy` embed panels — 100% capability before a single
+screen is rebuilt. Every source capability is a row of `stax-migration/parity.csv`
+(`id,capability,probe,expect`), and the gate DRIVES each row against the live app:
+
+```sh
+bunx stax-migrate parity --url https://your-app.example
+# PARITY 100% — n/n capabilities proven live.   (anything less: exit 1, naming what was lost)
+```
+
+Rebuilt screens swap their row's probe from the embed to the grammar target; less
+than 100% reverts the swap. The full playbook is the M10 master prompt.
 
 ### The design-integration prompt — restyle ANY project onto the Stax design system
 
