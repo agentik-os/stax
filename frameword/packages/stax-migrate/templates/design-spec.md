@@ -241,6 +241,12 @@ L-RHYTHM, L-FOOT, L-FLOW fail the build. `stax-migrate doctor` prints the
 adoption health report (contract, pending upgrade units, hardcoded-value
 drift) with its prescription.
 
+**Thread memory:** returning to a space RESUMES its last thread (the resume
+point records on every settled path; switching spaces costs nothing). Deep
+panel eyebrows carry their PARENT ("Acme Industries › contact"), never a bare
+type. Floating surfaces (palette, drawer, sheet) exit in 140ms mirrors of
+their entries — nothing blinks out.
+
 **The copilot bridge:** the shell exposes `window.stax` (serializable state,
 intents, the action registry) so agents DRIVE the workspace instead of faking
 clicks; the agent drawer's /commands speak it. Contract: agents.md M8.

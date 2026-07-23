@@ -283,6 +283,8 @@ function Shell() {
   const prof = useProfile();
   const [drawer, setDrawer] = useState(false);
   const [palette, setPalette] = useState(false);
+  const [paletteOut, setPaletteOut] = useState(false);
+  const [drawerOut, setDrawerOut] = useState(false);
   const [kbMap, setKbMap] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [toastOut, setToastOut] = useState(false);
@@ -423,7 +425,7 @@ function Shell() {
     if (fromRefId && (sp?.rootKey === key || SYS_ROOTS.includes(key))) ws.closePanel(fromRefId);
   };
 
-  // every settled thread becomes a RECENT (palette: Recent threads)
+  // every settled thread becomes a RECENT (palette) AND the space's resume point
   const pathSig = ws.path.map((pid) => ws.state.panelsById[pid]?.target.resourceKey).join(">");
   useEffect(() => {
     const st = ws.state;
@@ -432,8 +434,11 @@ function Shell() {
     const path = chain.map((p) => ({ t: p.target.panelType, k: p.target.resourceKey }));
     const leaf = chain[chain.length - 1];
     noteRecent({ sig: st.spaceId + "|" + pathSig, spaceId: st.spaceId, path, title: titleOfKey(leaf.target.resourceKey), ts: Date.now() });
+    spaceThreads.set(st.spaceId, path);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathSig]);
+  // returning to a space RESUMES its last thread: switching costs nothing
+  const openSpaceSmart = (spaceId: string, rootKey: string) => resumeOrOpen(ws, say, spaceId, rootKey);
 
   // a #ws= link carries a FULL shared workspace: restore it once, then the
   // provider rewrites the hash to the normal thread encoding
@@ -476,9 +481,9 @@ function Shell() {
     let i = 0;
     const tick = () => {
       if (!tourOn.current) { say("Tour stopped"); return; }
-      if (i >= steps.length) { tourOn.current = false; return; }
+      if (i >= steps.length) { tourOn.current = false; say("Tour done · ⌘K anytime · ? for keys"); return; }
       const [msg, act] = steps[i++];
-      say("✶ " + msg);
+      say(`✶ TOUR ${i}/${steps.length} · ${msg} · ESC STOPS`);
       try { act(); } catch { /* a missing key never derails the tour */ }
       window.setTimeout(tick, 1800);
     };
@@ -698,7 +703,7 @@ function Shell() {
         <nav className="tb-nav" aria-label="Dashboards">
           {DASHBOARDS.map((d) => (
             <div key={d.id} className="tb-nav-wrap">
-              <button className={"tb-nav-item" + (dash === d.id && Object.keys(ws.state.panelsById).length > 0 ? " on" : "")}
+              <button className={"tb-nav-item" + (dash === d.id && Object.keys(ws.state.panelsById).length > 0 && dashboardOfSpace(ws.state.spaceId) === d.id ? " on" : "")}
                 aria-expanded={navOpen === d.id}
                 onClick={() => setNavOpen((v) => (v === d.id ? null : d.id))}>
                 <DashIcon id={d.id} />{d.label}<span className="caret">▼</span>
@@ -715,7 +720,7 @@ function Shell() {
                             className={"dd-item" + (ws.state.spaceId === sp.spaceId ? " on" : "")}
                             onClick={() => {
                               setDash(d.id);
-                              ws.openSpace(sp.spaceId, targetOf(sp.rootKey));
+                              openSpaceSmart(sp.spaceId, sp.rootKey);
                               setNavOpen(null);
                             }}>
                             <span className="no">{String(i + 1).padStart(2, "0")}</span>{sp.label}
@@ -734,16 +739,16 @@ function Shell() {
         <button className="tb-goto" onClick={() => setPalette(true)}>
           GO TO<span className="kbd" style={{ minWidth: 0 }}>⌘K</span>
         </button>
-        <button className="tb-btn" title="Data: tables & pages" onClick={() => ws.openSpace("data", targetOf("sec:data"))}>
+        <button className="tb-btn" title="Data: tables & pages" onClick={() => openSpaceSmart("data", "sec:data")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6" /><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></svg>
         </button>
-        <button className="tb-btn" title="Notes" onClick={() => ws.openSpace("notes", targetOf("sec:notes"))}>
+        <button className="tb-btn" title="Notes" onClick={() => openSpaceSmart("notes", "sec:notes")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3v5h5" /><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7z" /><path d="M9 13h6M9 17h4" /></svg>
         </button>
-        <button className="tb-btn" title="Tasks" onClick={() => ws.openSpace("tasks", targetOf("sec:tasks"))}>
+        <button className="tb-btn" title="Tasks" onClick={() => openSpaceSmart("tasks", "sec:tasks")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="4" /><path d="M8 12l3 3 5-6" /></svg>
         </button>
-        <button className="tb-btn" title="Canvas board: your whiteboard" onClick={() => ws.openSpace("canvas", targetOf("sec:canvas"))}>
+        <button className="tb-btn" title="Canvas board: your whiteboard" onClick={() => openSpaceSmart("canvas", "sec:canvas")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M12 17v4" /><path d="M8 21h8" /><path d="M7.5 12l3-3.5 2.5 2 3.5-4" /></svg>
         </button>
         <NotifBell />
@@ -903,7 +908,7 @@ function Shell() {
                   {g.spaces.map((sp) => (
                     <button key={sp.spaceId}
                       className={"sb-item" + (ws.state.spaceId === sp.spaceId ? " on" : "")}
-                      onClick={() => { ws.openSpace(sp.spaceId, targetOf(sp.rootKey)); setSbView("space"); if (sbNarrow) setSbOpen(false); }}>
+                      onClick={() => { openSpaceSmart(sp.spaceId, sp.rootKey); setSbView("space"); if (sbNarrow) setSbOpen(false); }}>
                       <SpaceIcon id={sp.spaceId} />
                       {sp.label}
                       <span className="chev">›</span>
@@ -1011,7 +1016,7 @@ function Shell() {
         </button>
       </div>}
 
-      {drawer && <AgentDrawer onClose={() => setDrawer(false)} inject={aiInject} onInjectConsumed={() => setAiInject(null)} />}
+      {drawer && <AgentDrawer closing={drawerOut} onClose={() => { setDrawerOut(true); window.setTimeout(() => { setDrawer(false); setDrawerOut(false); }, 140); }} inject={aiInject} onInjectConsumed={() => setAiInject(null)} />}
       {kbMap && (
         <div className="palette-bg" onMouseDown={() => setKbMap(false)}>
           <div className="palette kb-map" role="dialog" aria-label="Keyboard map" onMouseDown={(e) => e.stopPropagation()}>
@@ -1034,7 +1039,7 @@ function Shell() {
           </div>
         </div>
       )}
-      {palette && <Palette onClose={() => setPalette(false)} deepLink={deepLink} say={say} setTheme={setTheme} />}
+      {palette && <Palette closing={paletteOut} onClose={() => { setPaletteOut(true); window.setTimeout(() => { setPalette(false); setPaletteOut(false); }, 140); }} deepLink={deepLink} say={say} setTheme={setTheme} />}
       {toast && !prefs.crumb && <div className="toast">{toast}</div>}
     </div>
     </PrefsCtx.Provider>
@@ -1235,6 +1240,17 @@ function animateExit(id: string) {
 /* ── recent threads + saved layouts: device-local, palette-surfaced ──────
    A thread signature is spaceId + the key chain; a layout is a full validated
    WorkspaceState snapshot restored via ws.restore(). */
+/* per-space resume points: session-scoped, device-local */
+const spaceThreads = new Map<string, { t: string; k: string }[]>();
+function resumeOrOpen(ws: ReturnType<typeof useWorkspace>, sayFn: (m: string) => void, spaceId: string, rootKey: string) {
+  const stash = spaceThreads.get(spaceId);
+  if (stash && stash.length > 1 && stash[0].k === rootKey && ws.state.spaceId !== spaceId) {
+    ws.openPath(spaceId, stash.map((x) => ({ panelType: x.t, resourceKey: x.k })));
+    sayFn("Resumed: " + titleOfKey(stash[stash.length - 1].k));
+  } else {
+    ws.openSpace(spaceId, targetOf(rootKey));
+  }
+}
 const RECENTS_KEY = "frameword-recents";
 const LAYOUTS_KEY = "frameword-layouts";
 type RecentThread = { sig: string; spaceId: string; path: { t: string; k: string }[]; title: string; ts: number };
@@ -1530,7 +1546,11 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
         {compact && !isRoot && (
           <button className="bar-btn back" title="Back" onClick={() => { animateExit(id); ws.closePanel(id); }}>‹</button>
         )}
-        <span className="eyebrow">{n.eyebrow ?? n.panelType}</span>
+        <span className="eyebrow">{n.eyebrow ?? (() => {
+          const par = p.parentInstanceId ? ws.state.panelsById[p.parentInstanceId] : null;
+          const pt = par ? titleOfKey(par.target.resourceKey) : null;
+          return pt ? `${pt} › ${n.panelType}` : n.panelType;
+        })()}</span>
         {isRef && <span className="badge-ref">Ref</span>}
         <div style={{ flex: 1 }} />
         {isRef ? (
@@ -1898,7 +1918,8 @@ function SettingsBody() {
 
 interface PaletteItem { tag: string; label: string; run: () => void }
 
-function Palette({ onClose, deepLink, say, setTheme }: {
+function Palette({ onClose, deepLink, say, setTheme, closing }: {
+  closing?: boolean;
   onClose: () => void;
   deepLink: (k: string) => void;
   say: (m: string) => void;
@@ -1924,7 +1945,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
     const curSig = ws.state.spaceId + "|" + ws.path.map((pid) => ws.state.panelsById[pid]?.target.resourceKey).join(">");
     for (const r of readJSON<RecentThread>(RECENTS_KEY))
       if (r.sig !== curSig)
-        out.push({ tag: "recent", label: "Recent: " + r.title, run: () => ws.openPath(r.spaceId, r.path.map((x) => ({ panelType: x.t, resourceKey: x.k }))) });
+        out.push({ tag: "recent", label: "Recent: " + r.title + (r.path.length > 1 ? "  ·  " + r.path.slice(0, -1).slice(-2).map((x) => titleOfKey(x.k)).join(" › ") + " ›" : ""), run: () => ws.openPath(r.spaceId, r.path.map((x) => ({ panelType: x.t, resourceKey: x.k }))) });
     const layouts = readJSON<SavedLayout>(LAYOUTS_KEY);
     for (const l of layouts)
       out.push({ tag: "layout", label: "Layout: " + l.name, run: () => ws.restore(l.state as Parameters<typeof ws.restore>[0]) });
@@ -1974,12 +1995,12 @@ function Palette({ onClose, deepLink, say, setTheme }: {
     out.push({ tag: "action", label: "Copy stack link", run: () => { navigator.clipboard?.writeText(location.href); say("Stack link copied"); } });
     out.push({ tag: "action", label: "Toggle sidebar: ⌘B", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true })) });
     out.push({ tag: "action", label: "Open Settings", run: () => ws.openSpace("settings", targetOf("sys:settings")) });
-    out.push({ tag: "action", label: "Open Canvas board", run: () => ws.openSpace("canvas", targetOf("sec:canvas")) });
+    out.push({ tag: "action", label: "Open Canvas board", run: () => resumeOrOpen(ws, say, "canvas", "sec:canvas") });
     out.push({ tag: "action", label: "Open Agent: ⌘J", run: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", metaKey: true })) });
     out.push({ tag: "action", label: "Open Profile", run: () => ws.openSpace("profile", targetOf("sys:profile")) });
-    out.push({ tag: "action", label: "Open Data: tables & pages", run: () => ws.openSpace("data", targetOf("sec:data")) });
-    out.push({ tag: "action", label: "Open Notes", run: () => ws.openSpace("notes", targetOf("sec:notes")) });
-    out.push({ tag: "action", label: "Open Tasks", run: () => ws.openSpace("tasks", targetOf("sec:tasks")) });
+    out.push({ tag: "action", label: "Open Data: tables & pages", run: () => resumeOrOpen(ws, say, "data", "sec:data") });
+    out.push({ tag: "action", label: "Open Notes", run: () => resumeOrOpen(ws, say, "notes", "sec:notes") });
+    out.push({ tag: "action", label: "Open Tasks", run: () => resumeOrOpen(ws, say, "tasks", "sec:tasks") });
     out.push({ tag: "action", label: "Theme: light", run: () => setTheme("light") });
     out.push({ tag: "action", label: "Theme: dark", run: () => setTheme("dark") });
     out.push({ tag: "action", label: "Theme: system", run: () => setTheme("system") });
@@ -1996,7 +2017,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
   const run = (i: PaletteItem) => { i.run(); onClose(); };
 
   return (
-    <div className="palette-bg" onClick={onClose}>
+    <div className={"palette-bg" + (closing ? " out" : "")} onClick={onClose}>
       <div className="palette" onClick={(e) => e.stopPropagation()}>
         <div className="palette-head">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
@@ -2032,7 +2053,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
             </div>
           )}
         </div>
-        <div className="palette-foot">↑↓ navigate · ↵ open · the palette reads the panel registry</div>
+        <div className="palette-foot">searches spaces · rows · tasks · notes · actions&nbsp;&nbsp;·&nbsp;&nbsp;↵ open · ⌘↵ open pinned · ? keys</div>
       </div>
     </div>
   );
@@ -2057,7 +2078,7 @@ function loadAgentStore(): { size: DrawerSize; convos: Convo[]; activeId: string
   return { size: "M", convos: [], activeId: null };
 }
 
-function AgentDrawer({ onClose, inject, onInjectConsumed }: { onClose: () => void; inject?: { id: number; text: string } | null; onInjectConsumed?: () => void }) {
+function AgentDrawer({ onClose, inject, onInjectConsumed, closing }: { onClose: () => void; inject?: { id: number; text: string } | null; onInjectConsumed?: () => void; closing?: boolean }) {
   const ws = useWorkspace();
   const init = useRef(loadAgentStore()).current;
   const [size, setSize] = useState<DrawerSize>(init.size);
@@ -2109,7 +2130,7 @@ function AgentDrawer({ onClose, inject, onInjectConsumed }: { onClose: () => voi
   const answer = (q: string, sent: ChatAtt[]): string => {
     const built = boardFromPrompt(q);
     if (built) {
-      ws.openSpace("canvas", targetOf("sec:canvas"));
+      resumeOrOpen(ws, () => { /* the drawer narrates via its own reply */ }, "canvas", "sec:canvas");
       return built + "\n\nTip: describe chains like \"Idea -> Prototype -> Test\" (one per line for branches), or ask for a sprint / retro / roadmap / funnel / launch / onboarding board.";
     }
     const path = ws.path.map((id) => titleOfKey(ws.state.panelsById[id].target.resourceKey));
@@ -2211,7 +2232,7 @@ function AgentDrawer({ onClose, inject, onInjectConsumed }: { onClose: () => voi
   };
 
   return (
-    <div className="drawer" role="complementary" aria-label="Demo agent" style={{ width: DRAWER_W[size] }}
+    <div className={"drawer" + (closing ? " out" : "")} role="complementary" aria-label="Demo agent" style={{ width: DRAWER_W[size] }}
       ref={(el) => { if (el && !el.dataset.focused) { el.dataset.focused = "1"; (el.querySelector("textarea, input, button") as HTMLElement | null)?.focus(); } }}>
       <div className="drawer-bar">
         <span style={{ color: "var(--accent)" }}>✶</span>

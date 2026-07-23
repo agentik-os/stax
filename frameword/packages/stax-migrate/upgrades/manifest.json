@@ -161,6 +161,12 @@
       "since": "0.12.0",
       "area": "ux",
       "title": "UX Wave-1 baseline: focus-scroll, escape ladder, narrated pins, truthful empties, quiet chrome, dark elevation"
+    },
+    {
+      "id": "U-028",
+      "since": "0.13.0",
+      "area": "ux",
+      "title": "UX Wave 2: per-space thread memory, symmetric overlay exits, eyebrow identity, drag truth"
     }
   ]
 }

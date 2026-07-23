@@ -490,6 +490,8 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
   }, []);
   const [menu, setMenu] = useState<null | string>(null);
   const [sheet, setSheet] = useState<null | string>(null); // rowId: the quick peek
+  const [sheetOut, setSheetOut] = useState(false);
+  const closeSheet = () => { setSheetOut(true); window.setTimeout(() => { setSheet(null); setSheetOut(false); }, 140); };
   const [pos, setPos] = useState<React.CSSProperties>({});
   const [renView, setRenView] = useState<{ id: string; v: string } | null>(null);
   const openMenu = (id: string, e: { currentTarget: EventTarget & Element }, h = 240, w = 180) => {
@@ -846,10 +848,10 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
 
       {sheet && (
         <>
-          <div className="sheet-bg" onMouseDown={() => setSheet(null)} />
+          <div className="sheet-bg" onMouseDown={() => closeSheet()} />
           <RowSheet c={c} rowId={sheet} panelId={panelId}
-            onOpenPanel={() => { openRow(sheet); setSheet(null); }}
-            onClose={() => setSheet(null)} />
+            onOpenPanel={() => { openRow(sheet); closeSheet(); }}
+            onClose={() => closeSheet()} closing={sheetOut} />
         </>
       )}
       {(view.type ?? "table") === "board" && (() => {
@@ -870,12 +872,21 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
                   onDrop={(e) => {
                     e.currentTarget.classList.remove("over");
                     const rid = e.dataTransfer.getData("text/dtb");
-                    if (rid) dataApp.setCell(c.id, rid, stage.id, opt || undefined);
+                    if (rid) {
+                      dataApp.setCell(c.id, rid, stage.id, opt || undefined);
+                      // the landed card flashes: a silent data write is a lost gesture
+                      requestAnimationFrame(() => {
+                        (e.currentTarget as HTMLElement)?.animate?.(
+                          [{ boxShadow: "inset 0 0 0 1px var(--accent)" }, { boxShadow: "inset 0 0 0 1px transparent" }],
+                          { duration: 600, easing: "ease-out" });
+                      });
+                    }
                   }}>
                   <div className="dtb-head"><span className="lab">{opt || "No " + stage.name.toLowerCase()}</span><span className="ct">{list.length}</span></div>
                   {list.map((r) => (
                     <button key={r.id} className="dtb-card" draggable
-                      onDragStart={(e) => e.dataTransfer.setData("text/dtb", r.id)}
+                      onDragStart={(e) => { e.dataTransfer.setData("text/dtb", r.id); (e.currentTarget as HTMLElement).classList.add("dragging"); }}
+                      onDragEnd={(e) => (e.currentTarget as HTMLElement).classList.remove("dragging")}
                       onClick={() => setSheet(r.id)}>
                       <span className="tt">{String((title && r.v[title.id]) || "Untitled")}</span>
                       {nums.length > 0 && (
@@ -1006,8 +1017,8 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
 /* ── the row panel: a Notion-class page ─────────────────────────────── */
 /* ── the entity SHEET: rich header (title + pipeline pills from the first
    select field) · facet segments · activity — structure any table inherits ── */
-function RowSheet({ c, rowId, panelId, onOpenPanel, onClose }: {
-  c: Collection; rowId: string; panelId: string; onOpenPanel: () => void; onClose: () => void;
+function RowSheet({ c, rowId, panelId, onOpenPanel, onClose, closing }: {
+  c: Collection; rowId: string; panelId: string; onOpenPanel: () => void; onClose: () => void; closing?: boolean;
 }) {
   const s = useDataApp();
   void s;
@@ -1030,7 +1041,7 @@ function RowSheet({ c, rowId, panelId, onOpenPanel, onClose }: {
   const acts = r.activity ?? [];
   const open = acts.filter((a) => a.kind === "task" && !a.done).length;
   return (
-    <aside className="sheet" aria-label="Row sheet" ref={bodyRef}>
+    <aside className={"sheet" + (closing ? " out" : "")} aria-label="Row sheet" ref={bodyRef}>
       <div className="sheet-head">
         <div className="sh-row">
           <span className="eyebrow">{c.name} · page</span>

@@ -339,7 +339,8 @@ body[data-dots="off"] .stage, body[data-dots="off"] .push-stage { background-ima
 /* BOARD view: columns from the select field's options; drag a card to restage */
 .dtb { display: flex; gap: 10px; align-items: flex-start; overflow-x: auto; padding: 2px 0 8px; flex: 1; min-height: 0; }
 .dtb-col { flex: 0 0 200px; min-width: 0; background: var(--secondary); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 7px; transition: background 130ms var(--ease); }
-.dtb-col.over { background: color-mix(in oklab, var(--accent) 7%, var(--secondary)); }
+.dtb-col.over { background: color-mix(in oklab, var(--accent) 10%, var(--secondary)); box-shadow: inset 0 0 0 1px var(--accent); }
+.dtb-card.dragging { opacity: 0.45; }
 .dtb-head { display: flex; align-items: baseline; gap: 7px; padding: 2px 2px 0; }
 .dtb-head .lab { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dtb-head .ct { font-family: var(--font-mono); font-size: 9.5px; color: var(--muted-foreground); margin-left: auto; font-variant-numeric: tabular-nums; }
@@ -737,6 +738,11 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .panel-foot .d-btn, .panel-foot .foot-cta.ghost { background: transparent; border: 1px solid var(--border); color: var(--ink-2); }
 .panel-foot .d-btn:hover, .panel-foot .foot-cta.ghost:hover { background: var(--secondary); color: var(--foreground); border-color: var(--border); transform: none; }
 .crumb-toast.out { opacity: 0; transition: opacity 150ms var(--ease); }
+/* floating surfaces leave like they arrive: 140ms symmetric exits */
+.palette-bg.out { animation: none; opacity: 0; transition: opacity 140ms var(--ease); }
+.palette-bg.out .palette { transform: translateY(-6px) scale(0.99); opacity: 0; transition: transform 140ms var(--ease), opacity 140ms var(--ease); }
+.drawer.out { transform: translateX(14px); opacity: 0; transition: transform 140ms var(--ease), opacity 140ms var(--ease); }
+.sheet.out { transform: translateX(14px); opacity: 0; transition: transform 140ms var(--ease), opacity 140ms var(--ease); }
 .kb-map { width: 460px; }
 .kb-rows { padding: 8px 6px 10px; }
 .kb-row { display: flex; align-items: baseline; gap: 14px; padding: 7px 12px; }
