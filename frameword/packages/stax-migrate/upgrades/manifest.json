@@ -143,6 +143,12 @@
       "since": "0.9.0",
       "area": "ux",
       "title": "View grammar: table/board/cards/list per view + foot control deck + quiet hero KPIs"
+    },
+    {
+      "id": "U-025",
+      "since": "0.10.0",
+      "area": "ux",
+      "title": "Click-through filter chips + one-row toolbar + cell walking + team task grammar"
     }
   ]
 }

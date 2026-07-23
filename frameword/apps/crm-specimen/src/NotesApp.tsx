@@ -17,9 +17,15 @@ export type Prio = "low" | "med" | "high";
 export interface Note { id: string; title: string; body: string; ts: number; pinned?: boolean; folder?: string }
 export interface Folder { id: string; name: string }
 export interface TaskSub { id: string; label: string; done?: boolean }
-export interface Task { id: string; label: string; done: boolean; prio: Prio; cat?: string; subs?: TaskSub[]; due?: string; dueTime?: string; notes?: string; ts: number }
+export interface Task { id: string; label: string; done: boolean; prio: Prio; cat?: string; subs?: TaskSub[]; due?: string; dueTime?: string; notes?: string; ts: number; assignee?: string; project?: string }
 export interface Category { id: string; name: string }
-interface NotesState { notes: Note[]; tasks: Task[]; cats: Category[]; folders?: Folder[]; view?: "list" | "kanban" }
+export type TaskGroup = "cat" | "assignee" | "prio" | "project";
+export interface TaskFilter { people: string[]; prios: Prio[]; projects: string[] }
+/* the TEAM: the first member is the CONNECTED profile (the specimen's seed
+   identity); a real app feeds this from its auth/members store */
+export const TEAM = ["Gareth Agentik", "Jo Lambert", "Max Verne", "Sam Chen"];
+export const TASK_PROJECTS = ["Website", "Ops", "Q3 launch"];
+interface NotesState { notes: Note[]; tasks: Task[]; cats: Category[]; folders?: Folder[]; view?: "list" | "kanban"; taskGroup?: TaskGroup; taskF?: TaskFilter }
 
 const KEY = "frameword-notesapp";
 const now = Date.now();
@@ -43,10 +49,10 @@ const SEED: NotesState = {
     { id: "done", name: "Done" },
   ],
   tasks: [
-    { id: "t-ship", label: "Ship the notes module", done: false, prio: "high", cat: "doing", due: "2026-07-22", dueTime: "18:00", subs: [{ id: "s1", label: "Wire the store", done: true }, { id: "s2", label: "Kanban view" }], ts: now - 3 * H },
-    { id: "t-drill", label: "Review drill-row spacing on mobile", done: false, prio: "med", cat: "todo", ts: now - 5 * H },
-    { id: "t-retro", label: "Book the launch retro", done: false, prio: "med", cat: "review", due: "2026-07-28", ts: now - 8 * H },
-    { id: "t-arch", label: "Archive the old prototype boards", done: true, prio: "low", cat: "done", ts: now - 40 * H },
+    { id: "t-ship", label: "Ship the notes module", assignee: "Gareth Agentik", project: "Website", done: false, prio: "high", cat: "doing", due: "2026-07-22", dueTime: "18:00", subs: [{ id: "s1", label: "Wire the store", done: true }, { id: "s2", label: "Kanban view" }], ts: now - 3 * H },
+    { id: "t-drill", label: "Review drill-row spacing on mobile", assignee: "Jo Lambert", project: "Website", done: false, prio: "med", cat: "todo", ts: now - 5 * H },
+    { id: "t-retro", label: "Book the launch retro", assignee: "Max Verne", project: "Q3 launch", done: false, prio: "med", cat: "review", due: "2026-07-28", ts: now - 8 * H },
+    { id: "t-arch", label: "Archive the old prototype boards", assignee: "Sam Chen", project: "Ops", done: true, prio: "low", cat: "done", ts: now - 40 * H },
   ],
 };
 
@@ -89,6 +95,9 @@ export const notesApp = {
   task: (id: string) => state.tasks.find((t) => t.id === id),
   patchNote: (id: string, patch: Partial<Note>) =>
     notesApp.update((s) => ({ ...s, notes: s.notes.map((n) => (n.id === id ? { ...n, ...patch, ts: Date.now() } : n)) })),
+  setTaskGroup: (g: TaskGroup) => notesApp.update((st) => ({ ...st, taskGroup: g })),
+  patchTaskFilter: (p: Partial<TaskFilter>) =>
+    notesApp.update((st) => ({ ...st, taskF: { people: [], prios: [], projects: [], ...(st.taskF ?? {}), ...p } })),
   patchTask: (id: string, patch: Partial<Task>) =>
     notesApp.update((s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch, ts: Date.now() } : t)) })),
   addNote: (folder?: string): string => {
@@ -371,12 +380,30 @@ export function FolderPanel({ folderKey, panelId, searchQ = "" }: { folderKey: s
   );
 }
 
-export function TasksRoot({ panelId, searchQ = "" }: { panelId: string; searchQ?: string }) {
+export function TasksRoot({ panelId, searchQ = "", me }: { panelId: string; searchQ?: string; me?: string }) {
   const ws = useWorkspace();
   const s = useNotesApp();
   const q = searchQ.trim().toLowerCase();
-  const matches = (t: Task) => !q || t.label.toLowerCase().includes(q);
+  const tf: TaskFilter = { people: [], prios: [], projects: [], ...(s.taskF ?? {}) };
+  const matches = (t: Task) =>
+    (!q || t.label.toLowerCase().includes(q)) &&
+    (tf.people.length === 0 || tf.people.includes(t.assignee ?? "")) &&
+    (tf.prios.length === 0 || tf.prios.includes(t.prio)) &&
+    (tf.projects.length === 0 || tf.projects.includes(t.project ?? ""));
   const view = s.view ?? "list";
+  const group: TaskGroup = s.taskGroup ?? "cat";
+  const [fly, setFly] = useState<null | "group" | "person" | "prio" | "project">(null);
+  const [flyPos, setFlyPos] = useState<React.CSSProperties>({});
+  const openFly = (id: typeof fly, e: { currentTarget: EventTarget & Element }) => { setFlyPos(popPos(e, 200, 170)); setFly(fly === id ? null : id); };
+  // the group DRIVES both layouts: each entry knows how to WRITE itself on drop
+  const PRIOS: Prio[] = ["high", "med", "low"];
+  const groups: { id: string; name: string; write: (taskId: string) => void }[] =
+    group === "cat" ? s.cats.map((c) => ({ id: c.id, name: c.name, write: (tid) => notesApp.moveTask(tid, c.id, undefined) }))
+    : group === "assignee" ? [...TEAM.map((p) => ({ id: p, name: p === me ? p + " (you)" : p, write: (tid: string) => notesApp.patchTask(tid, { assignee: p }) })), { id: "", name: "Unassigned", write: (tid: string) => notesApp.patchTask(tid, { assignee: undefined }) }]
+    : group === "prio" ? PRIOS.map((p) => ({ id: p, name: p.toUpperCase(), write: (tid) => notesApp.patchTask(tid, { prio: p }) }))
+    : [...TASK_PROJECTS.map((p) => ({ id: p, name: p, write: (tid: string) => notesApp.patchTask(tid, { project: p }) })), { id: "", name: "No project", write: (tid: string) => notesApp.patchTask(tid, { project: undefined }) }];
+  const keyOf = (t: Task): string =>
+    group === "cat" ? (t.cat ?? s.cats[0].id) : group === "assignee" ? (t.assignee ?? "") : group === "prio" ? t.prio : (t.project ?? "");
   const [dragId, setDragId] = useState<string | null>(null);
   const [renCat, setRenCat] = useState<{ id: string; v: string } | null>(null);
   const CatName = ({ c, className }: { c: Category; className: string }) =>
@@ -425,6 +452,8 @@ export function TasksRoot({ panelId, searchQ = "" }: { panelId: string; searchQ?
           {t.subs!.filter((x) => x.done).length}/{t.subs!.length}
         </span>
       )}
+      {t.assignee && <span className="nt-ava" title={t.assignee}>{t.assignee.split(" ").map((w) => w[0]).join("").slice(0, 2)}</span>}
+      {t.project && <span className="nt-proj">{t.project}</span>}
       <span title={"Priority: " + t.prio}
         style={{ width: 7, height: 7, flex: "none", borderRadius: 999, background: PRIO_DOT[t.prio] }} />
       {t.due && <span className="tag" style={{ flex: "none" }}>{fmtDue(t.due)}{t.dueTime ? " · " + t.dueTime : ""}</span>}
@@ -462,25 +491,79 @@ export function TasksRoot({ panelId, searchQ = "" }: { panelId: string; searchQ?
 
   return (
     <>
-      <div className="nt-viewseg" role="group" aria-label="Tasks view">
-        <button className={view === "list" ? "on" : ""} onClick={() => notesApp.setView("list")}>List</button>
-        <button className={view === "kanban" ? "on" : ""} onClick={() => notesApp.setView("kanban")}>Kanban</button>
+      {fly && <div className="pop-bg" onMouseDown={() => setFly(null)} />}
+      <div className="nt-ctl">
+        <div className="nt-viewseg" role="group" aria-label="Tasks view">
+          <button className={view === "list" ? "on" : ""} onClick={() => notesApp.setView("list")}>List</button>
+          <button className={view === "kanban" ? "on" : ""} onClick={() => notesApp.setView("kanban")}>Kanban</button>
+        </div>
+        <span className="dp-wrap">
+          <button className="d-btn outline sm" onClick={(e) => openFly("group", e)}>Group: {group === "cat" ? "Status" : group === "assignee" ? "Person" : group === "prio" ? "Priority" : "Project"}</button>
+          {fly === "group" && (
+            <div className="dp-pop dt-selfly" style={flyPos}>
+              {([["cat", "Status"], ["assignee", "Person"], ["prio", "Priority"], ["project", "Project"]] as const).map(([g2, lbl]) => (
+                <button key={g2} className={"tp-slot" + (group === g2 ? " on" : "")} onClick={() => { notesApp.setTaskGroup(g2); setFly(null); }}>{lbl}</button>
+              ))}
+            </div>
+          )}
+        </span>
+        <span className="dp-wrap">
+          <button className={"d-btn sm" + (tf.people.length ? "" : " outline")} onClick={(e) => openFly("person", e)}>
+            {tf.people.length ? tf.people.map((p) => p.split(" ")[0]).join(", ") : "Person"}
+          </button>
+          {fly === "person" && (
+            <div className="dp-pop dt-selfly" style={flyPos}>
+              {TEAM.map((p) => (
+                <button key={p} className={"tp-slot" + (tf.people.includes(p) ? " on" : "")}
+                  onClick={() => notesApp.patchTaskFilter({ people: tf.people.includes(p) ? tf.people.filter((x) => x !== p) : [...tf.people, p] })}>
+                  {p === me ? p + " (you)" : p}
+                </button>
+              ))}
+              {tf.people.length > 0 && <button className="dp-clear" onClick={() => { notesApp.patchTaskFilter({ people: [] }); setFly(null); }}>Clear</button>}
+            </div>
+          )}
+        </span>
+        <span className="dp-wrap">
+          <button className={"d-btn sm" + (tf.projects.length ? "" : " outline")} onClick={(e) => openFly("project", e)}>
+            {tf.projects.length ? tf.projects.join(", ") : "Project"}
+          </button>
+          {fly === "project" && (
+            <div className="dp-pop dt-selfly" style={flyPos}>
+              {TASK_PROJECTS.map((p) => (
+                <button key={p} className={"tp-slot" + (tf.projects.includes(p) ? " on" : "")}
+                  onClick={() => notesApp.patchTaskFilter({ projects: tf.projects.includes(p) ? tf.projects.filter((x) => x !== p) : [...tf.projects, p] })}>{p}</button>
+              ))}
+              {tf.projects.length > 0 && <button className="dp-clear" onClick={() => { notesApp.patchTaskFilter({ projects: [] }); setFly(null); }}>Clear</button>}
+            </div>
+          )}
+        </span>
+        {me && (
+          <button className={"d-btn sm" + (tf.people.length === 1 && tf.people[0] === me ? "" : " outline")}
+            title="Only my tasks"
+            onClick={() => notesApp.patchTaskFilter({ people: tf.people.length === 1 && tf.people[0] === me ? [] : [me] })}>
+            Mine
+          </button>
+        )}
       </div>
 
-      {view === "list" && s.cats.map((c) => {
-        const list = s.tasks.filter((t) => (t.cat ?? s.cats[0].id) === c.id).filter(matches).sort((a, b) => Number(a.done) - Number(b.done));
+      {view === "list" && groups.map((g) => {
+        const c = group === "cat" ? s.cats.find((x) => x.id === g.id)! : null;
+        const list = s.tasks.filter((t) => keyOf(t) === g.id).filter(matches).sort((a, b) => Number(a.done) - Number(b.done));
+        if (group !== "cat" && list.length === 0) return null;
         const open = list.filter((t) => !t.done).length;
         return (
-          <div className="card" key={c.id}>
+          <div className="card" key={g.id || "none"}>
             <div className="lab" style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ flex: 1, display: "inline-flex", gap: 6, alignItems: "center", minWidth: 0 }}>
-                <CatName c={c} className="" /> · {open}/{list.length}
+                {c ? <CatName c={c} className="" /> : <span>{g.name}</span>} · {open}/{list.length}
               </span>
-              <button className="cv-conn-edit" title="Rename category" style={{ width: 22, height: 22 }}
-                onClick={() => setRenCat({ id: c.id, v: c.name })}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
-              </button>
-              {s.cats.length > 1 && (
+              {c && (
+                <button className="cv-conn-edit" title="Rename category" style={{ width: 22, height: 22 }}
+                  onClick={() => setRenCat({ id: c.id, v: c.name })}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
+                </button>
+              )}
+              {c && s.cats.length > 1 && (
                 <button className="cv-conn-edit" title="Delete category (tasks move to the first one)" style={{ width: 22, height: 22 }}
                   onClick={() => notesApp.removeCategory(c.id)}>✕</button>
               )}
@@ -494,36 +577,40 @@ export function TasksRoot({ panelId, searchQ = "" }: { panelId: string; searchQ?
               ))}
               {list.length === 0 && <p style={{ margin: 0 }}>Nothing here.</p>}
             </div>
-            <QuickAdd cat={c.id} />
+            {c ? <QuickAdd cat={c.id} /> : null}
           </div>
         );
       })}
 
       {view === "kanban" && (
         <div className="nt-kanban">
-          {s.cats.map((c) => {
-            const list = s.tasks.filter((t) => (t.cat ?? s.cats[0].id) === c.id).filter(matches).sort((a, b) => Number(a.done) - Number(b.done));
+          {groups.map((g) => {
+            const c = group === "cat" ? s.cats.find((x) => x.id === g.id)! : null;
+            const list = s.tasks.filter((t) => keyOf(t) === g.id).filter(matches).sort((a, b) => Number(a.done) - Number(b.done));
+            if (group !== "cat" && g.id === "" && list.length === 0) return null;
             const open = list.filter((t) => !t.done).length;
             return (
-              <div key={c.id}
-                className={"nt-col" + (overCol === c.id ? " over" : "")}
-                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setOverCol(c.id); }}
+              <div key={g.id || "none"}
+                className={"nt-col" + (overCol === g.id ? " over" : "")}
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setOverCol(g.id); }}
                 onDragLeave={(e) => { if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) { setOverCol(null); setOverCard(null); } }}
                 onDrop={(e) => {
                   e.preventDefault();
                   const id = e.dataTransfer.getData("text/task") || dragId;
-                  if (id) notesApp.moveTask(id, c.id, overCard ?? undefined);
+                  if (id) { g.write(id); if (group === "cat" && overCard) notesApp.moveTask(id, g.id, overCard); }
                   setDragId(null); setOverCol(null); setOverCard(null);
                 }}>
                 <div className="nt-colhead">
-                  <CatName c={c} className="nm" />
+                  {c ? <CatName c={c} className="nm" /> : <span className="nm">{g.name}</span>}
                   <span className="cnt">{open}</span>
                   <span style={{ flex: 1 }} />
-                  <button className="nt-colbtn" title="Rename column"
-                    onClick={() => setRenCat({ id: c.id, v: c.name })}>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
-                  </button>
-                  {s.cats.length > 1 && (
+                  {c && (
+                    <button className="nt-colbtn" title="Rename column"
+                      onClick={() => setRenCat({ id: c.id, v: c.name })}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
+                    </button>
+                  )}
+                  {c && s.cats.length > 1 && (
                     <button className="nt-colbtn" title="Delete column (tasks move left)"
                       onClick={() => notesApp.removeCategory(c.id)}>✕</button>
                   )}
@@ -535,21 +622,23 @@ export function TasksRoot({ panelId, searchQ = "" }: { panelId: string; searchQ?
                       draggable
                       onDragStart={(e) => { e.dataTransfer.setData("text/task", t.id); e.dataTransfer.effectAllowed = "move"; setDragId(t.id); }}
                       onDragEnd={() => { setDragId(null); setOverCol(null); setOverCard(null); }}
-                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setOverCol(c.id); if (t.id !== dragId) setOverCard(t.id); }}
+                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setOverCol(g.id); if (t.id !== dragId) setOverCard(t.id); }}
                       onClick={() => openTask(t.id)}
                       role="button" tabIndex={0}>
                       <div className="nt-ktitle">{t.label}</div>
                       <SubRows t={t} />
                       <div className="nt-kmeta">
+                        {t.assignee && <span className="nt-ava" title={t.assignee}>{t.assignee.split(" ").map((w) => w[0]).join("").slice(0, 2)}</span>}
+                        {t.project && <span className="nt-proj">{t.project}</span>}
                         <span style={{ width: 6, height: 6, borderRadius: 999, background: PRIO_DOT[t.prio], flex: "none" }} />
                         {t.due && <span>{fmtDue(t.due)}{t.dueTime ? " " + t.dueTime : ""}</span>}
                         {(t.subs?.length ?? 0) > 0 && <span>{t.subs!.filter((x) => x.done).length}/{t.subs!.length}</span>}
                       </div>
                     </div>
                   ))}
-                  {list.length === 0 && overCol !== c.id && <div className="nt-empty">Drop tasks here</div>}
+                  {list.length === 0 && overCol !== g.id && <div className="nt-empty">Drop tasks here</div>}
                 </div>
-                <button className="nt-kadd" onClick={() => openTask(notesApp.addTask("New task", c.id))}>+ Add task</button>
+                <button className="nt-kadd" onClick={() => { const id = notesApp.addTask("New task", c?.id); if (!c) g.write(id); openTask(id); }}>+ Add task</button>
               </div>
             );
           })}

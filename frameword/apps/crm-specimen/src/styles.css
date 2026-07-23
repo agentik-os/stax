@@ -302,6 +302,11 @@ img.avatar { border: 1px solid var(--border); }
 body[data-dots="off"] .stage, body[data-dots="off"] .push-stage { background-image: none; }
 
 /* foot search (the zip's per-panel search) */
+/* tasks control bar: view segs + group + click-through people/project filters */
+.nt-ctl { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
+.nt-ctl .nt-viewseg { margin-bottom: 0; }
+.nt-ava { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.04em; width: 18px; height: 18px; border-radius: 50%; background: var(--secondary); border: 1px solid var(--border); color: var(--ink-2); display: inline-grid; place-items: center; flex: none; text-transform: uppercase; }
+.nt-proj { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted-foreground); border: 1px solid var(--border); border-radius: 9999px; padding: 2px 7px 1px; flex: none; }
 /* foot SEGMENTS: the quiet filter/view switcher every converted dashboard
    lands on (Moonbase pattern): hairline container, mono labels, card-bg active */
 .foot-seg { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 1px; flex: none; }
@@ -885,7 +890,14 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .dt-propval .dt-cell { padding: 6px 8px; min-width: 0; }
 
 /* data v2 — views, tags, groups, calcs, wrap */
-.dtv-tabs { display: flex; align-items: center; gap: 3px; margin-bottom: 10px; flex-wrap: wrap; flex: none; }
+.dtv-tabs { display: inline-flex; align-items: center; gap: 3px; margin: 0; flex: none; }
+/* active filters as CHIPS: click the body to edit values, × to drop the rule */
+.dt-fchip { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 9999px; overflow: hidden; flex: none; max-width: 220px; }
+.dt-fchip .bd { display: inline-flex; align-items: baseline; gap: 5px; padding: 4px 4px 3px 9px; font-size: 11px; color: var(--ink-2); min-width: 0; }
+.dt-fchip .bd:hover { background: var(--secondary); }
+.dt-fchip .k { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); flex: none; }
+.dt-fchip .x { width: 18px; height: 18px; border-radius: 50%; color: var(--muted-foreground); font-size: 12px; line-height: 1; flex: none; margin-right: 3px; display: grid; place-items: center; }
+.dt-fchip .x:hover { background: var(--secondary); color: var(--foreground); }
 .dtv-tab { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 8px; font-size: calc(var(--fz-body, 13.5px) - 1.5px); font-weight: 500; color: var(--muted-foreground); }
 .dtv-tab:hover { background: var(--secondary); color: var(--foreground); }
 .dtv-tab.on { background: var(--secondary); color: var(--foreground); }

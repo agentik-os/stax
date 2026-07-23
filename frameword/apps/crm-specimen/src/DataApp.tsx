@@ -273,8 +273,8 @@ const OPS: Record<FieldType, { id: string; label: string }[]> = {
   email: [{ id: "contains", label: "contains" }, { id: "empty", label: "is empty" }],
   phone: [{ id: "contains", label: "contains" }, { id: "empty", label: "is empty" }],
   number: [{ id: "eq", label: "=" }, { id: "gt", label: ">" }, { id: "lt", label: "<" }],
-  select: [{ id: "is", label: "is" }, { id: "not", label: "is not" }],
-  multiselect: [{ id: "has", label: "has" }, { id: "nothas", label: "does not have" }],
+  select: [{ id: "anyof", label: "is any of" }, { id: "is", label: "is" }, { id: "not", label: "is not" }],
+  multiselect: [{ id: "anyof", label: "has any of" }, { id: "has", label: "has" }, { id: "nothas", label: "does not have" }],
   date: [{ id: "on", label: "on" }, { id: "before", label: "before" }, { id: "after", label: "after" }],
   check: [{ id: "checked", label: "is checked" }, { id: "unchecked", label: "is not checked" }],
 };
@@ -287,6 +287,12 @@ function passes(row: Row, f: Filter): boolean {
     case "contains": return s.includes(q);
     case "is": return s === q;
     case "not": return s !== q;
+    case "anyof": {
+      const wants = q.split("|").filter(Boolean);
+      if (wants.length === 0) return true;
+      const have = Array.isArray(raw) ? raw.map((x) => x.toLowerCase()) : [s];
+      return wants.some((w) => have.includes(w));
+    }
     case "has": return Array.isArray(raw) && raw.some((x) => x.toLowerCase() === q);
     case "nothas": return !Array.isArray(raw) || !raw.some((x) => x.toLowerCase() === q);
     case "empty": return s === "";
@@ -443,15 +449,25 @@ function Cell({ colId, row, field, wrap }: { colId: string; row: Row; field: Fie
       );
     default: {
       const cls = "dt-cell" + (field.type === "url" || field.type === "email" ? " url" : "");
+      const walk = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        if (e.key === "Escape") { e.stopPropagation(); (e.target as HTMLElement).blur(); return; }
+        if (e.key !== "Enter" || (wrap && field.type === "text" && !e.metaKey)) return;
+        e.preventDefault();
+        const td = (e.target as HTMLElement).closest("td");
+        let tr = td?.closest("tr")?.nextElementSibling as HTMLTableRowElement | null;
+        while (tr && tr.classList.contains("dt-group")) tr = tr.nextElementSibling as HTMLTableRowElement | null;
+        if (!td || !tr) return;
+        (tr.cells[td.cellIndex]?.querySelector("input, textarea, button") as HTMLElement | null)?.focus();
+      };
       if (wrap && field.type === "text") {
         return (
           <textarea className={cls + " wrap"} rows={1} value={v == null ? "" : String(v)}
-            onChange={(e) => set(e.target.value || undefined)} />
+            onKeyDown={walk} onChange={(e) => set(e.target.value || undefined)} />
         );
       }
       return (
         <input className={cls} value={v == null ? "" : String(v)}
-          onChange={(e) => set(e.target.value || undefined)} />
+          onKeyDown={walk} onChange={(e) => set(e.target.value || undefined)} />
       );
     }
   }
@@ -552,13 +568,13 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
   const BodyRow = ({ r }: { r: Row }) => (
     <tr className={selRows.has(r.id) ? "dt-selrow" : undefined}>
       <td className="dt-opentd">
-        <input type="checkbox" className={"dt-selbox" + (selRows.size > 0 ? " show" : "")}
+        <input type="checkbox" tabIndex={-1} className={"dt-selbox" + (selRows.size > 0 ? " show" : "")}
           checked={selRows.has(r.id)} onChange={(e) => toggleRow(r.id, e.target.checked)} />
-        <button className="dt-open" title="Open as a page" onClick={() => openRow(r.id)}>
+        <button className="dt-open" tabIndex={-1} title="Open as a page" onClick={() => openRow(r.id)}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
         </button>
         <span className="dp-wrap">
-          <button className="dt-open" title="Row actions" onClick={(e) => openMenu("r:" + r.id, e, 130, 160)}>⋯</button>
+          <button className="dt-open" tabIndex={-1} title="Row actions" onClick={(e) => openMenu("r:" + r.id, e, 130, 160)}>⋯</button>
           {menu === "r:" + r.id && (
             <div className="dp-pop dt-selfly" style={pos}>
               <button className="tp-slot" onClick={() => { dataApp.insertRowAfter(c.id, r.id); setMenu(null); }}>Insert row below</button>
@@ -573,7 +589,7 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
         <td key={f.id} className={fi === 0 ? "dt-titletd" : undefined}>
           <Cell colId={c.id} row={r} field={f} wrap={view.wrap} />
           {fi === 0 && (
-          <button className="dt-openchip" title="Quick peek"
+          <button className="dt-openchip" tabIndex={-1} title="Quick peek"
             onClick={(e) => { e.stopPropagation(); setSheet(r.id); }}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
             Open
@@ -588,7 +604,8 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
     <>
       {menu && <div className="pop-bg" onMouseDown={() => setMenu(null)} />}
 
-      {/* named views: each carries its own filters/sort/hidden/group/wrap */}
+      {/* ONE toolbar row: views + filter chips + tools — space is thought through */}
+      <div className="dt-toolbar">
       <div className="dtv-tabs">
         {c.views.map((v) => (
           renView?.id === v.id ? (
@@ -637,7 +654,23 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
         )}
       </div>
 
-      <div className="dt-toolbar">
+        {view.filters.map((fl, i) => {
+          const field = c.fields.find((x) => x.id === fl.fieldId);
+          if (!field) return null;
+          const vals = fl.value.split("|").filter(Boolean);
+          const summary = ["empty", "checked", "unchecked"].includes(fl.op)
+            ? OPS[field.type].find((o) => o.id === fl.op)?.label
+            : vals.length ? vals.join(", ") : "…";
+          return (
+            <span key={i} className="dt-fchip">
+              <button className="bd" onClick={(e) => openMenu("flt:" + i, e, 260, 220)}>
+                <span className="k">{field.name}</span> {summary}
+              </button>
+              <button className="x" title="Remove filter"
+                onClick={() => dataApp.patchView(c.id, { filters: view.filters.filter((_, j) => j !== i) })}>×</button>
+            </span>
+          );
+        })}
         {selRows.size > 0 ? (
           <div className="dt-bulk">
             <span className="ct">{selRows.size} selected</span>
@@ -682,35 +715,86 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
             Filter{view.filters.length ? " · " + view.filters.length : ""}
           </button>
           {menu === "filter" && (
-            <div className="dp-pop dt-filterfly" style={pos}>
-              {view.filters.map((f, i) => {
-                const field = c.fields.find((x) => x.id === f.fieldId);
-                return (
-                  <div key={i} className="dt-frow">
-                    <span className="dt-fname">{field?.name ?? "?"}</span>
-                    <span className="dt-fop">{OPS[field?.type ?? "text"].find((o) => o.id === f.op)?.label ?? f.op}</span>
-                    {!["empty", "checked", "unchecked"].includes(f.op) && (
-                      <input className="inline-edit" value={f.value}
-                        onChange={(e) => dataApp.patchView(c.id, { filters: view.filters.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)) })} />
-                    )}
-                    <button className="cv-conn-edit" title="Remove rule"
-                      onClick={() => dataApp.patchView(c.id, { filters: view.filters.filter((_, j) => j !== i) })}>✕</button>
-                  </div>
-                );
-              })}
-              <div className="dt-addrule">
-                {c.fields.map((f) => (
-                  <button key={f.id} className="tp-slot"
-                    onClick={() => dataApp.patchView(c.id, { filters: [...view.filters, { fieldId: f.id, op: OPS[f.type][0].id, value: "" }] })}>
-                    + {f.name}
-                  </button>
-                ))}
-              </div>
+            <div className="dp-pop dt-selfly" style={pos}>
+              <div className="pop-sub" style={{ margin: "2px 8px 4px" }}>Filter by</div>
+              {c.fields.map((f) => (
+                <button key={f.id} className="tp-slot"
+                  onClick={() => {
+                    const def = f.type === "select" || f.type === "multiselect" ? "anyof"
+                      : f.type === "check" ? "checked" : f.type === "number" ? "eq" : f.type === "date" ? "on" : "contains";
+                    dataApp.patchView(c.id, { filters: [...view.filters, { fieldId: f.id, op: def, value: "" }] });
+                    setMenu("flt:" + view.filters.length);
+                  }}>
+                  {f.name}
+                </button>
+              ))}
               {view.filters.length > 0 && (
                 <button className="dp-clear" onClick={() => dataApp.patchView(c.id, { filters: [] })}>Clear all filters</button>
               )}
             </div>
           )}
+          {menu?.startsWith("flt:") && (() => {
+            const i = Number(menu.slice(4));
+            const fl = view.filters[i];
+            const field = fl && c.fields.find((x) => x.id === fl.fieldId);
+            if (!fl || !field) return null;
+            const patch = (p: Partial<Filter>) =>
+              dataApp.patchView(c.id, { filters: view.filters.map((x, j) => (j === i ? { ...x, ...p } : x)) });
+            const vals = fl.value.split("|").filter(Boolean);
+            const toggle = (o: string) =>
+              patch({ value: (vals.includes(o) ? vals.filter((x) => x !== o) : [...vals, o]).join("|") });
+            return (
+              <div className="dp-pop dt-selfly" style={pos}>
+                <div className="pop-sub" style={{ margin: "2px 8px 4px" }}>{field.name}</div>
+                {(field.type === "select" || field.type === "multiselect") && (field.options ?? []).map((o) => (
+                  <button key={o} className={"tp-slot" + (vals.includes(o) ? " on" : "")} onClick={() => toggle(o)}>{o}</button>
+                ))}
+                {field.type === "check" && (
+                  <div className="dt-mrow">
+                    <button className={"tp-slot" + (fl.op === "checked" ? " on" : "")} onClick={() => patch({ op: "checked" })}>Checked</button>
+                    <button className={"tp-slot" + (fl.op === "unchecked" ? " on" : "")} onClick={() => patch({ op: "unchecked" })}>Unchecked</button>
+                  </div>
+                )}
+                {field.type === "date" && (
+                  <>
+                    <div className="dt-mrow">
+                      {OPS.date.map((o) => (
+                        <button key={o.id} className={"tp-slot" + (fl.op === o.id ? " on" : "")} onClick={() => patch({ op: o.id })}>{o.label}</button>
+                      ))}
+                    </div>
+                    <div style={{ padding: "4px 8px" }}>
+                      <DatePicker value={fl.value || undefined} onChange={(nv) => patch({ value: nv ?? "" })} />
+                    </div>
+                  </>
+                )}
+                {(field.type === "number") && (
+                  <>
+                    <div className="dt-mrow">
+                      {OPS.number.map((o) => (
+                        <button key={o.id} className={"tp-slot" + (fl.op === o.id ? " on" : "")} onClick={() => patch({ op: o.id })}>{o.label}</button>
+                      ))}
+                    </div>
+                    <input className="inline-edit" type="number" autoFocus value={fl.value} style={{ margin: "4px 8px", width: "auto" }}
+                      onChange={(e) => patch({ value: e.target.value })} />
+                  </>
+                )}
+                {["text", "url", "email", "phone"].includes(field.type) && (
+                  <>
+                    <div className="dt-mrow">
+                      {OPS[field.type].map((o) => (
+                        <button key={o.id} className={"tp-slot" + (fl.op === o.id ? " on" : "")} onClick={() => patch({ op: o.id })}>{o.label}</button>
+                      ))}
+                    </div>
+                    {fl.op !== "empty" && (
+                      <input className="inline-edit" autoFocus value={fl.value} placeholder="Type to match…" style={{ margin: "4px 8px", width: "auto" }}
+                        onChange={(e) => patch({ value: e.target.value })} />
+                    )}
+                  </>
+                )}
+                <button className="dp-clear" onClick={() => { dataApp.patchView(c.id, { filters: view.filters.filter((_, j) => j !== i) }); setMenu(null); }}>Remove this filter</button>
+              </div>
+            );
+          })()}
         </span>
         <span className="dp-wrap">
           <button className="d-btn outline sm" onClick={(e) => openMenu("field", e, 330, 170)}>+ Field</button>
@@ -837,7 +921,13 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
       })()}
       {(view.type ?? "table") === "table" && (
       <div className="dt-scroll">
-        <table className={"dt" + (view.density === "compact" ? " compact" : "")}>
+        <table className={"dt" + (view.density === "compact" ? " compact" : "")}
+          onClick={(e) => {
+            const td = e.target as HTMLElement;
+            if (td.tagName !== "TD") return; // a real control was hit: let it handle
+            (td.querySelector("input, textarea") as HTMLElement | null)?.focus();
+            (td.querySelector("button.dt-pill, button.dt-tags, button.dt-check") as HTMLElement | null)?.click();
+          }}>
           <thead>
             <tr>
               <th className="dt-openth">

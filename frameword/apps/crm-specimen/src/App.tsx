@@ -1446,6 +1446,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
   const isFluid = effSize === "XXL";
   const refIndex = ws.state.referenceRailOrder.indexOf(id);
   // per-panel search (the zip's foot search): panels with a real list get it
+  const prof = useProfile();
   const searchable = !isRef && ((n.children?.length ?? 0) >= 4
     || ["datahome", "notes", "notefolder", "tasks", "datatable"].includes(p.target.panelType));
   const kids = (n.children ?? []).filter((k) =>
@@ -1545,7 +1546,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             {p.target.panelType === "blocklive" && <BlockLive name={p.target.resourceKey} />}
             {p.target.panelType === "profile" && <ProfileBody />}
             {p.target.panelType === "notes" && <NotesRoot panelId={id} searchQ={q} />}
-            {p.target.panelType === "tasks" && <TasksRoot panelId={id} searchQ={q} />}
+            {p.target.panelType === "tasks" && <TasksRoot panelId={id} searchQ={q} me={prof.name} />}
             {p.target.panelType === "note" && <NoteEditor noteKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "notefolder" && <FolderPanel folderKey={p.target.resourceKey} panelId={id} searchQ={q} />}
             {p.target.panelType.startsWith("pf") && <PlatformBody panelType={p.target.panelType} resourceKey={p.target.resourceKey} panelId={id} />}
