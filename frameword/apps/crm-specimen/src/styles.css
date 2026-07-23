@@ -989,7 +989,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .crumb-theme { flex: none; width: 24px; height: 24px; margin-right: -8px; border: none; background: transparent; border-radius: 6px; color: var(--muted-foreground); display: grid; place-items: center; align-self: center; }
 a.crumb-gh { margin-right: 0; text-decoration: none; }
 /* the quiet ⌘K: bottom-right, one hairline chip — the palette's only chrome */
-.crumb-goto { flex: none; align-self: center; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--muted-foreground); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 6px; padding: 3px 6px 2px; margin-right: 2px; line-height: 1; background: var(--card); cursor: pointer; }
+.crumb-goto { flex: none; align-self: center; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--muted-foreground); border: none; border-radius: 6px; padding: 4px 6px 3px; margin-right: 2px; line-height: 1; background: transparent; cursor: pointer; }
 .crumb-goto:hover { color: var(--foreground); background: var(--secondary); }
 .crumb-theme:hover { color: var(--foreground); background: var(--secondary); }
 

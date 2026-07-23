@@ -226,8 +226,9 @@ outside it.
 **Crumbbar (h 34):**
 - home glyph → thread crumbs (mono, focused = accent, click = navigateTo rewind) ·
   spacer · transient toasts (inline text, never floating pills over the UI) ·
-  **⌘K chip** (the palette's ONLY chrome: a quiet mono hairline chip, bottom-right,
-  just LEFT of GitHub — never a labeled pill in the topbar) ·
+  **⌘K chip** (the palette's ONLY chrome: a bare mono "⌘K" at 11px, borderless,
+  bottom-right, just LEFT of GitHub — never a labeled pill in the topbar,
+  never a boxed kbd chip) ·
   repo/GitHub link · theme toggle — icons as bare 24px, menus open UPWARD.
 
 **Shareable workspaces:** "Copy workspace link" carries the FULL state
