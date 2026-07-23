@@ -11,7 +11,7 @@ values in this file.
 
 ```
 ┌─ .panel ──────────────────────────────── radius 14 · 1px border · shadow-2xs ─┐
-│ .panel-bar     h 56 · padding 0 10px 0 16px · gap 10 · 1px bottom border      │
+│ .panel-bar     h 44 · padding 0 10px 0 16px · gap 10 · 1px bottom border      │
 │   .eyebrow     mono var(--fz-mono) · tracking 0.14em · uppercase · muted      │
 │ .panel-body    padding 18px 18px 16px · flex column · scrolls (thin bar)      │
 │   .panel-title serif var(--fz-title 27) · lh 1.08 · tracking -0.02em         │
@@ -240,7 +240,7 @@ of the frame; stat labels ellipsise instead of clipping.
 ├─────────┬──────────────────────────────────────────┤
 │ sidebar │  STAGE (scrolls horizontally)            │
 │  org ⇅  │  ┌─ panel ─┐ ┌─ panel ─┐ ┌─ ref S ─┐    │
-│  ⌘K row │  │ bar h56 │ │         │ │ (rail)  │    │
+│  ⌘K row │  │ bar h44 │ │         │ │ (rail)  │    │
 │  spaces │  │ body    │ │         │ │         │    │
 │  ────── │  │ foot    │ │         │ │         │    │
 │  KPIs*  │  └─────────┘ └─────────┘ └─────────┘    │

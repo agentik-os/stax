@@ -16,7 +16,7 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .panel { display: flex; flex-direction: column; flex: none; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; min-width: 0; }
 .panel.focused { border-color: var(--ink-4); }
 .panel.ref { opacity: 0.92; }
-.panel-bar { height: 56px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border); }
+.panel-bar { height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border); }
 .eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); }
 .bar-btn { width: 28px; height: 28px; border-radius: 7px; color: var(--muted-foreground); display: grid; place-items: center; font-size: 15px; }
 .bar-btn:hover { background: var(--secondary); color: var(--foreground); }
