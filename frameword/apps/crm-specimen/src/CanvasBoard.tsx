@@ -36,7 +36,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useWorkspace } from "@frameword/panels-react";
 import { board, useBoard, useBoardsFile, SEED, DEFAULT_UI, type BoardUi, type CvNode, type CvEdge, type CvSub } from "./boardStore";
-import { RichNotes } from "./RichNotes";
+import { RichNotes } from "./RichNotesLazy";
 
 /* element colors: the accent ramp only; they follow the Settings accent */
 const RAMP: Record<string, string> = {

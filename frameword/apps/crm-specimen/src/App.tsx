@@ -9,7 +9,7 @@ import {
   type PanelSize,
 } from "@frameword/panels-react";
 import { DOMAIN, SPACES, DASHBOARDS, dashboardOfSpace, chainOf, spaceOf } from "./domain";
-import { ComponentDemo } from "./ComponentDemo";
+const ComponentDemo = lazy(() => import("./ComponentDemo").then((m) => ({ default: m.ComponentDemo })));
 import { BlockDemo } from "./BlockDemo";
 import { board, boardFromPrompt } from "./boardStore";
 // the canvas renderer (React Flow + dagre) loads lazily: it is the heaviest
@@ -17,7 +17,7 @@ import { board, boardFromPrompt } from "./boardStore";
 const CanvasBoard = lazy(() => import("./CanvasBoard").then((m) => ({ default: m.CanvasBoard })));
 const NodeInspector = lazy(() => import("./CanvasBoard").then((m) => ({ default: m.NodeInspector })));
 const EdgeInspector = lazy(() => import("./CanvasBoard").then((m) => ({ default: m.EdgeInspector })));
-import { BlockLive } from "./BlockLive";
+const BlockLive = lazy(() => import("./BlockLive").then((m) => ({ default: m.BlockLive })));
 import { ProfileBody, AvatarBubble, useProfile } from "./Profile";
 import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, FolderPanel, notesApp, useNotesApp } from "./NotesApp";
 import { DataHome, DataTable, DataRow, dataApp, useDataApp } from "./DataApp";
@@ -1633,12 +1633,12 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
 
         {(
           <>
-            {p.target.panelType === "component" && <ComponentDemo name={n.title} />}
+            {p.target.panelType === "component" && <Suspense fallback={<div className="leaf-note">Loading…</div>}><ComponentDemo name={n.title} /></Suspense>}
             {p.target.panelType === "settings" && <SettingsBody />}
             {p.target.panelType === "block" && <BlockDemo name={p.target.resourceKey} />}
             {p.target.panelType === "canvasnode" && <Suspense fallback={<div className="leaf-note">Loading…</div>}><NodeInspector nodeKey={p.target.resourceKey} panelId={id} /></Suspense>}
             {p.target.panelType === "canvasedge" && <Suspense fallback={<div className="leaf-note">Loading…</div>}><EdgeInspector edgeKey={p.target.resourceKey} panelId={id} /></Suspense>}
-            {p.target.panelType === "blocklive" && <BlockLive name={p.target.resourceKey} />}
+            {p.target.panelType === "blocklive" && <Suspense fallback={<div className="leaf-note">Loading…</div>}><BlockLive name={p.target.resourceKey} /></Suspense>}
             {p.target.panelType === "profile" && <ProfileBody />}
             {p.target.panelType === "notes" && <NotesRoot panelId={id} searchQ={q} />}
             {p.target.panelType === "tasks" && <TasksRoot panelId={id} searchQ={q} me={prof.name} />}

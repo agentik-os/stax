@@ -7,7 +7,7 @@
  */
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useWorkspace } from "@frameword/panels-react";
-import { RichNotes } from "./RichNotes";
+import { RichNotes } from "./RichNotesLazy";
 import { DatePicker, popPos } from "./NotesApp";
 
 /* ── model ───────────────────────────────────────────────────────────── */

@@ -4,11 +4,11 @@
  * explains how it plugs into the panel framework (lives / drill / state / size).
  */
 import { useRef, useState, type ReactNode } from "react";
-import { RichNotes } from "./RichNotes";
-import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import TTImage from "@tiptap/extension-image";
-import Placeholder from "@tiptap/extension-placeholder";
+import { lazy, Suspense } from "react";
+import { RichNotes } from "./RichNotesLazy";
+
+/* the tiptap stack rides ONLY in the TiptapDemo chunk (bundle-diet seam) */
+const TiptapDemo = lazy(() => import("./TiptapDemo").then((m) => ({ default: m.TiptapDemo })));
 
 /* ── meta: category + grammar table values ───────────────────────────── */
 export interface BlockMeta { title: string; sub: string; cat: string; g: [string, string, string, string] }
@@ -80,13 +80,13 @@ export const BLOCK_CATS: { key: string; label: string; blocks: string[]; done: s
 ];
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
-const Zone = ({ children, col }: { children: ReactNode; col?: boolean }) => (
+export const Zone = ({ children, col }: { children: ReactNode; col?: boolean }) => (
   <div className="demo-zone" style={col ? { flexDirection: "column", alignItems: "stretch" } : undefined}>{children}</div>
 );
 const Ph = ({ w = "100%", h = 8 }: { w?: number | string; h?: number }) => (
   <span style={{ display: "block", width: w, height: h, borderRadius: 3, background: "var(--border)" }} />
 );
-const muted = { color: "var(--muted-foreground)" } as const;
+export const muted = { color: "var(--muted-foreground)" } as const;
 const mono10 = { fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted-foreground)" } as const;
 const serifV = { fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" } as const;
 const Delta = ({ v, neg }: { v: string; neg?: boolean }) => (
@@ -124,55 +124,6 @@ function Gram({ g }: { g: [string, string, string, string] }) {
   );
 }
 
-
-/* ── REAL Tiptap integration ─────────────────────────────────────────── */
-export function TiptapDemo({ v }: { v: 1 | 2 | 3 }) {
-  const [rich, setRich] = useState(
-    "<h2>The framework editor</h2><p>The same <b>RichNotes</b> component the canvas, tasks and data pages use: smart paragraph menu, checklists, links, highlight.</p><ul data-type=\"taskList\"><li data-type=\"taskItem\" data-checked=\"true\"><label><input type=\"checkbox\" checked=\"checked\"><span></span></label><div><p>One editor everywhere</p></div></li><li data-type=\"taskItem\" data-checked=\"false\"><label><input type=\"checkbox\"><span></span></label><div><p>Try the Text menu</p></div></li></ul>");
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      TTImage,
-      Placeholder.configure({ placeholder: v === 2 ? "Title your story, then just write…" : "Take a note…" }),
-    ],
-    content:
-      v === 1
-        ? "<p>A <b>real</b> Tiptap editor inside a panel: select text, use the toolbar.</p><ul><li>Notes</li><li>Specs</li><li>Meeting minutes</li></ul>"
-        : v === 2
-          ? "<h2>Why panels beat pages</h2><p>The draft lives beside its sources: pin a record, quote it, keep writing. <i>Blog writing without losing the thread.</i></p><blockquote>A panel is a modal that respects its parent.</blockquote>"
-          : "<p>Image note-taking: insert screenshots and annotate around them.</p>",
-  }, [v]);
-  if ((v as number) === 1) {
-    return (
-      <Zone col>
-        <RichNotes html={rich} onChange={setRich} />
-      </Zone>
-    );
-  }
-  if (!editor) return null;
-  const B = ({ act, on, label }: { act: () => void; on?: boolean; label: string }) => (
-    <button className={on ? "on" : ""} onMouseDown={(e) => { e.preventDefault(); act(); }}>{label}</button>
-  );
-  return (
-    <Zone col>
-      <div className="tt-wrap">
-        <div className="tt-toolbar">
-          <B label="B" on={editor.isActive("bold")} act={() => editor.chain().focus().toggleBold().run()} />
-          <B label="I" on={editor.isActive("italic")} act={() => editor.chain().focus().toggleItalic().run()} />
-          <B label="H2" on={editor.isActive("heading", { level: 2 })} act={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} />
-          <B label="• List" on={editor.isActive("bulletList")} act={() => editor.chain().focus().toggleBulletList().run()} />
-          <B label="❝" on={editor.isActive("blockquote")} act={() => editor.chain().focus().toggleBlockquote().run()} />
-          <B label="‹›" on={editor.isActive("code")} act={() => editor.chain().focus().toggleCode().run()} />
-          {v === 3 && <B label="🖼 Image" act={() => editor.chain().focus().setImage({ src: "https://picsum.photos/seed/stax/360/140" }).run()} />}
-        </div>
-        <EditorContent editor={editor} className={v === 2 ? "blog-host" : undefined} />
-      </div>
-      <div style={{ fontSize: 10.5, ...muted }}>
-        {v === 1 ? "Default editor: StarterKit, fully editable right now." : v === 2 ? "Blog mode: serif voice, placeholder, headings & quotes." : "Note-taker: click 🖼 Image to insert, then keep typing around it."}
-      </div>
-    </Zone>
-  );
-}
 
 /* ── voice to text: Web Speech API live, ElevenLabs Scribe in prod ──── */
 export function VoiceDemo({ v }: { v: 1 | 2 | 3 }) {
@@ -384,7 +335,7 @@ function Body({ k, v }: { k: string; v: 1 | 2 | 3 }) {
         : v === 2 ? (<Zone col><div style={{ position: "relative", paddingLeft: 22 }}><span style={{ position: "absolute", left: 8, top: 6, bottom: 6, width: 2, background: "var(--border)" }} />{[["Account created", 1], ["Team invited", 1], ["First deal", 0]].map(([l, on]) => <div key={l as string} style={{ position: "relative", marginBottom: 8, fontSize: 12.5, color: on ? "var(--foreground)" : "var(--muted-foreground)" }}><span style={{ position: "absolute", left: -20, top: 3, width: 12, height: 12, borderRadius: "50%", background: on ? "var(--foreground)" : "var(--secondary)", border: "2px solid var(--card)", outline: "1px solid var(--border)" }} />{l as string}</div>)}</div></Zone>)
         : (<Zone col><div className="d-row" style={{ justifyContent: "space-between", marginBottom: 4 }}><b style={{ fontSize: 12.5 }}>Step 2 / 4: Contact details</b><span style={mono10}>50%</span></div><div className="d-prog" style={{ width: "100%" }}><div className="fill" style={{ width: "50%" }} /></div><div className="d-row" style={{ justifyContent: "space-between", marginTop: 8 }}><button className="d-btn ghost sm">‹ Back</button><button className="d-btn sm">Next ›</button></div></Zone>);
     case "blk:rich-editor":
-      return <TiptapDemo v={v} />;
+      return <Suspense fallback={<div className="leaf-note">Loading the editor…</div>}><TiptapDemo v={v} /></Suspense>;
     /* ═══ NAV ═══ */
     case "blk:filter-bar":
       return v === 1 ? (<Zone><div className="d-row" style={{ flexWrap: "wrap" }}><span className="att-chip">stage: proposal<button>×</button></span><span className="att-chip">owner: Jo<button>×</button></span><span className="att-chip">&gt; 10k€<button>×</button></span><button className="d-btn ghost sm" style={{ color: "var(--accent)" }}>Clear all</button></div></Zone>)
