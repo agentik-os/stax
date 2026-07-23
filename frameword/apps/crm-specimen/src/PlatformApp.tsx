@@ -8,7 +8,7 @@
  * of the original becomes a sibling PANEL; every tab a segment; every floating
  * composer anchors in the foot (Law 6).
  */
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useWorkspace } from "@frameword/panels-react";
 import { popPos } from "./NotesApp";
 
@@ -989,6 +989,158 @@ function LogDetail({ id }: { id: string }) {
 }
 
 /* ── entry points for the Panel shell ────────────────────────────────── */
+/* ── TERMINAL: the workspace as a CLI. The scrollback is the body; the PROMPT
+   lives in the FOOT (the action zone). Verbs speak the copilot bridge — the
+   terminal is the third control surface after the foot and the palette. ── */
+type TermLine = { kind: "cmd" | "out" | "err"; t: string };
+let termState: { lines: TermLine[]; hist: string[] } = {
+  lines: [{ kind: "out", t: "stax terminal — type `help` for the verbs" }],
+  hist: [],
+};
+const termSubs = new Set<() => void>();
+const termEmit = () => termSubs.forEach((f) => f());
+export const term = {
+  get: () => termState,
+  clear: () => { termState = { ...termState, lines: [] }; termEmit(); },
+  print: (kind: TermLine["kind"], t: string) => { termState = { ...termState, lines: [...termState.lines, { kind, t }] }; termEmit(); },
+  run(input: string) {
+    const raw = input.trim();
+    if (!raw) return;
+    termState = { ...termState, hist: [raw, ...termState.hist].slice(0, 40) };
+    term.print("cmd", raw);
+    const sx = (window as unknown as { stax?: Record<string, (...a: never[]) => unknown> }).stax;
+    const [verb, ...rest] = raw.split(/\s+/);
+    const arg = rest.join(" ");
+    if (!sx) { term.print("err", "bridge offline"); return; }
+    switch (verb) {
+      case "help":
+        term.print("out", "verbs: status · open <q> · close · pin · unpin · undo · redo · actions · run <id> · tour · theme dark|light · clear · help");
+        break;
+      case "clear": term.clear(); break;
+      case "status": {
+        const st = (sx.getState as () => { spaceId?: string; panelsById: object; referenceRailOrder: string[] })();
+        const path = (sx.path as () => string[])();
+        term.print("out", `space ${st.spaceId ?? "—"} · thread ${path.length} panel${path.length === 1 ? "" : "s"} [${path.join(" › ")}] · rail ${st.referenceRailOrder.length}`);
+        break;
+      }
+      case "open": {
+        if (!arg) { term.print("err", "usage: open <title>"); break; }
+        const hits = (sx.find as (q: string) => { key: string; title: string }[])(arg);
+        if (!hits.length) { term.print("err", `nothing titled "${arg}"`); break; }
+        (sx.open as (k: string) => void)(hits[0].key);
+        term.print("out", `opened ${hits[0].title} (${hits[0].key})`);
+        break;
+      }
+      case "close": (sx.close as () => void)(); term.print("out", "closed the focused panel"); break;
+      case "pin": (sx.pin as () => void)(); term.print("out", "pinned"); break;
+      case "unpin": (sx.unpin as () => void)(); term.print("out", "unpinned"); break;
+      case "undo": (sx.undo as () => void)(); term.print("out", "undone"); break;
+      case "redo": (sx.redo as () => void)(); term.print("out", "redone"); break;
+      case "tour": window.dispatchEvent(new CustomEvent("stax:tour")); term.print("out", "tour rolling — Escape stops it"); break;
+      case "actions": {
+        const acts = (sx.actions as () => { id: string; label: string }[])();
+        term.print("out", acts.length ? acts.map((a) => `${a.id} — ${a.label}`).join("  ·  ") : "no registry actions on the focused panel");
+        break;
+      }
+      case "run": {
+        if (!arg) { term.print("err", "usage: run <actionId> (see `actions`)"); break; }
+        term.print((sx.act as (i: string) => boolean)(arg) ? "out" : "err", (sx.act ? `ran ${arg}` : "bridge offline"));
+        break;
+      }
+      case "theme":
+        if (arg !== "dark" && arg !== "light") { term.print("err", "usage: theme dark|light"); break; }
+        window.dispatchEvent(new CustomEvent("stax:theme", { detail: arg }));
+        term.print("out", "theme → " + arg);
+        break;
+      default:
+        term.print("err", `unknown verb "${verb}" — try help`);
+    }
+  },
+};
+export function useTerm() {
+  return useSyncExternalStore((cb) => { termSubs.add(cb); return () => termSubs.delete(cb); }, () => termState);
+}
+function TerminalBody() {
+  const st = useTerm();
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { ref.current?.scrollTo({ top: ref.current.scrollHeight }); }, [st.lines.length]);
+  return (
+    <div className="term" ref={ref} aria-live="polite">
+      {st.lines.map((l, i) => (
+        <div key={i} className={"term-line " + l.kind}>
+          {l.kind === "cmd" && <span className="ps">❯</span>}
+          {l.t}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── CHAT SESSION: a conversation as CONTENT. The thread is the body, the
+   composer is the foot; /commands drive the workspace through the bridge. ── */
+type ChatMsg2 = { who: "you" | "model"; t: string };
+let chatState: { msgs: ChatMsg2[]; typing: boolean; model: string } = {
+  msgs: [{ who: "model", t: "This chat is a PANEL: pin it, drill beside it, share it in the workspace link. Ask anything, or drive the workspace with /open, /actions, /run, /undo, /tour." }],
+  typing: false, model: "fable-5",
+};
+const chatSubs = new Set<() => void>();
+const chatEmit = () => chatSubs.forEach((f) => f());
+export const pfchat = {
+  get: () => chatState,
+  reset: () => { chatState = { ...chatState, msgs: chatState.msgs.slice(0, 1), typing: false }; chatEmit(); },
+  setModel: (m: string) => { chatState = { ...chatState, model: m }; chatEmit(); },
+  send(text: string) {
+    const t = text.trim();
+    if (!t) return;
+    chatState = { ...chatState, msgs: [...chatState.msgs, { who: "you", t }], typing: true };
+    chatEmit();
+    const sx = (window as unknown as { stax?: Record<string, (...a: never[]) => unknown> }).stax;
+    let reply: string;
+    if (t.startsWith("/") && sx) {
+      const [cmd, ...rest] = t.slice(1).split(/\s+/);
+      const arg = rest.join(" ");
+      if (cmd === "open" && arg) {
+        const hits = (sx.find as (q: string) => { key: string; title: string }[])(arg);
+        if (hits.length) { (sx.open as (k: string) => void)(hits[0].key); reply = `Opened ${hits[0].title} beside us — the thread reads left to right.`; }
+        else reply = `I found nothing titled "${arg}".`;
+      } else if (cmd === "actions") {
+        const acts = (sx.actions as () => { id: string; label: string }[])();
+        reply = acts.length ? "This panel can: " + acts.map((a) => `${a.label} (/run ${a.id})`).join(" · ") : "No registry actions here.";
+      } else if (cmd === "run" && arg) reply = (sx.act as (i: string) => boolean)(arg) ? `Ran ${arg}.` : `No action "${arg}" on the focused panel.`;
+      else if (cmd === "undo") { (sx.undo as () => void)(); reply = "Undone — every workspace move is reversible."; }
+      else if (cmd === "tour") { window.dispatchEvent(new CustomEvent("stax:tour")); reply = "Rolling the tour. Escape stops it."; }
+      else reply = "I speak /open <title> · /actions · /run <id> · /undo · /tour.";
+    } else if (/[?？]$/.test(t)) {
+      reply = "Demo model here — in a real deployment this panel streams your LLM. What I CAN do live: /open any panel, /actions, /run one, /undo. The point: a chat is just content in the grammar.";
+    } else {
+      reply = `Noted: "${t.slice(0, 80)}". Try a /command to see the workspace move while we talk.`;
+    }
+    window.setTimeout(() => {
+      chatState = { ...chatState, msgs: [...chatState.msgs, { who: "model", t: reply }], typing: false };
+      chatEmit();
+    }, 520);
+  },
+};
+export function usePfChat() {
+  return useSyncExternalStore((cb) => { chatSubs.add(cb); return () => chatSubs.delete(cb); }, () => chatState);
+}
+function ChatBody() {
+  const st = usePfChat();
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { ref.current?.scrollTo({ top: ref.current.scrollHeight, behavior: "smooth" }); }, [st.msgs.length, st.typing]);
+  return (
+    <div className="pfc" ref={ref}>
+      {st.msgs.map((m, i) => (
+        <div key={i} className={"pfc-msg" + (m.who === "you" ? " me" : "")}>
+          <span className="who">{m.who === "you" ? "You" : "Model · " + st.model}</span>
+          <p>{m.t}</p>
+        </div>
+      ))}
+      {st.typing && <div className="pfc-msg"><span className="who">Model · {st.model}</span><span className="typing"><i /><i /><i /></span></div>}
+    </div>
+  );
+}
+
 export function PlatformBody({ panelType, resourceKey, panelId }: { panelType: string; resourceKey: string; panelId: string }) {
   usePfApp();
   const id = resourceKey.split(":")[1] ?? "";
@@ -1008,6 +1160,8 @@ export function PlatformBody({ panelType, resourceKey, panelId }: { panelType: s
     case "pflog": return <LogDetail id={id} />;
     case "pfcontrols": return <ControlsBody />;
     case "pfsecurity": return <SecurityBody />;
+    case "pfterm": return <TerminalBody />;
+    case "pfchat": return <ChatBody />;
     case "pfprompt": return <PromptBody />;
     case "pfrealtime": return <RealtimeBody />;
     case "pfimages": return <ImagesBody />;
@@ -1038,6 +1192,40 @@ export function PlatformFoot({ panelType, resourceKey, panelId, closePanel }: { 
   const plus = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>;
   const trash = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>;
   switch (panelType) {
+    case "pfterm":
+      return (
+        <form className="foot-search-row" style={{ fontFamily: "var(--font-mono)" }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            const inp = (e.target as HTMLFormElement).elements.namedItem("tcmd") as HTMLInputElement;
+            term.run(inp.value);
+            inp.value = "";
+          }}>
+          <span style={{ color: "var(--accent)", flex: "none", fontSize: 12 }}>❯</span>
+          <input name="tcmd" autoComplete="off" spellCheck={false} placeholder="help · status · open acme · undo…"
+            style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") { e.stopPropagation(); (e.target as HTMLElement).blur(); }
+              if (e.key === "ArrowUp") { e.preventDefault(); const h = term.get().hist; const el = e.target as HTMLInputElement; const idx = Number(el.dataset.h ?? "-1") + 1; if (h[idx] !== undefined) { el.value = h[idx]; el.dataset.h = String(idx); } }
+              if (e.key === "ArrowDown") { e.preventDefault(); const h = term.get().hist; const el = e.target as HTMLInputElement; const idx = Number(el.dataset.h ?? "-1") - 1; el.value = idx >= 0 ? (h[idx] ?? "") : ""; el.dataset.h = String(Math.max(idx, -1)); }
+            }} />
+          <button className="d-btn outline sm" type="button" onClick={() => term.clear()}>Clear</button>
+        </form>
+      );
+    case "pfchat":
+      return (
+        <form className="foot-search-row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const inp = (e.target as HTMLFormElement).elements.namedItem("cmsg") as HTMLInputElement;
+            pfchat.send(inp.value);
+            inp.value = "";
+          }}>
+          <input name="cmsg" autoComplete="off" placeholder="Message the model — or /open, /actions, /run, /undo…"
+            onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); (e.target as HTMLElement).blur(); } }} />
+          <button className="foot-cta" type="submit">Send</button>
+        </form>
+      );
     case "pfkeys":
       return <button className="foot-cta" onClick={() => ws.openDetail(panelId, { panelType: "pfkey", resourceKey: "pfk:" + pfApp.addKey() })}>{plus} Create secret key</button>;
     case "pfkey": {

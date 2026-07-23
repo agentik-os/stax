@@ -49,6 +49,8 @@ const REGISTRY: PanelRegistry = {
   notes: { size: "M" },
   datahome: { size: "M" },
   devtools: { size: "L" },
+  pfterm: { size: "L" },
+  pfchat: { size: "L" },
   datatable: { size: "XL" },
   datarow: { size: "L" },
   notefolder: { size: "M" },
@@ -493,9 +495,11 @@ function Shell() {
       setAiInject({ id: Date.now(), text: d.insight });
     };
     const sayH = (e: Event) => say((e as CustomEvent<string>).detail);
+    const themeH = (e: Event) => setTheme((e as CustomEvent<string>).detail);
     window.addEventListener("stax:ai", h);
     window.addEventListener("stax:say", sayH);
-    return () => { window.removeEventListener("stax:ai", h); window.removeEventListener("stax:say", sayH); };
+    window.addEventListener("stax:theme", themeH);
+    return () => { window.removeEventListener("stax:ai", h); window.removeEventListener("stax:say", sayH); window.removeEventListener("stax:theme", themeH); };
   }, []);
 
   /* ── the COPILOT BRIDGE: the workspace is DRIVABLE. window.stax exposes the

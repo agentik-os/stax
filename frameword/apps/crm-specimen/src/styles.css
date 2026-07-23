@@ -302,6 +302,22 @@ img.avatar { border: 1px solid var(--border); }
 body[data-dots="off"] .stage, body[data-dots="off"] .push-stage { background-image: none; }
 
 /* foot search (the zip's per-panel search) */
+/* TERMINAL panel: mono scrollback, flat; the prompt lives in the foot */
+.term { flex: 1; min-height: 0; overflow-y: auto; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.75; padding: 2px 0 8px; }
+.term-line { white-space: pre-wrap; word-break: break-word; color: var(--ink-2); }
+.term-line.cmd { color: var(--foreground); font-weight: 500; margin-top: 6px; }
+.term-line.cmd .ps { color: var(--accent); margin-right: 7px; }
+.term-line.err { color: var(--destructive); }
+
+/* CHAT panel: the thread as flat content — mono speaker labels, hairlines */
+.pfc { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.pfc-msg { padding: 10px 0 11px; border-bottom: 1px solid var(--border); }
+.pfc-msg:last-child { border-bottom: none; }
+.pfc-msg .who { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); display: block; margin-bottom: 4px; }
+.pfc-msg.me .who { color: var(--accent); }
+.pfc-msg p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.pfc-msg.me p { color: var(--foreground); }
+
 /* tasks control bar: view segs + group + click-through people/project filters */
 .nt-ctl { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
 .nt-ctl .nt-viewseg { margin-bottom: 0; }

@@ -731,11 +731,19 @@ export const DOMAIN: Record<string, DomainNode> = {
     body: "Every receipt is a row; in production each would drill to its PDF panel.",
   },
 
+  "pf:terminal": {
+    panelType: "pfterm", title: "Terminal.", eyebrow: "Studio · CLI",
+    subtitle: "The workspace as a command line: the same intents the foot, palette and bridge speak — typed. `help` lists the verbs; `open acme` really opens the panel.",
+  },
+  "pf:chat": {
+    panelType: "pfchat", title: "Chat session.", eyebrow: "Studio · LLM",
+    subtitle: "A conversation as CONTENT: the thread lives in the panel body, the composer in the foot. Slash commands drive the workspace through the bridge.",
+  },
   "sec:pf-studio": {
     panelType: "section", title: "The Studio.", eyebrow: "Studio · Platform",
     subtitle: "The creative surfaces: a prompt composer, a realtime voice creator, an image grid and the prompt-card hub: each with its composer anchored where the grammar puts verbs: the foot.",
     kpis: [{ v: "4", l: "surfaces" }, { v: "2", l: "foot composers" }, { v: "6", l: "ready prompts" }],
-    children: ["pf:prompt", "pf:realtime", "pf:images", "pf:hub"],
+    children: ["pf:prompt", "pf:realtime", "pf:images", "pf:hub", "pf:terminal", "pf:chat"],
   },
   "pf:prompt": {
     panelType: "pfprompt", title: "Prompt composer", eyebrow: "studio · prompts",

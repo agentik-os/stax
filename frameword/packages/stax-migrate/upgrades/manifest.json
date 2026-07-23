@@ -149,6 +149,12 @@
       "since": "0.10.0",
       "area": "ux",
       "title": "Click-through filter chips + one-row toolbar + cell walking + team task grammar"
+    },
+    {
+      "id": "U-026",
+      "since": "0.11.0",
+      "area": "ux",
+      "title": "Terminal + LLM chat as panels: scrollback/thread bodies, prompt/composer feet, bridge verbs"
     }
   ]
 }
