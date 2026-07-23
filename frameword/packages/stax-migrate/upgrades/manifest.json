@@ -185,6 +185,12 @@
       "since": "0.16.0",
       "area": "design",
       "title": "Zero-bleed rail (fill = lines = text) + quiet crumbbar ⌘K + responsive rules RR-1..8"
+    },
+    {
+      "id": "U-032",
+      "since": "0.17.0",
+      "area": "a11y",
+      "title": "Dark-accent legibility law (fg follows accent lightness) + main landmark + canvas-measured contrast"
     }
   ]
 }

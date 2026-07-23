@@ -1097,7 +1097,7 @@ function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: s
 
   if (!ws.state.rootInstanceId)
     return (
-      <div className="stage" ref={stageRef}>
+      <main className="stage" ref={stageRef} aria-label="Workspace stage">
         {ws.state.referenceRailOrder.length === 0 ? (
           <div className="stage-empty">
             <div className="glyph"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="8" height="16" rx="2" /><rect x="14" y="4" width="7" height="16" rx="2" opacity="0.45" /></svg></div>
@@ -1110,11 +1110,11 @@ function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: s
             <Panel key={id} id={id} deepLink={deepLink} />
           ))
         )}
-      </div>
+      </main>
     );
 
   return (
-    <div className="stage" ref={stageRef}>
+    <main className="stage" ref={stageRef} aria-label="Workspace stage">
       {ws.path.map((id) => (
         <Panel key={id} id={id} deepLink={deepLink}
           collapsed={rootCollapsed && id === ws.state.rootInstanceId && ws.path.length > 1}
@@ -1124,7 +1124,7 @@ function ColumnHost({ deepLink, rootCollapsed, onExpandRoot }: { deepLink: (k: s
       {ws.state.referenceRailOrder.map((id) => (
         <Panel key={id} id={id} deepLink={deepLink} />
       ))}
-    </div>
+    </main>
   );
 }
 

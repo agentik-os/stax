@@ -57,7 +57,7 @@ values in this file.
     reads cramped, but padding would move the rail. The LAST
     row has no hairline at rest (the dedup law gives it to whatever follows),
     so hover paints none there: inventing a line under the cursor doubles the
-    next block's separator. Index/arrow accent, arrow slides 3px.
+    next block's separator. Index and arrow turn accent while they breathe.
     Row meta tags are flat mono uppercase, never pills. A row that pairs a drill
     with a TRAILING action (pin, edit) draws the separator on the ROW wrapper, not
     the drill, so the line still reaches the shared right bound.
@@ -75,7 +75,12 @@ values in this file.
   - **A11y baseline** — toasts announce via a `role="status"` aria-live region;
     ArrowUp/Down walk the drill rows of the list the focus is in; overlays
     (sheet, drawer) move focus inside on open and RETURN it to the opener on
-    close; every icon-only control carries a title/aria-label.
+    close; every icon-only control carries a title/aria-label. The stage is a
+    `<main>` landmark. DARK-ACCENT LEGIBILITY LAW: an accent-filled control's
+    text follows the accent's lightness per theme — a dark theme brightens the
+    accent (L≈0.7), so its text goes NEAR-BLACK (white by inertia measures
+    ~2.5:1, illegible); contrast is MEASURED (canvas oklch→sRGB, ≥4.5:1), not
+    eyeballed.
   - `.anat-row` — hairline top, padding 12/0, mono accent label column 104px.
   - Popover labels `.pop-sub` — margin-bottom 6.
 - The foot is the ONLY action zone, with a strict hierarchy: ONE primary CTA per

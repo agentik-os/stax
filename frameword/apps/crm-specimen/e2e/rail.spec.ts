@@ -86,3 +86,26 @@ test("the last row paints no separator on hover (dedup law)", async ({ page }) =
   const color = await last.evaluate((el) => getComputedStyle(el, "::after").borderBottomColor);
   expect(color === "rgba(0, 0, 0, 0)" || color === "transparent").toBe(true);
 });
+
+test("the LIST view rides the same law: breathing edges + accent hairline", async ({ page }) => {
+  await fresh(page);
+  await page.goto(link({ spaceId: "data", path: [{ t: "datahome", k: "sys:data" }] }));
+  await page.waitForSelector(".panel");
+  await page.waitForTimeout(300);
+  await page.locator(".drill").first().click();
+  await page.waitForSelector(".dt-toolbar");
+  await page.locator(".foot-seg button", { hasText: "List" }).first().click();
+  await page.waitForSelector(".dtl-row");
+  const row = page.locator(".dtl-row").first();
+  await row.hover();
+  await page.waitForTimeout(220);
+  const m = await row.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return {
+      ttGap: el.querySelector(".tt")!.getBoundingClientRect().left - r.left,
+      hairline: getComputedStyle(el, "::after").borderBottomColor,
+    };
+  });
+  expect(m.ttGap).toBeGreaterThan(8);
+  expect(m.hairline).not.toBe("oklch(0.922 0.001 80)"); // not the rest border: accent turned
+});

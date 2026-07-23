@@ -174,18 +174,17 @@ img.avatar { border: 1px solid var(--border); }
 
 /* drill rows */
 /* drill list — flat rows, hairlines BETWEEN rows, hover fill */
-/* the list bleeds 12px into the gutter so the hover fill BREATHES while the
-   text stays aligned with every other flat block. Separators are drawn as
-   12px-inset pseudo hairlines so every line in a panel shares the EXACT
-   left/right bounds of the head hairline (only the FILL bleeds, never a line) */
+/* the ZERO-BLEED RAIL: rows sit ON the text rail (margin 0, padding 12px 0,
+   hairlines at left/right 0) so the hover fill, the separators and the text
+   share EXACTLY the same bounds — nothing ever overhangs, in either theme */
 .drills { display: flex; flex-direction: column; gap: 0; position: relative; margin: 0; }
 .drills::before { content: ""; position: absolute; left: 0; right: 0; top: 0; border-top: 1px solid var(--border); }
 .drills > * { width: auto; }
-.drill { display: flex; align-items: center; gap: 12px; padding: 12px 0; border: none; border-radius: 0; cursor: pointer; text-align: left; width: 100%; position: relative;; content-visibility: auto; contain-intrinsic-size: auto 62px; }
+.drill { display: flex; align-items: center; gap: 12px; padding: 12px 0; border: none; border-radius: 0; cursor: pointer; text-align: left; width: 100%; position: relative; content-visibility: auto; contain-intrinsic-size: auto 62px; }
 .drill::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease); pointer-events: none; }
-/* hover: flat fill; the row's own hairline turns ACCENT and EXPANDS to the
-   fill's edges (a line narrower than its surface reads broken). The line
-   ABOVE the hovered row expands too so the fill is framed symmetrically. */
+/* hover: flat fill; the row's own hairline turns ACCENT in place, and the
+   edge content BREATHES inside the fill: index +10px, arrow -10px, by
+   TRANSFORM only — zero layout shift, the rail never moves. */
 .drill { transition: background 130ms var(--ease); }
 .drill:hover { background: var(--secondary); }
 .drill:active { background: color-mix(in oklab, var(--foreground) 5%, var(--secondary)); }
@@ -370,6 +369,10 @@ body[data-dots="off"] .stage, body[data-dots="off"] .push-stage { background-ima
 .dtl-row::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; border-bottom: 1px solid var(--border); }
 .dtl-row:last-child::after { border-bottom-color: transparent; }
 .dtl-row:hover { background: var(--secondary); }
+.dtl-row:hover::after { border-color: var(--accent); }
+.dtl-row .tt, .dtl-row .num { transition: transform 130ms var(--ease); }
+.dtl-row:hover .tt { transform: translateX(10px); }
+.dtl-row:hover .num { transform: translateX(-10px); }
 .dtl-row .tt { font-size: 13px; font-weight: 500; }
 .dtl-row .pill { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); border-radius: 9999px; padding: 3px 8px 2px; }
 .dtl-row .num { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--ink-2); }
