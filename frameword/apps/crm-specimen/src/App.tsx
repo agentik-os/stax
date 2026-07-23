@@ -50,6 +50,7 @@ const REGISTRY: PanelRegistry = {
   datahome: { size: "M" },
   devtools: { size: "L" },
   pfterm: { size: "L" },
+  legacy: { size: "XL" },
   pfchat: { size: "L" },
   datatable: { size: "XL" },
   datarow: { size: "L" },
@@ -1641,6 +1642,12 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             {p.target.panelType.startsWith("pf") && <PlatformBody panelType={p.target.panelType} resourceKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "datahome" && <DataHome panelId={id} searchQ={q} />}
             {p.target.panelType === "devtools" && <DevtoolsBody />}
+            {p.target.panelType === "legacy" && (
+              <div className="legacy-embed">
+                <iframe title={n.title || "Legacy screen"} sandbox="allow-same-origin"
+                  {...(n.embedUrl ? { src: n.embedUrl } : { srcDoc: n.embed ?? "" })} />
+              </div>
+            )}
             {p.target.panelType === "datatable" && <DataTable colKey={p.target.resourceKey} panelId={id} searchQ={q} />}
             {p.target.panelType === "datarow" && <DataRow rowKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "task" && <TaskDetail taskKey={p.target.resourceKey} panelId={id} />}
@@ -1762,6 +1769,8 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
           <PlatformFoot panelType={p.target.panelType} resourceKey={p.target.resourceKey} panelId={id} closePanel={() => ws.closePanel(id)} />
         ) : isCanvas ? (
           <span className="foot-note">Canvas: click a node to inspect · drag a handle to connect</span>
+        ) : p.target.panelType === "legacy" ? (
+          <span className="foot-note"><span className="sig">✶</span> Strangler embed: full legacy capability today; replace this screen in place, parity-gate it, shrink the embed</span>
         ) : p.target.panelType === "blocklive" ? (
           <span className="foot-note">Live demo: real size, live tokens; change the accent in Settings and watch it follow</span>
         ) : (() => {

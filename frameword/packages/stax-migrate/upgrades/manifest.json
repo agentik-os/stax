@@ -173,6 +173,12 @@
       "since": "0.14.0",
       "area": "ux",
       "title": "UX Wave 3: sheet foot+riffle, hairline slabs, digit keys, range select, crumb minimap, first-run tour"
+    },
+    {
+      "id": "U-030",
+      "since": "0.15.0",
+      "area": "migration",
+      "title": "The 100% transfer: legacy embed panels + the machine-checked parity contract (stax-migrate parity)"
     }
   ]
 }

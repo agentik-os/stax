@@ -55,6 +55,21 @@ PHASE 2: REBUILD BETTER. Actions into the registry (foot = palette = window.stax
 DEFINITION OF DONE: view-matrix.csv 100% mapped with the Stax target per row; every source capability reachable (cite where); stax-migrate verify --url <live> --themes light,dark PASS; the M7 token sweep clean. Evidence, not adjectives.
 ```
 
+## M10: Enterprise strangler — the 100% transfer
+
+*SAP-class migrations: full capability on day 1, parity-gated forever after.*
+
+```text
+ROLE: Enterprise migration engineer. Move a large legacy product (SAP-class: hundreds of screens, forms, reports, workflows, permissions) onto Stax with ZERO capability loss at every moment. The transfer is not a rewrite gamble: it is a strangler with a machine-checked parity contract.
+LAW 0 - THE TRANSFER ALWAYS WORKS: at every commit, 100% of the source's capabilities are reachable in the Stax shell. Anything less is a broken build, not a partial success.
+PHASE 0 - CONTRACT: inventory EVERY source capability into stax-migration/parity.csv (id,capability,probe,expect): every route, list, form, report, action, export, permission surface. probe = the Stax deep-link hash where it will live; expect = panel | action:<id> | text:<needle>. No row, no capability, no mercy.
+PHASE 1 - EMBED FIRST (day 1 = 100%): wrap the WHOLE legacy app in the Stax shell as LEGACY EMBED panels (panelType legacy: iframe/srcDoc in the panel grammar, media-rule borders, a foot note naming the replacement plan). Navigation, spaces and the palette are Stax from day 1; every legacy screen is one drill away, unchanged. Run stax-migrate parity --url <staging>: it must print PARITY 100% before anything else happens.
+PHASE 2 - REPLACE IN PLACE, GATED: pick ONE screen; rebuild it in the grammar (M9's view mapping: kanban->board view, tables->dt, detail->faceted sheet, filters->foot segments); swap the embed row's probe to the rebuilt target; run parity again. 100% -> commit; less -> the swap reverts. The embed shrinks screen by screen; the contract never does.
+PHASE 3 - DATA: the workspace persists through a StorageAdapter (Convex/Supabase/REST); big grids stay server-paginated behind the same view grammar; the URL still carries every thread.
+PHASE 4 - DECOMMISSION: when parity.csv has zero embed probes left, the legacy host dies. Keep the contract in CI forever: stax-migrate parity + verify --themes light,dark on every push - capability AND design, both gates, both 100%.
+DEFINITION OF DONE: parity.csv covers the full source inventory (cite the source screen per row); CI runs both gates; the doctor is clean; no embed rows remain. Evidence, not adjectives.
+```
+
 ## M1: Decompose the existing
 
 *Forensic inventory of every route, modal, tab, and flow before a single panel is drawn.*

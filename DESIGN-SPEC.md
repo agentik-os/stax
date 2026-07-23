@@ -235,6 +235,16 @@ the intent history (each entry = the state an intent replaced), Jump =
 time travel through ws.restore (undoable). The keyboard map ships as the "?"
 overlay (palette chrome, Escape closes it first).
 
+**Enterprise adoption — the strangler contract:** day 1, the WHOLE legacy app
+runs inside the shell as LEGACY EMBED panels (iframe/srcDoc in the grammar,
+media-rule border) — 100% capability before a single screen is rebuilt. Every
+source capability is a row of `stax-migration/parity.csv` (id, capability,
+probe deep-link, expect: panel | action:<id> | text:<needle>); `stax-migrate
+parity --url` DRIVES each row against the live app and exits non-zero unless
+100% pass: a migration that loses one capability is a failed migration.
+Screens are replaced in place, one at a time, each swap parity-gated; the
+embed shrinks until the legacy host dies, and the contract stays in CI forever.
+
 **The design laws are CI:** `stax-migrate verify --url --themes light,dark`
 runs on every push/PR (build → preview → scan, BOTH themes): L-ALIGN,
 L-RHYTHM, L-FOOT, L-FLOW fail the build. `stax-migrate doctor` prints the

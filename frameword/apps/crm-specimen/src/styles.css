@@ -308,6 +308,10 @@ img.avatar { border: 1px solid var(--border); }
 body[data-dots="off"] .stage, body[data-dots="off"] .push-stage { background-image: none; }
 
 /* foot search (the zip's per-panel search) */
+/* LEGACY EMBED (the strangler): the old app runs unchanged inside a panel —
+   media rule applies (borders belong to media), the shell stays in charge */
+.legacy-embed { flex: 1; min-height: 0; display: flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.legacy-embed iframe { flex: 1; border: none; min-height: 0; background: #fff; }
 /* TERMINAL panel: mono scrollback, flat; the prompt lives in the foot */
 .term { flex: 1; min-height: 0; overflow-y: auto; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.75; padding: 2px 0 8px; }
 .term-line { white-space: pre-wrap; word-break: break-word; color: var(--ink-2); }

@@ -799,6 +799,28 @@ async function cmdTheme(flags) {
   console.log(block);
 }
 
+function cmdParity(target, flags) {
+  const url = flags.url;
+  const file = flags.file ? path.resolve(process.cwd(), String(flags.file)) : path.join(target, "stax-migration", "parity.csv");
+  if (!url || !fs.existsSync(file)) {
+    console.log("Usage: stax-migrate parity --url <live-url> [--file stax-migration/parity.csv]");
+    console.log("The parity contract: id,capability,probe,expect — every SOURCE capability");
+    console.log("gets a row; the gate DRIVES each against the rebuilt app. 100% or exit 1:");
+    console.log("a migration that loses one capability is a failed migration.");
+    if (url && !fs.existsSync(file)) console.log(`\n(no contract at ${file})`);
+    process.exit(2);
+  }
+  const scan = new URL("./verify/parity.mjs", import.meta.url).pathname;
+  const r = spawnSync("node", [scan, url, file], { encoding: "utf8" });
+  if (r.status === 2 || !r.stdout.trim()) { process.stderr.write(r.stderr || "parity: scan failed\n"); process.exit(2); }
+  const rep = JSON.parse(r.stdout);
+  console.log(`stax parity · ${rep.url} · contract ${file.split("/").pop()}`);
+  if (rep.pass) { console.log(green(bold(`PARITY 100% — ${rep.passed}/${rep.total} capabilities proven live.`))); return; }
+  console.log(`PARITY ${rep.passed}/${rep.total} — the transfer is NOT done:\n`);
+  for (const f2 of rep.failed) console.log(`  ✗ [${f2.id}] ${f2.capability}: ${f2.why}`);
+  process.exitCode = 1;
+}
+
 function cmdVerify(flags) {
   const url = flags.url;
   if (!url) {
@@ -964,6 +986,9 @@ async function main() {
         break;
       case "verify":
         cmdVerify(flags);
+        break;
+      case "parity":
+        cmdParity(resolveTarget(pos[0]), flags);
         break;
       case "theme":
         await cmdTheme(flags);

@@ -42,6 +42,9 @@ export interface DomainNode {
   composer?: string;
   footActions?: FootAction[];
   kpis?: { v: string; l: string }[];
+  /** strangler pattern: inline legacy markup (or a URL) rendered in an embed panel */
+  embed?: string;
+  embedUrl?: string;
 }
 
 export interface SpaceDef { spaceId: string; rootKey: string; label: string }
@@ -363,7 +366,7 @@ export const DOMAIN: Record<string, DomainNode> = {
       { kind: "card", label: "4: stax-migrate", text: "packages/stax-migrate: a zero-dependency Node CLI that rebuilds ANY legacy app on this grammar in 9 gated phases via Claude Code or Codex, at a CONTRACTED integration level (full / standard / starter / shell: chosen at init, enforced by every gate, lowered only with --force + a logged decision). Three CSV matrices are the law: every feature (F-NNN), every visual element (E-NNN), and every table & server function (D-NNN, bound to the panel that reads it and the foot action that writes it). An uncited skip blocks; stax-migrate contract prints how integrated you REALLY are." },
       { kind: "code", code: "cd frameword && bun install && bun test    # 33 laws\ncd apps/crm-specimen && bunx vite          # run this app\nnode packages/stax-migrate/index.mjs \\\n  init /path/to/legacy-app                 # start a migration" },
     ],
-    children: ["arch:registry", "arch:convex"],
+    children: ["arch:registry", "arch:convex", "arch:legacy"],
   },
   "arch:registry": {
     panelType: "doc", title: "Registry map", subtitle: "Every panel type this app registers, with its width class.",
@@ -390,7 +393,7 @@ export const DOMAIN: Record<string, DomainNode> = {
   "sec:prompts": {
     panelType: "section", title: "Prompt pack", eyebrow: "Prompt pack · 06",
     subtitle: "P0-P3 teach and build. M1-M6 are the MASTER KIT: paste-ready prompts that let any coding agent decompose an existing app, map it to the panel grammar, migrate it, build new on it, wire an agent, and audit against the laws.",
-    children: ["pr:p0", "pr:p1", "pr:p2", "pr:p3", "pr:m-decompose", "pr:m-map", "pr:m-design", "pr:m-migrate", "pr:m-build", "pr:m-agent", "pr:m-laws", "pr:m-bridge", "pr:m-anydash"],
+    children: ["pr:p0", "pr:p1", "pr:p2", "pr:p3", "pr:m-decompose", "pr:m-map", "pr:m-design", "pr:m-migrate", "pr:m-build", "pr:m-agent", "pr:m-laws", "pr:m-bridge", "pr:m-anydash", "pr:m-enterprise"],
     blocks: [{ kind: "card", label: "How to use", text: "Paste one prompt into any coding agent as-is. For a full migration, prefer the stax-migrate CLI (Architecture · 05): it drives the same protocols as 9 gated phases with mechanical, level-aware exit gates (integration contract: full / standard / starter / shell). Always demand citations: file:line, screenshots, or test output: for every material claim." }],
   },
   "pr:m-bridge": {
@@ -401,6 +404,10 @@ export const DOMAIN: Record<string, DomainNode> = {
     panelType: "prompt", title: "M9: ANY dashboard → Stax", subtitle: "Understand the source app's views, then rebuild them better: one dataset, four shapes.", meta: "transform",
     blocks: [{ kind: "code", label: "MASTER PROMPT: paste into any coding agent", code: "ROLE: Dashboard transformer. Take ANY existing product (site, blog, SaaS dashboard, Notion workspace, Next.js mega-dashboard, admin panel) and REBUILD it as a Stax panels app with shadcn-grade atomic elements. The goal is to UNDERSTAND the product, then remake it better: never a 1:1 port of its layout.\nPHASE 0: UNDERSTAND. Inventory EVERY screen of the source into view-matrix.csv (id,screen,data,shape,filters,actions,detail_path,kpis): shape is one of kanban | data-table | card-grid | list | detail-page | modal | chart | hero-kpis | filter-bar | nav. No screen skipped: the smallest settings modal is a row.\nPHASE 1: MAP by the VIEW GRAMMAR, never by eye:\n- kanban board -> a saved view with type BOARD: the first select field's options are the columns, dragging a card restages it (writes the field), column head = mono label + count.\n- data table -> the dt grid (typed cells, per-view settings, CSV, bulk select).\n- card grid -> view type CARDS (flat cards, click = peek sheet).\n- long list -> view type LIST (one-line rows in the drill grammar).\nONE DATASET, FOUR SHAPES: table/board/cards/list are VIEW TYPES over the same rows, switched from the FOOT segments — never four separate pages.\n- detail page or overlay -> the faceted SHEET first (pipeline pills from the stage field, facet tabs as the sub-menu line: Info / Financials / Notes / Documents...), 'Open as panel' promotes it to a full panel in the thread.\n- global filter bar, fund/team switcher, archived toggle -> FOOT SEGMENTS (.foot-seg) with the live count as a foot note; per-panel search = the foot ⌕. The foot is the panel's control deck.\n- hero KPI strip -> QUIET stats (17px mono values) + the sidebar KPI mirror; never display-size numbers in the hero.\n- top nav / side nav -> spaces + drills; modals -> panels beside; settings -> a sys panel.\nPHASE 2: REBUILD BETTER. Actions into the registry (foot = palette = window.stax bridge); every list searchable from the foot; undo everywhere; exit ghosts on close; both themes.\nDEFINITION OF DONE: view-matrix.csv 100% mapped with the Stax target per row; every source capability reachable (cite where); stax-migrate verify --url <live> --themes light,dark PASS; the M7 token sweep clean. Evidence, not adjectives."
     }],
+  },
+  "pr:m-enterprise": {
+    panelType: "prompt", title: "M10: Enterprise strangler — the 100% transfer", subtitle: "SAP-class migrations: full capability on day 1, parity-gated forever after.", meta: "enterprise",
+    blocks: [{ kind: "code", label: "MASTER PROMPT: paste into any coding agent", code: "ROLE: Enterprise migration engineer. Move a large legacy product (SAP-class: hundreds of screens, forms, reports, workflows, permissions) onto Stax with ZERO capability loss at every moment. The transfer is not a rewrite gamble: it is a strangler with a machine-checked parity contract.\nLAW 0 - THE TRANSFER ALWAYS WORKS: at every commit, 100% of the source's capabilities are reachable in the Stax shell. Anything less is a broken build, not a partial success.\nPHASE 0 - CONTRACT: inventory EVERY source capability into stax-migration/parity.csv (id,capability,probe,expect): every route, list, form, report, action, export, permission surface. probe = the Stax deep-link hash where it will live; expect = panel | action:<id> | text:<needle>. No row, no capability, no mercy.\nPHASE 1 - EMBED FIRST (day 1 = 100%): wrap the WHOLE legacy app in the Stax shell as LEGACY EMBED panels (panelType legacy: iframe/srcDoc in the panel grammar, media-rule borders, a foot note naming the replacement plan). Navigation, spaces and the palette are Stax from day 1; every legacy screen is one drill away, unchanged. Run stax-migrate parity --url <staging>: it must print PARITY 100% before anything else happens.\nPHASE 2 - REPLACE IN PLACE, GATED: pick ONE screen; rebuild it in the grammar (M9's view mapping: kanban->board view, tables->dt, detail->faceted sheet, filters->foot segments); swap the embed row's probe to the rebuilt target; run parity again. 100% -> commit; less -> the swap reverts. The embed shrinks screen by screen; the contract never does.\nPHASE 3 - DATA: the workspace persists through a StorageAdapter (Convex/Supabase/REST); big grids stay server-paginated behind the same view grammar; the URL still carries every thread.\nPHASE 4 - DECOMMISSION: when parity.csv has zero embed probes left, the legacy host dies. Keep the contract in CI forever: stax-migrate parity + verify --themes light,dark on every push - capability AND design, both gates, both 100%.\nDEFINITION OF DONE: parity.csv covers the full source inventory (cite the source screen per row); CI runs both gates; the doctor is clean; no embed rows remain. Evidence, not adjectives." }],
   },
   "pr:p0": {
     panelType: "prompt", title: "P0: Concept explainer", subtitle: "Brand-agnostic. Teaches the paradigm in five lines.", meta: "concept",
@@ -738,6 +745,22 @@ export const DOMAIN: Record<string, DomainNode> = {
   "pf:chat": {
     panelType: "pfchat", title: "Chat session.", eyebrow: "Studio · LLM",
     subtitle: "A conversation as CONTENT: the thread lives in the panel body, the composer in the foot. Slash commands drive the workspace through the bridge.",
+  },
+  "arch:legacy": {
+    panelType: "legacy", title: "The strangler.", eyebrow: "Architecture · embed",
+    subtitle: "Day 1 of an enterprise migration: the WHOLE legacy app runs INSIDE the shell as embed panels — 100% capability before a single screen is rebuilt. Then each screen is replaced in place and parity-gated; the embed shrinks until it is gone.",
+    embed: `<style>body{font-family:Arial,sans-serif;margin:0;background:#eef1f6;color:#1a2733}
+.hd{background:#354a5f;color:#fff;padding:10px 14px;font-size:13px;font-weight:bold}
+table{width:100%;border-collapse:collapse;font-size:12px;background:#fff}
+th{background:#dfe6ee;text-align:left;padding:6px 10px;border:1px solid #c3cdd9}
+td{padding:6px 10px;border:1px solid #dde4ec}
+.btn{background:#0a6ed1;color:#fff;border:none;padding:6px 14px;font-size:12px;margin:10px}
+</style><div class="hd">SAP-ish Legacy · Purchase Orders (running unchanged inside a Stax panel)</div>
+<table><tr><th>PO</th><th>Vendor</th><th>Value</th><th>Status</th></tr>
+<tr><td>4500012345</td><td>Acme GmbH</td><td>€24,800</td><td>Released</td></tr>
+<tr><td>4500012346</td><td>Globex AG</td><td>€8,150</td><td>Blocked</td></tr>
+<tr><td>4500012347</td><td>Initech SARL</td><td>€61,020</td><td>Released</td></tr></table>
+<button class="btn">Create PO</button>`,
   },
   "sec:pf-studio": {
     panelType: "section", title: "The Studio.", eyebrow: "Studio · Platform",
