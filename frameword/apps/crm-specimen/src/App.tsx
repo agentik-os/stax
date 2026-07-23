@@ -748,9 +748,6 @@ function Shell() {
           ))}
         </nav>
         <div style={{ flex: 1 }} />
-        <button className="tb-goto" onClick={() => setPalette(true)}>
-          GO TO<span className="kbd" style={{ minWidth: 0 }}>⌘K</span>
-        </button>
         <button className="tb-btn" title="Data: tables & pages" onClick={() => openSpaceSmart("data", "sec:data")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6" /><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></svg>
         </button>
@@ -1001,10 +998,17 @@ function Shell() {
           onClick={() => ws.state.rootInstanceId && ws.closePanel(ws.state.rootInstanceId)}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9.5 9-7 9 7" /><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10" /></svg>
         </span>
-        {path.map((id, i) => (
+        {compact && path.length > 2 && (
+          <span style={{ display: "contents" }}>
+            <span className="crumb-sep">›</span>
+            <span className="crumb" title="Earlier panels: focus the nearest hidden one"
+              onClick={() => { const id = path[path.length - 3]; ws.focusPanel(id); scrollPanelIntoView(id); }}>…</span>
+          </span>
+        )}
+        {(compact && path.length > 2 ? path.slice(-2) : path).map((id) => (
           <span key={id} style={{ display: "contents" }}>
             <span className="crumb-sep">›</span>
-            <span className={"crumb" + (i === path.length - 1 ? " here" : "") + (id === ws.state.focusedPanelId ? " focus" : "")}
+            <span className={"crumb" + (id === path[path.length - 1] ? " here" : "") + (id === ws.state.focusedPanelId ? " focus" : "")}
               title="Click: focus · ⌥click: rewind the thread here"
               onClick={(e) => {
                 if (e.altKey) { ws.navigateTo(id); return; }
@@ -1025,6 +1029,7 @@ function Shell() {
         )}
         <span style={{ flex: 1 }} />
         <span role="status" aria-live="polite" style={{ display: "contents" }}>{toast && <span className={"crumb-toast" + (toastOut ? " out" : "")}>{toast}</span>}</span>
+        <button className="crumb-goto" title="Go to anything · ⌘K" onClick={() => setPalette(true)}>⌘K</button>
         <a className="crumb-theme crumb-gh" href="https://github.com/agentik-os/stax" target="_blank" rel="noreferrer" title="GitHub: source & docs">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" /><path d="M9 18c-4.51 2-5-2-7-2" /></svg>
         </a>

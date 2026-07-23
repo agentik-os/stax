@@ -55,11 +55,7 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 .dd-item .no { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); color: var(--muted-foreground); }
 .dd-foot { padding: 8px 15px 10px; border-top: 1px solid var(--border); margin: 5px -6px -6px; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }
 @media (max-width: 760px) { .tb-nav { display: none; } }
-.tb-goto { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px 6px; color: var(--muted-foreground); font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.05); letter-spacing: 0.08em; line-height: 1; white-space: nowrap; flex: none; }
 /* tight topbars: the label never wraps — the ⌘K chip folds away instead */
-@media (max-width: 500px) { .tb-goto .kbd { display: none; } }
-.tb-goto:hover { background: var(--secondary); color: var(--foreground); }
-.tb-goto .kbd { border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 6px; padding: 3px 5px 2px; background: var(--card); font-size: 10px; }
 .tb-btn { width: 28px; height: 28px; border: 1px solid transparent; border-radius: 7px; color: var(--muted-foreground); font-size: 13px; display: flex; align-items: center; justify-content: center; }
 .tb-btn:hover { background: var(--secondary); color: var(--foreground); }
 .tb-btn.agent { color: var(--accent); }
@@ -182,36 +178,35 @@ img.avatar { border: 1px solid var(--border); }
    text stays aligned with every other flat block. Separators are drawn as
    12px-inset pseudo hairlines so every line in a panel shares the EXACT
    left/right bounds of the head hairline (only the FILL bleeds, never a line) */
-.drills { display: flex; flex-direction: column; gap: 0; position: relative; margin: 0 -12px; }
-.drills::before { content: ""; position: absolute; left: 12px; right: 12px; top: 0; border-top: 1px solid var(--border); transition: left 130ms var(--ease), right 130ms var(--ease); }
+.drills { display: flex; flex-direction: column; gap: 0; position: relative; margin: 0; }
+.drills::before { content: ""; position: absolute; left: 0; right: 0; top: 0; border-top: 1px solid var(--border); }
 .drills > * { width: auto; }
-.drill { display: flex; align-items: center; gap: 12px; padding: 12px; border: none; border-radius: 0; cursor: pointer; text-align: left; width: 100%; position: relative;; content-visibility: auto; contain-intrinsic-size: auto 62px; }
-.drill::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease), left 130ms var(--ease), right 130ms var(--ease); pointer-events: none; }
+.drill { display: flex; align-items: center; gap: 12px; padding: 12px 0; border: none; border-radius: 0; cursor: pointer; text-align: left; width: 100%; position: relative;; content-visibility: auto; contain-intrinsic-size: auto 62px; }
+.drill::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease); pointer-events: none; }
 /* hover: flat fill; the row's own hairline turns ACCENT and EXPANDS to the
    fill's edges (a line narrower than its surface reads broken). The line
    ABOVE the hovered row expands too so the fill is framed symmetrically. */
 .drill { transition: background 130ms var(--ease); }
 .drill:hover { background: var(--secondary); }
 .drill:active { background: color-mix(in oklab, var(--foreground) 5%, var(--secondary)); }
-.drill:active .arr { transform: translateX(5px); color: var(--accent); }
-.drill:hover::after { border-color: var(--accent); left: 0; right: 0; }
-.drill:has(+ .drill:hover)::after, .drill:has(+ .cv-conn-row:hover)::after,
-.cv-conn-row:has(+ .drill:hover)::after, .cv-conn-row:has(+ .cv-conn-row:hover)::after { left: 0; right: 0; }
-.drills:has(> .drill:first-child:hover)::before, .drills:has(> .cv-conn-row:first-child:hover)::before { left: 0; right: 0; }
-.drill:hover .no { color: var(--accent); }
+.drill:active .arr { transform: translateX(-6px); color: var(--accent); }
+.drill:hover::after { border-color: var(--accent); }
+.drill:hover .no { color: var(--accent); transform: translateX(10px); }
 .drill .arr { transition: transform 130ms var(--ease), color 130ms var(--ease); }
-.drill:hover .arr { color: var(--accent); transform: translateX(3px); }
+.drill .no { transition: transform 130ms var(--ease), color 130ms var(--ease); }
+.drill:hover .arr { color: var(--accent); transform: translateX(-10px); }
 /* rows pairing a drill with a trailing action: the separator belongs to the ROW,
    inset back to the shared gutter bounds (the drill alone stops at the button) */
 .cv-conn-row { position: relative; transition: background 130ms var(--ease); }
 .cv-conn-row .drill::after { display: none; }
-.cv-conn-row::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease), left 130ms var(--ease), right 130ms var(--ease); pointer-events: none; }
+.cv-conn-row::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; border-bottom: 1px solid var(--border); transition: border-color 130ms var(--ease); pointer-events: none; }
 /* the FILL belongs to the whole row (drill + trailing action), matching its line */
 .cv-conn-row:hover { background: var(--secondary); }
 .cv-conn-row .drill:hover { background: transparent; }
 .cv-conn-row:hover .no, .cv-conn-row:hover .arr { color: var(--accent); }
-.cv-conn-row:hover .arr { transform: translateX(3px); }
-.cv-conn-row:hover::after { border-color: var(--accent); left: 0; right: 0; }
+.cv-conn-row:hover .no { transform: translateX(10px); }
+.cv-conn-row:hover .arr { transform: translateX(-10px); }
+.cv-conn-row:hover::after { border-color: var(--accent); }
 .drills .cv-conn-row:last-child::after { border-bottom-color: transparent; }
 .drill .no { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); color: var(--muted-foreground); flex: none; }
 .drill .bd { flex: 1; min-width: 0; }
@@ -247,6 +242,8 @@ img.avatar { border: 1px solid var(--border); }
 .crumb.focus { color: var(--accent); font-weight: 600; }
 .crumbbar { height: 34px; flex: none; display: flex; align-items: center; gap: 7px; padding: 0 16px; border-top: 1px solid var(--border); background: var(--card); overflow-x: auto; white-space: nowrap; font-family: var(--font-mono); font-size: var(--fz-mono, 10px); letter-spacing: 0.08em; text-transform: uppercase; }
 .crumb { cursor: pointer; color: var(--muted-foreground); flex: none; }
+/* compact: a long title never pushes the right cluster out — it ellipsizes */
+@media (max-width: 640px) { .crumbbar .crumb { max-width: 96px; overflow: hidden; text-overflow: ellipsis; } }
 .crumb:hover, .crumb.here { color: var(--foreground); }
 .crumb.here { color: var(--accent); }
 .crumb-sep { color: var(--border); flex: none; }
@@ -368,9 +365,9 @@ body[data-dots="off"] .stage, body[data-dots="off"] .push-stage { background-ima
 .dtc-card .v { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* LIST view: one-line rows in the drill grammar */
-.dtl { display: flex; flex-direction: column; position: relative; margin: 0 -12px; }
-.dtl-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-align: left; position: relative; transition: background 130ms var(--ease); }
-.dtl-row::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); }
+.dtl { display: flex; flex-direction: column; position: relative; margin: 0; }
+.dtl-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; text-align: left; position: relative; transition: background 130ms var(--ease); }
+.dtl-row::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; border-bottom: 1px solid var(--border); }
 .dtl-row:last-child::after { border-bottom-color: transparent; }
 .dtl-row:hover { background: var(--secondary); }
 .dtl-row .tt { font-size: 13px; font-weight: 500; }
@@ -991,6 +988,9 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 /* theme toggle — bare icon at the crumbbar's right end, like the home glyph */
 .crumb-theme { flex: none; width: 24px; height: 24px; margin-right: -8px; border: none; background: transparent; border-radius: 6px; color: var(--muted-foreground); display: grid; place-items: center; align-self: center; }
 a.crumb-gh { margin-right: 0; text-decoration: none; }
+/* the quiet ⌘K: bottom-right, one hairline chip — the palette's only chrome */
+.crumb-goto { flex: none; align-self: center; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--muted-foreground); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 6px; padding: 3px 6px 2px; margin-right: 2px; line-height: 1; background: var(--card); cursor: pointer; }
+.crumb-goto:hover { color: var(--foreground); background: var(--secondary); }
 .crumb-theme:hover { color: var(--foreground); background: var(--secondary); }
 
 /* compact ref-chip remove button */

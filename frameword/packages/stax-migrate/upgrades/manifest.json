@@ -4,61 +4,61 @@
       "id": "U-001",
       "since": "0.4.0",
       "area": "engine",
-      "title": "Pinned roots \u00b7 reload keeps pins \u00b7 Back/Forward rewind (urlSync push)"
+      "title": "Pinned roots · reload keeps pins · Back/Forward rewind (urlSync push)"
     },
     {
       "id": "U-002",
       "since": "0.4.0",
       "area": "design",
-      "title": "A\u00d7F5 form grammar \u2014 the title IS the field; form cards abolished"
+      "title": "A×F5 form grammar — the title IS the field; form cards abolished"
     },
     {
       "id": "U-003",
       "since": "0.4.0",
       "area": "layout",
-      "title": "Crumbbar utilities \u2014 bare theme icon at the right, repo link beside it, topbar decluttered"
+      "title": "Crumbbar utilities — bare theme icon at the right, repo link beside it, topbar decluttered"
     },
     {
       "id": "U-004",
       "since": "0.4.0",
       "area": "layout",
-      "title": "Dedicated space menus \u2014 the sidebar mirrors the OPEN space, with back arrow and root show/hide"
+      "title": "Dedicated space menus — the sidebar mirrors the OPEN space, with back arrow and root show/hide"
     },
     {
       "id": "U-005",
       "since": "0.4.0",
       "area": "layout",
-      "title": "Reference rail v2 \u2014 S-capped refs, scroll-to-leaf, removable chips, root-ref consume-on-resume"
+      "title": "Reference rail v2 — S-capped refs, scroll-to-leaf, removable chips, root-ref consume-on-resume"
     },
     {
       "id": "U-006",
       "since": "0.4.0",
       "area": "ux",
-      "title": "First-run auto-open \u00b7 \u2318K indexes live stores \u00b7 mobile dashboard switcher"
+      "title": "First-run auto-open · ⌘K indexes live stores · mobile dashboard switcher"
     },
     {
       "id": "U-007",
       "since": "0.4.0",
       "area": "design",
-      "title": "Foundations \u2014 one foot-button family, fixed-position popovers, no native selects/pickers, no emoji chrome"
+      "title": "Foundations — one foot-button family, fixed-position popovers, no native selects/pickers, no emoji chrome"
     },
     {
       "id": "U-008",
       "since": "0.4.0",
       "area": "perf",
-      "title": "Bundle diet \u2014 lazy heavy panel modules behind a store-only seam; trim icon mega-packs"
+      "title": "Bundle diet — lazy heavy panel modules behind a store-only seam; trim icon mega-packs"
     },
     {
       "id": "U-009",
       "since": "0.4.1",
       "area": "design",
-      "title": "Flat everything \u2014 doc cards, stats, drills, anat-rows and list rows lose their boxes (hairline grammar)"
+      "title": "Flat everything — doc cards, stats, drills, anat-rows and list rows lose their boxes (hairline grammar)"
     },
     {
       "id": "U-010",
       "since": "0.4.1",
       "area": "engine",
-      "title": "Root-close promotion \u2014 closing the root hands the lead to its child; the space ends at the last panel"
+      "title": "Root-close promotion — closing the root hands the lead to its child; the space ends at the last panel"
     },
     {
       "id": "U-011",
@@ -70,19 +70,19 @@
       "id": "U-012",
       "since": "0.4.2",
       "area": "design",
-      "title": "Separator dedup \u00b7 neutral focus ring \u00b7 resizable pinned refs"
+      "title": "Separator dedup · neutral focus ring · resizable pinned refs"
     },
     {
       "id": "U-013",
       "since": "0.4.3",
       "area": "ux",
-      "title": "Tables v3 \u00b7 Notion row peek \u00b7 the entity sheet (pipeline pills, facets, activity)"
+      "title": "Tables v3 · Notion row peek · the entity sheet (pipeline pills, facets, activity)"
     },
     {
       "id": "U-014",
       "since": "0.4.3",
       "area": "design",
-      "title": "Menu design v2 \u00b7 XXL exact-width semantics \u00b7 double-click panel align"
+      "title": "Menu design v2 · XXL exact-width semantics · double-click panel align"
     },
     {
       "id": "U-015",
@@ -179,6 +179,12 @@
       "since": "0.15.0",
       "area": "migration",
       "title": "The 100% transfer: legacy embed panels + the machine-checked parity contract (stax-migrate parity)"
+    },
+    {
+      "id": "U-031",
+      "since": "0.16.0",
+      "area": "design",
+      "title": "Zero-bleed rail (fill = lines = text) + quiet crumbbar ⌘K + responsive rules RR-1..8"
     }
   ]
 }

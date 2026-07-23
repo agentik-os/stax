@@ -45,17 +45,19 @@ values in this file.
     cards 14/15, sections 15/16), never from ad-hoc spacer divs or inline margins.
     Surfaced blocks (code, demos) carry their own margin-bottom 14-16; the head
     closes with margin-bottom 18.
-  - `.drills` — hairline top on the list, hairline between rows; the list bleeds
-    **12px into the gutter** (margin 0 -12px, row padding 12px) so hover breathes while
-    text keeps the flat-block left edge. Separators are drawn as 12px-INSET pseudo
-    hairlines (`.drills::before`, `.drill::after`), never as borders on the bled box:
-    only the FILL bleeds, never a line. Hover = secondary fill + the row's own 1px
-    hairline turns **accent** and EXPANDS to the fill's edges (a line narrower than
-    its surface reads broken); the line above the hovered row expands too, framing
-    the fill symmetrically. The LAST row has no hairline at rest (the dedup law
-    gives it to whatever follows), so hover paints none there: inventing a line
-    under the cursor doubles the next block's separator. Index/arrow accent,
-    arrow slides 3px.
+  - `.drills` — hairline top on the list, hairline between rows, and everything
+    sits ON THE TEXT RAIL: the list does NOT bleed into the gutter (margin 0,
+    row padding 12px 0). The hover FILL, the pseudo hairlines (`.drills::before`,
+    `.drill::after`, both left/right 0) and the text share EXACTLY the same
+    bounds — nothing ever overhangs the rail, in either theme (dark makes any
+    overhang glare). Hover = secondary fill + the row's own 1px hairline turns
+    **accent** IN PLACE (no width change, no expansion choreography), and the
+    EDGE CONTENT breathes INSIDE the fill: the index nudges +10px, the arrow
+    -10px, by TRANSFORM only (zero layout shift) — text glued to a fill edge
+    reads cramped, but padding would move the rail. The LAST
+    row has no hairline at rest (the dedup law gives it to whatever follows),
+    so hover paints none there: inventing a line under the cursor doubles the
+    next block's separator. Index/arrow accent, arrow slides 3px.
     Row meta tags are flat mono uppercase, never pills. A row that pairs a drill
     with a TRAILING action (pin, edit) draws the separator on the ROW wrapper, not
     the drill, so the line still reaches the shared right bound.
@@ -198,7 +200,7 @@ outside it.
 **Topbar (h 52, solid card bg — NEVER backdrop-filter: it breaks fixed descendants):**
 - sidebar toggle (bare icon 16) · dashboard NAV as dropdown triggers (icon 14 + label
   + caret; menu = numbered dd-items, one per space, footer hint) · spacer ·
-- GO TO pill (⌘K) · utility icons 15 (system spaces: data, notes, tasks, canvas) ·
+- utility icons 15 (system spaces: data, notes, tasks, canvas) ·
 - notification bell (unread dot; dropdown: search, All/Unread segment, kind dots,
   mark-all-read foot) — the ONLY floating menus allowed are these chrome dropdowns.
 
@@ -224,7 +226,9 @@ outside it.
 **Crumbbar (h 34):**
 - home glyph → thread crumbs (mono, focused = accent, click = navigateTo rewind) ·
   spacer · transient toasts (inline text, never floating pills over the UI) ·
-  repo/GitHub link · theme toggle — both as bare 24px icons, menus open UPWARD.
+  **⌘K chip** (the palette's ONLY chrome: a quiet mono hairline chip, bottom-right,
+  just LEFT of GitHub — never a labeled pill in the topbar) ·
+  repo/GitHub link · theme toggle — icons as bare 24px, menus open UPWARD.
 
 **Shareable workspaces:** "Copy workspace link" carries the FULL state
 (gzip+base64url in `#ws=…`, no backend); a receiver restores it at boot OR on
@@ -277,19 +281,35 @@ clicks; the agent drawer's /commands speak it. Contract: agents.md M8.
 shortcuts) — never a page; profile = entity panel (fs-head name/role); language and
 theme are DEVICE-LOCAL prefs (localStorage), never navigation state.
 
-**Responsive (three tiers):** ≥900 the sidebar is DOCKED (240px beside the stage);
-640-900 it AUTO-CLOSES and reopens as an OVERLAY with backdrop (a docked 240px
-sidebar starves the stage: a 640 L panel never fits), any nav click closes it;
-≤640 is PushHost: one card + back, ref chips with remove ×, the overlay sidebar
-carries the dashboard switcher; ≤760 hides the topbar nav (the sidebar switcher
-takes over). Fixed drawers (agent 380, sheet 440, palette 560) all clamp to 88-92%
-of the frame; stat labels ellipsise instead of clipping.
+**Responsive rules (numbered — a migration implements ALL of them):**
+
+- **RR-1 Three tiers.** ≥900 the sidebar is DOCKED (240px beside the stage);
+  640-900 it AUTO-CLOSES and reopens as an OVERLAY with backdrop (a docked
+  240px sidebar starves the stage: a 640 L panel never fits), any nav click
+  closes it; <640 is PushHost: one card + back-stack navigation.
+- **RR-2 Nav collapse.** ≤760 the topbar nav dropdowns hide; the sidebar
+  switcher takes over. The topbar keeps only brand + icon utils.
+- **RR-3 The chrome never leaves.** The crumbbar (h34) survives EVERY width
+  with its full right cluster — ⌘K chip, GitHub, theme — and never wraps.
+- **RR-4 Crumbs middle-collapse.** <640 with a path deeper than 2, the
+  crumbbar shows `home › … › parent › leaf`; the `…` crumb focuses the
+  nearest hidden panel. Long crumb titles ellipsize at 96px — a title never
+  pushes the right cluster out.
+- **RR-5 Overlays clamp.** Fixed drawers (agent 380, sheet 440, palette 560)
+  all clamp to 88-92% of the frame; they never touch both edges.
+- **RR-6 No sideways document.** The document NEVER scrolls horizontally at
+  any width — only the stage scrolls (and wide blocks scroll inside their own
+  container). `scrollWidth <= clientWidth` is a testable invariant.
+- **RR-7 Text degrades, never clips.** Stat labels, crumb titles and bar
+  labels ellipsise; counts and kbd hints DROP before labels truncate mid-word.
+- **RR-8 Compact refs.** PushHost ref chips carry a remove ×; the overlay
+  sidebar carries the dashboard switcher.
 
 **The shell at a glance:**
 
 ```
 ┌──────────────────── topbar h52 ────────────────────┐
-│ ☰ · nav dropdowns · spacer · GO TO ⌘K · utils · 🔔 │
+│ ☰ · nav dropdowns · spacer · utils · 🔔            │
 ├─────────┬──────────────────────────────────────────┤
 │ sidebar │  STAGE (scrolls horizontally)            │
 │  org ⇅  │  ┌─ panel ─┐ ┌─ panel ─┐ ┌─ ref S ─┐    │
@@ -301,6 +321,6 @@ of the frame; stat labels ellipsise instead of clipping.
 │  pipe   │    declares them (mirrors .stats)        │
 │  avatar │                                          │
 ├─────────┴──────────────────────────────────────────┤
-│ crumbbar h34: home → crumbs · toasts · gh · theme  │
+│ crumbbar h34: home → crumbs · toasts ⌘K gh theme   │
 └────────────────────────────────────────────────────┘
 ```
