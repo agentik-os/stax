@@ -61,6 +61,10 @@ values in this file.
     into the gutter draws its lines inset back to those bounds.
   - **Focus ring** — neutral (foreground mix), suppressed while hovered/active
     (Safari fires :focus-visible on click); keyboard keeps it. Never accent.
+  - **A11y baseline** — toasts announce via a `role="status"` aria-live region;
+    ArrowUp/Down walk the drill rows of the list the focus is in; overlays
+    (sheet, drawer) move focus inside on open and RETURN it to the opener on
+    close; every icon-only control carries a title/aria-label.
   - `.anat-row` — hairline top, padding 12/0, mono accent label column 104px.
   - Popover labels `.pop-sub` — margin-bottom 6.
 - The foot is the ONLY action zone, with a strict hierarchy: ONE primary CTA per
@@ -136,12 +140,20 @@ pixel font-size that ignores them is a defect.
 | Hover affordances | Reveal on row/element hover (edit pencils, open arrows at opacity 0 → 1) |
 | Data grid | `.dt` table — sticky mono headers, hairline `--rule-1` grid, borderless cell
   inputs (focus = 5% accent tint), typed cells (mono numbers right-aligned, accent select
-  pills, accent checks), row opens as the NEXT panel (a page) |
+  pills, accent checks), row opens as the NEXT panel (a page), never instead of it.
+  Views carry their OWN settings via the active tab's menu (rename, duplicate,
+  Cozy/Compact density per view, reset, delete); the ⋯ menu exports a real CSV
+  (visible fields, filtered+sorted rows); the row menu inserts a row below; the
+  foot's New row adds IN PLACE (reveals the row, never opens a panel). The bar ⌕
+  drives the row quick-search; rows multi-select via quiet hover checkboxes
+  (header = select-all-visible) and a selection shows a BULK BAR in the toolbar
+  (count · Duplicate · Delete red-text · clear) |
 | Free-form board / diagram | Canvas panel — WhitePaper nodes, 4-way handles, accent edges |
 | Wizard | Chained drills with foot CTAs |
 | Form/inspector card ("Element", "Details"…) | **The title IS the field**: the entity's name/subtitle edit in place as the panel's serif title block (`.fs-head`/`.fs-title`/`.fs-sub`, rhythm 6/12/18); every remaining group is a flat `.section` (mono label + hairline top) — form cards are FORBIDDEN |
 | Global search | ⌘K palette |
 | Close the focused panel | ctrl+X (inert while typing) + the bar × + Escape on the leaf |
+| Undo / redo a workspace intent | mod+Z / shift+mod+Z (bounded stack in the provider; a FOCUSED canvas keeps its own board history) |
 | Chat / AI helper | Full-height drawer (⌘J) |
 
 ## 7 · States — all six, for every element

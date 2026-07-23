@@ -5,7 +5,7 @@
  * ops (hide, duplicate, move, width), row ops (duplicate, delete), and every
  * row opens as the NEXT panel: a page with fields + a rich body.
  */
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useWorkspace } from "@frameword/panels-react";
 import { RichNotes } from "./RichNotes";
 import { DatePicker, popPos } from "./NotesApp";
@@ -207,6 +207,15 @@ export const dataApp = {
     dataApp.patchCol(colId, { rows: (dataApp.col(colId)?.rows ?? []).map((r) => (r.id === rowId ? { ...r, v: { ...r.v, [fieldId]: value }, ts: Date.now() } : r)) }),
   removeRow: (colId: string, rowId: string) =>
     dataApp.patchCol(colId, { rows: (dataApp.col(colId)?.rows ?? []).filter((r) => r.id !== rowId) }),
+  removeRows: (colId: string, ids: string[]) =>
+    dataApp.patchCol(colId, { rows: (dataApp.col(colId)?.rows ?? []).filter((r) => !ids.includes(r.id)) }),
+  duplicateRows: (colId: string, ids: string[]) => {
+    const c = dataApp.col(colId);
+    if (!c) return;
+    const copies = c.rows.filter((r) => ids.includes(r.id))
+      .map((r, i) => ({ ...r, id: "r" + (Date.now() + i).toString(36) + Math.random().toString(36).slice(2, 5), activity: [] }));
+    dataApp.patchCol(colId, { rows: [...c.rows, ...copies] });
+  },
   addField: (colId: string, type: FieldType): string => {
     const id = uid("f");
     const names: Record<FieldType, string> = { text: "Text", number: "Number", select: "Select", multiselect: "Tags", date: "Date", check: "Check", url: "Link", email: "Email", phone: "Phone" };
@@ -449,11 +458,12 @@ function Cell({ colId, row, field, wrap }: { colId: string; row: Row; field: Fie
 /* ── the table panel: views, toolbar, grid, group, calcs ────────────── */
 const WIDTHS: Record<string, number> = { s: 120, m: 200, l: 300 };
 
-export function DataTable({ colKey, panelId }: { colKey: string; panelId: string }) {
+export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; panelId: string; searchQ?: string }) {
   const ws = useWorkspace();
   const s = useDataApp();
   const c = s.collections.find((x) => x.id === colKey.slice(4));
-  const [q, setQ] = useState("");
+  const q = searchQ; // the panel's bar ⌕ drives the row query
+  const [selRows, setSelRows] = useState<ReadonlySet<string>>(new Set());
   const [menu, setMenu] = useState<null | string>(null);
   const [sheet, setSheet] = useState<null | string>(null); // rowId: the quick peek
   const [pos, setPos] = useState<React.CSSProperties>({});
@@ -535,9 +545,13 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
     </th>
   );
 
+  const toggleRow = (id: string, on: boolean) =>
+    setSelRows((prev) => { const n = new Set(prev); if (on) n.add(id); else n.delete(id); return n; });
   const BodyRow = ({ r }: { r: Row }) => (
-    <tr>
+    <tr className={selRows.has(r.id) ? "dt-selrow" : undefined}>
       <td className="dt-opentd">
+        <input type="checkbox" className={"dt-selbox" + (selRows.size > 0 ? " show" : "")}
+          checked={selRows.has(r.id)} onChange={(e) => toggleRow(r.id, e.target.checked)} />
         <button className="dt-open" title="Open as a page" onClick={() => openRow(r.id)}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
         </button>
@@ -615,9 +629,14 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
       </div>
 
       <div className="dt-toolbar">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--muted-foreground)", flex: "none" }}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
-        <input className="foot-search" style={{ maxWidth: 200 }} placeholder="Search rows…"
-          value={q} onChange={(e) => setQ(e.target.value)} />
+        {selRows.size > 0 ? (
+          <div className="dt-bulk">
+            <span className="ct">{selRows.size} selected</span>
+            <button className="d-btn sm outline" onClick={() => { dataApp.duplicateRows(c.id, [...selRows]); setSelRows(new Set()); }}>Duplicate</button>
+            <button className="d-btn sm outline danger" onClick={() => { dataApp.removeRows(c.id, [...selRows]); setSelRows(new Set()); }}>Delete</button>
+            <button className="ps-clr" title="Clear selection" onClick={() => setSelRows(new Set())}>×</button>
+          </div>
+        ) : null}
         <span style={{ flex: 1 }} />
         {view.sort && (
           <button className="d-btn sm" title="Clear sort"
@@ -738,7 +757,11 @@ export function DataTable({ colKey, panelId }: { colKey: string; panelId: string
         <table className={"dt" + (view.density === "compact" ? " compact" : "")}>
           <thead>
             <tr>
-              <th className="dt-openth" />
+              <th className="dt-openth">
+                <input type="checkbox" className="dt-selbox head" title="Select all visible rows"
+                  checked={rows.length > 0 && rows.every((r) => selRows.has(r.id))}
+                  onChange={(e) => setSelRows(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())} />
+              </th>
               {fields.map((f) => <HeaderCell key={f.id} f={f} />)}
             </tr>
           </thead>
@@ -812,6 +835,14 @@ function RowSheet({ c, rowId, panelId, onOpenPanel, onClose }: {
   const [menu, setMenu] = useState(false);
   const [kind, setKind] = useState<"note" | "task">("note");
   const [draft, setDraft] = useState("");
+  // focus lands inside the sheet on open and returns to the opener on close
+  const openerRef = useRef<HTMLElement | null>(null);
+  const bodyRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    openerRef.current = document.activeElement as HTMLElement | null;
+    (bodyRef.current?.querySelector("input, button, [tabindex]") as HTMLElement | null)?.focus();
+    return () => openerRef.current?.focus();
+  }, []);
   const r = c.rows.find((x) => x.id === rowId);
   if (!r) return null;
   const firstText = c.fields.find((f) => f.type === "text");
@@ -819,7 +850,7 @@ function RowSheet({ c, rowId, panelId, onOpenPanel, onClose }: {
   const acts = r.activity ?? [];
   const open = acts.filter((a) => a.kind === "task" && !a.done).length;
   return (
-    <aside className="sheet" aria-label="Row sheet">
+    <aside className="sheet" aria-label="Row sheet" ref={bodyRef}>
       <div className="sheet-head">
         <div className="sh-row">
           <span className="eyebrow">{c.name} · page</span>

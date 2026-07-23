@@ -1,0 +1,9 @@
+{
+  "name": "create-stax-app",
+  "version": "0.1.0",
+  "description": "Scaffold a Stax panels-inside-panels app: shell, engine and design contract wired in one command.",
+  "type": "module",
+  "bin": { "create-stax-app": "./index.mjs" },
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/agentik-os/stax" }
+}

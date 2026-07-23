@@ -51,6 +51,17 @@ cd apps/crm-specimen
 bunx vite build                   # → dist/ (static, deploy anywhere)
 ```
 
+## Start a NEW app in one command
+
+```bash
+node frameword/packages/create-stax-app/index.mjs my-app   # or from a clone: --from <checkout>
+cd my-app && bun install && bun dev                        # http://localhost:5800
+```
+
+You get the starter shell (provider, stage, panel anatomy, drills, foot), the
+vendored engine under `packages/`, and `DESIGN-SPEC.md` — the same contract this
+repo enforces. Edit `src/domain.ts` and the app grows panels.
+
 ## Use the framework in your own app
 
 The engine is two packages — a pure reducer and thin React bindings:
@@ -64,6 +75,10 @@ const REGISTRY = { space: { size: "L" }, account: { size: "M" }, contact: { size
 // 2 · wrap the app — URL sync + localStorage persistence are built in
 <WorkspaceProvider registry={REGISTRY} urlSync storageKey="my-app">
   <Shell />
+// storageKey = localStorage. For a backend, pass storage={yourAdapter} instead:
+// { load(): WorkspaceState | Promise<...>, save(state) } — async loads reconcile
+// UNDER the current URL (the URL's thread always wins). mod+Z / shift+mod+Z
+// undo-redo every workspace intent out of the box (ws.undo() / ws.redo()).
 </WorkspaceProvider>;
 
 // 3 · drive it with intents — the entire UI derives from WorkspaceState

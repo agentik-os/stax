@@ -432,8 +432,13 @@ function BoardInner({ panelId }: { panelId: string }) {
      not reliably focusable, so a host onKeyDown would miss most keystrokes) */
   const rfNodesRef = useRef(rfNodes);
   rfNodesRef.current = rfNodes;
+  // only the FOCUSED canvas owns the board shortcuts (the workspace-level
+  // mod+Z in the Shell yields to us on the same condition)
+  const focusedRef = useRef(false);
+  focusedRef.current = ws.state.focusedPanelId === panelId;
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
+      if (!focusedRef.current) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {

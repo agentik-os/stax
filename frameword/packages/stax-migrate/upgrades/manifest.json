@@ -95,6 +95,18 @@
       "since": "0.4.5",
       "area": "ux",
       "title": "Panel search in the bar (flat row) + quiet secondary / destructive foot buttons"
+    },
+    {
+      "id": "U-017",
+      "since": "0.5.0",
+      "area": "ux",
+      "title": "Workspace undo/redo (mod+Z) + table multi-select bulk bar + bar-driven row search"
+    },
+    {
+      "id": "U-018",
+      "since": "0.5.0",
+      "area": "a11y",
+      "title": "A11y baseline: aria-live toasts, arrow-key drill nav, overlay focus land/return"
     }
   ]
 }

@@ -787,6 +787,18 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .dt tbody tr:last-child td { border-bottom: none; }
 .dt tbody tr:hover td { background: color-mix(in oklab, var(--foreground) 2.5%, transparent); }
 .dt-openth { width: 34px; }
+/* row selection: quiet checkboxes revealed on hover or while a selection is live */
+.dt-selbox { appearance: none; width: 13px; height: 13px; border: 1px solid var(--border); border-radius: 4px; background: var(--card); cursor: pointer; opacity: 0; flex: none; display: inline-block; vertical-align: middle; position: relative; }
+.dt tbody tr:hover .dt-selbox, .dt-selbox.show, .dt-selbox:checked, .dt thead .dt-selbox { opacity: 1; }
+.dt thead .dt-selbox { opacity: 0.6; }
+.dt thead .dt-selbox:hover, .dt thead .dt-selbox:checked { opacity: 1; }
+.dt-selbox:checked { background: var(--accent); border-color: var(--accent); }
+.dt-selbox:checked::after { content: ""; position: absolute; inset: 2px 3px 4px; border: solid var(--accent-foreground); border-width: 0 0 1.5px 1.5px; transform: rotate(-45deg); }
+.dt-selrow td { background: color-mix(in oklab, var(--accent) 4%, transparent); }
+.dt-bulk { display: flex; align-items: center; gap: 7px; }
+.dt-bulk .ct { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.05); letter-spacing: 0.06em; color: var(--muted-foreground); }
+.dt-bulk .d-btn.danger { color: var(--destructive); border-color: transparent; }
+.dt-bulk .d-btn.danger:hover { background: color-mix(in oklab, var(--destructive) 10%, transparent); }
 .dt-opentd { width: 34px; text-align: center; }
 .dt-open { width: 24px; height: 24px; border-radius: 6px; color: var(--muted-foreground); display: inline-grid; place-items: center; opacity: 0; }
 .dt tbody tr:hover .dt-open { opacity: 1; }

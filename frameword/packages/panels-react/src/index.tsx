@@ -69,6 +69,10 @@ export interface WorkspaceApi {
   openPath: (spaceId: string, targets: PanelTarget[]) => void;
   resumeReference: (id: string, rebuild: (target: PanelTarget) => void) => void;
   moveReference: (id: string, dir: -1 | 1) => void;
+  /** step the workspace back to the state before the last intent (bounded stack) */
+  undo: () => void;
+  /** re-apply the last undone intent */
+  redo: () => void;
   reset: () => void;
 }
 
@@ -80,6 +84,41 @@ export function useWorkspace(): WorkspaceApi {
   return api;
 }
 
+/* ── persistence adapter ─────────────────────────────────────────────── */
+
+/** Pluggable workspace persistence. `load` may be sync or async: an async
+ *  snapshot is reconciled UNDER the current URL once it arrives (the URL's
+ *  ContextPath always wins; the snapshot contributes the reference rail).
+ *  The default adapter is localStorage via `storageKey`. */
+export interface StorageAdapter {
+  load(): WorkspaceState | null | Promise<WorkspaceState | null>;
+  save(state: WorkspaceState): void;
+}
+
+export function localStorageAdapter(key: string): StorageAdapter {
+  return {
+    load() {
+      if (typeof localStorage === "undefined") return null;
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const snap = JSON.parse(raw) as WorkspaceState;
+        return snap && snap.schemaVersion === 1 && validate(snap).length === 0 ? snap : null;
+      } catch {
+        return null; /* malformed snapshot degrades to empty — never throws */
+      }
+    },
+    save(state) {
+      if (typeof localStorage === "undefined") return;
+      try {
+        localStorage.setItem(key, JSON.stringify(state));
+      } catch {
+        /* quota errors are non-fatal */
+      }
+    },
+  };
+}
+
 export interface WorkspaceProviderProps {
   registry: PanelRegistry;
   /** sync the ContextPath into location.hash and restore from it.
@@ -89,6 +128,9 @@ export interface WorkspaceProviderProps {
   urlSync?: boolean | "replace" | "push";
   /** persist the whole workspace to localStorage under this key (used when no URL) */
   storageKey?: string;
+  /** custom persistence backend; takes precedence over storageKey.
+   *  `localStorageAdapter(key)` is what storageKey builds internally. */
+  storage?: StorageAdapter;
   children: ReactNode;
 }
 
@@ -96,32 +138,52 @@ export function WorkspaceProvider({
   registry,
   urlSync = true,
   storageKey,
+  storage,
   children,
 }: WorkspaceProviderProps) {
   const urlMode = urlSync === true ? "replace" : urlSync; // false | "replace" | "push"
+  const adapter = useMemo<StorageAdapter | null>(
+    () => storage ?? (storageKey ? localStorageAdapter(storageKey) : null),
+    [storage, storageKey],
+  );
   const [state, setState] = useState<WorkspaceState>(() => {
     // Restore the device-local snapshot FIRST — it is the only carrier of the
     // reference rail (the URL encodes just the ContextPath). Then reconcile the
     // URL ON TOP of it: openPath reveals-never-duplicates, so pins survive a
     // reload instead of being rebuilt away and then clobbered by the persist.
     let base = emptyWorkspace();
-    if (storageKey && typeof localStorage !== "undefined") {
-      try {
-        const raw = localStorage.getItem(storageKey);
-        if (raw) {
-          const snap = JSON.parse(raw) as WorkspaceState;
-          if (snap && snap.schemaVersion === 1 && validate(snap).length === 0) base = snap;
-        }
-      } catch {
-        /* malformed snapshot degrades to empty — never throws */
-      }
-    }
+    const loaded = adapter?.load();
+    if (loaded && !(loaded instanceof Promise)) base = loaded;
     if (urlMode && typeof location !== "undefined" && location.hash.length > 1) {
       const loc = decodeLocation(location.hash.slice(1));
       if (loc) return reconcileLocation(base, loc);
     }
     return base;
   });
+
+  // an ASYNC adapter resolves after mount: reconcile the current URL on top,
+  // exactly like the sync path (URL wins; the snapshot brings the rail)
+  const asyncLoaded = useRef(false);
+  useEffect(() => {
+    const p = adapter?.load();
+    if (!(p instanceof Promise) || asyncLoaded.current) return;
+    asyncLoaded.current = true;
+    p.then((snap) => {
+      if (!snap) return;
+      setState(() => {
+        if (urlMode && typeof location !== "undefined" && location.hash.length > 1) {
+          const loc = decodeLocation(location.hash.slice(1));
+          if (loc) return reconcileLocation(snap, loc);
+        }
+        return snap;
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adapter]);
+
+  // bounded undo/redo stacks: every intent pushes the PREVIOUS state
+  const undoStack = useRef<WorkspaceState[]>([]);
+  const redoStack = useRef<WorkspaceState[]>([]);
 
   // set while applying a popstate — that state change must not push again
   const popApply = useRef(false);
@@ -139,14 +201,8 @@ export function WorkspaceProvider({
       }
       popApply.current = false;
     }
-    if (storageKey && typeof localStorage !== "undefined") {
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(state));
-      } catch {
-        /* quota errors are non-fatal */
-      }
-    }
-  }, [state, urlMode, storageKey]);
+    adapter?.save(state);
+  }, [state, urlMode, adapter]);
 
   // Back/Forward rewind the workspace instead of exiting the app
   useEffect(() => {
@@ -166,7 +222,15 @@ export function WorkspaceProvider({
   const wrap = useCallback(
     <A extends unknown[]>(fn: (s: WorkspaceState, ...args: A) => WorkspaceState) =>
       (...args: A) =>
-        setState((s) => fn(s, ...args)),
+        setState((s) => {
+          const next = fn(s, ...args);
+          if (next !== s) {
+            undoStack.current.push(s);
+            if (undoStack.current.length > 50) undoStack.current.shift();
+            redoStack.current = [];
+          }
+          return next;
+        }),
     [],
   );
 
@@ -191,6 +255,20 @@ export function WorkspaceProvider({
           const { state: s2, target } = resumeReference(s, id);
           if (target) queueMicrotask(() => rebuild(target));
           return s2;
+        }),
+      undo: () =>
+        setState((s) => {
+          const prev = undoStack.current.pop();
+          if (!prev) return s;
+          redoStack.current.push(s);
+          return prev;
+        }),
+      redo: () =>
+        setState((s) => {
+          const next = redoStack.current.pop();
+          if (!next) return s;
+          undoStack.current.push(s);
+          return next;
         }),
       reset: () => setState(emptyWorkspace()),
     }),
