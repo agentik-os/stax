@@ -482,6 +482,12 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
   const c = s.collections.find((x) => x.id === colKey.slice(4));
   const q = searchQ; // the panel's foot ⌕ drives the row query
   const [selRows, setSelRows] = useState<ReadonlySet<string>>(new Set());
+  // the global Escape peels a live selection FIRST (Linear's escape contract)
+  useEffect(() => {
+    const h = () => setSelRows(new Set());
+    window.addEventListener("stax:clear-selection", h);
+    return () => window.removeEventListener("stax:clear-selection", h);
+  }, []);
   const [menu, setMenu] = useState<null | string>(null);
   const [sheet, setSheet] = useState<null | string>(null); // rowId: the quick peek
   const [pos, setPos] = useState<React.CSSProperties>({});
@@ -897,7 +903,7 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
                 ))}
               </button>
             ))}
-            {rows.length === 0 && <p className="drill-empty">No rows match: clear the search or filters.</p>}
+            {rows.length === 0 && <p className="drill-empty">{q || view.filters.length > 0 ? "No rows match: clear the search or filters." : "No rows yet: + New row lives in the foot."}</p>}
           </div>
         );
       })()}
@@ -915,7 +921,7 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
                 {num && <span className="num">{String(r.v[num.id] ?? "")}</span>}
               </button>
             ))}
-            {rows.length === 0 && <p className="drill-empty">No rows match: clear the search or filters.</p>}
+            {rows.length === 0 && <p className="drill-empty">{q || view.filters.length > 0 ? "No rows match: clear the search or filters." : "No rows yet: + New row lives in the foot."}</p>}
           </div>
         );
       })()}
@@ -952,7 +958,7 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
             </tbody>
           ))}
           {rows.length === 0 && (
-            <tbody><tr><td colSpan={fields.length + 1} className="dt-empty">No rows match: clear the search or filters.</td></tr></tbody>
+            <tbody><tr><td colSpan={fields.length + 1} className="dt-empty">{q || view.filters.length > 0 ? "No rows match: clear the search or filters." : "No rows yet: + New row lives in the foot."}</td></tr></tbody>
           )}
           <tfoot>
             <tr>

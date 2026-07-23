@@ -79,8 +79,8 @@ values in this file.
 - The foot is the ONLY action zone, with a strict hierarchy: ONE primary CTA per
   foot (accent bg + accent border + `--accent-hover` on hover); SECONDARY actions
   are QUIET (hairline `--border`, ink-2 text, secondary fill on hover — never
-  accent chrome); destructive = `--destructive` TEXT on transparent chrome, soft
-  red fill on hover. Never object-state toggles (pin/unpin) in the foot; never
+  accent chrome); destructive rests in MUTED ink and only turns `--destructive`
+  red on approach (hover/focus): delete never rhymes with the primary. Never object-state toggles (pin/unpin) in the foot; never
   metadata lines.
 - AI actions are REGISTRY citizens: kind "ai" renders as the ✶ signature on an
   accent-SOFT chip (never accent-filled: the one-primary law counts fills); its
@@ -98,7 +98,7 @@ values in this file.
 
 | Role | Font | Size | Rules |
 |---|---|---|---|
-| Display / panel titles | `--font-serif` (Newsreader) | `--fz-title` 27 | weight 400, tracking −0.02em |
+| Display / panel titles | `--font-serif` (Newsreader) | `--fz-title` 27 · ROOTS 32 | weight 400 (roots 450, opsz 32): the thread shows a visible hierarchy of rank |
 | Body | `--font-sans` (Inter) | `--fz-body` 13.5 | derived sizes via `calc(var(--fz-body) * k)` |
 | Labels / eyebrows / data | `--font-mono` (Geist Mono) | `--fz-mono` 10 | uppercase, tracking 0.08–0.14em |
 | **Every numeric value** | `--font-mono` | context | `tabular-nums`, tracking −0.02em — **numbers are never serif** |
@@ -177,7 +177,8 @@ pixel font-size that ignores them is a defect.
 | Wizard | Chained drills with foot CTAs |
 | Form/inspector card ("Element", "Details"…) | **The title IS the field**: the entity's name/subtitle edit in place as the panel's serif title block (`.fs-head`/`.fs-title`/`.fs-sub`, rhythm 6/12/18); every remaining group is a flat `.section` (mono label + hairline top) — form cards are FORBIDDEN |
 | Global search | ⌘K palette |
-| Close the focused panel | ctrl+X (inert while typing) + the bar × + Escape on the leaf |
+| Close the focused panel | ctrl+X (inert while typing) + the bar × + Escape on the leaf. The Escape LADDER peels one layer per press: overlay → live table selection → popover/sheet → palette → drawer → menus → leaf panel |
+| Search the focused panel | "/" (inert while typing) opens its foot search |
 | Undo / redo a workspace intent | mod+Z / shift+mod+Z (bounded stack in the provider; a FOCUSED canvas keeps its own board history) |
 | Chat / AI helper | Full-height drawer (⌘J) |
 

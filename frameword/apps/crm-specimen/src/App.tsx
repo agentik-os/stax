@@ -285,6 +285,7 @@ function Shell() {
   const [palette, setPalette] = useState(false);
   const [kbMap, setKbMap] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [toastOut, setToastOut] = useState(false);
   const [theme, setThemeState] = useState<string>(() => localStorage.getItem("frameword-theme") ?? "system");
 
   // input modality: pointer users never see focus rings (Safari fires
@@ -306,10 +307,14 @@ function Shell() {
   }, []);
 
   const sayTimer = useRef(0);
+  const sayFade = useRef(0);
   const say = (msg: string) => {
     setToast(msg);
+    setToastOut(false);
     window.clearTimeout(sayTimer.current); // a stale clear must not blank the NEW toast
-    sayTimer.current = window.setTimeout(() => setToast(null), 2200);
+    window.clearTimeout(sayFade.current);
+    sayFade.current = window.setTimeout(() => setToastOut(true), 2050);
+    sayTimer.current = window.setTimeout(() => setToast(null), 2250);
   };
   const setTheme = (m: string) => {
     setThemeState(m);
@@ -496,10 +501,12 @@ function Shell() {
     };
     const sayH = (e: Event) => say((e as CustomEvent<string>).detail);
     const themeH = (e: Event) => setTheme((e as CustomEvent<string>).detail);
+    const kbH = () => setKbMap(true);
+    window.addEventListener("stax:kbmap", kbH);
     window.addEventListener("stax:ai", h);
     window.addEventListener("stax:say", sayH);
     window.addEventListener("stax:theme", themeH);
-    return () => { window.removeEventListener("stax:ai", h); window.removeEventListener("stax:say", sayH); window.removeEventListener("stax:theme", themeH); };
+    return () => { window.removeEventListener("stax:ai", h); window.removeEventListener("stax:say", sayH); window.removeEventListener("stax:theme", themeH); window.removeEventListener("stax:kbmap", kbH); };
   }, []);
 
   /* ── the COPILOT BRIDGE: the workspace is DRIVABLE. window.stax exposes the
@@ -580,7 +587,7 @@ function Shell() {
         const cur = ws.state.focusedPanelId ?? ws.state.contextLeafId ?? "";
         const i = ws.path.indexOf(cur);
         const j = e.key === "[" ? i - 1 : i + 1;
-        if (i !== -1 && j >= 0 && j < ws.path.length) { e.preventDefault(); ws.focusPanel(ws.path[j]); }
+        if (i !== -1 && j >= 0 && j < ws.path.length) { e.preventDefault(); ws.focusPanel(ws.path[j]); scrollPanelIntoView(ws.path[j]); }
         return;
       }
       // P pins the focused panel: keep it across pages (skip while typing)
@@ -595,6 +602,14 @@ function Shell() {
           if (on) { ws.unpinPanel(fid!); say("Unpinned"); }
           else { ws.pinPanel(fid!); say(fp.role === "root" ? "Pinned: this root rides the rail across switches" : "Pinned: survives every page"); }
         }
+        return;
+      }
+      // "/" opens the FOCUSED panel's foot search (inert while typing)
+      if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const t = e.target as HTMLElement | null;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("stax:search"));
         return;
       }
       // "?" shows the keyboard map (inert while typing)
@@ -645,6 +660,7 @@ function Shell() {
       // an open in-panel popover (table menus, date pickers, cell flys…) always
       // mounts a .pop-bg backdrop: Escape closes IT, never the panel behind it
       if (kbMap) return setKbMap(false);
+      if (document.querySelector(".dt-bulk")) { window.dispatchEvent(new CustomEvent("stax:clear-selection")); return; }
       const popBg = document.querySelector(".pop-bg, .sheet-bg");
       if (popBg) {
         popBg.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
@@ -986,7 +1002,7 @@ function Shell() {
           </>
         )}
         <span style={{ flex: 1 }} />
-        <span role="status" aria-live="polite" style={{ display: "contents" }}>{toast && <span className="crumb-toast">{toast}</span>}</span>
+        <span role="status" aria-live="polite" style={{ display: "contents" }}>{toast && <span className={"crumb-toast" + (toastOut ? " out" : "")}>{toast}</span>}</span>
         <a className="crumb-theme crumb-gh" href="https://github.com/agentik-os/stax" target="_blank" rel="noreferrer" title="GitHub: source & docs">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" /><path d="M9 18c-4.51 2-5-2-7-2" /></svg>
         </a>
@@ -1167,6 +1183,20 @@ function DtFootSeg({ colKey }: { colKey: string }) {
       <span className="foot-note" style={{ marginLeft: "auto" }}>{c.rows.length} row{c.rows.length === 1 ? "" : "s"}</span>
     </>
   );
+}
+
+/* keyboard focus and the viewport must never desync: whenever focus walks,
+   the stage brings the focused panel into view */
+function scrollPanelIntoView(id: string) {
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`.panel[data-pid="${CSS.escape(id)}"]:not(.panel-exit)`) as HTMLElement | null;
+    const st = el?.closest(".stage") as HTMLElement | null;
+    if (!el || !st) return;
+    const pad = parseFloat(getComputedStyle(st).paddingLeft) || 18;
+    const er = el.getBoundingClientRect(), sr = st.getBoundingClientRect();
+    if (er.left < sr.left + 2) st.scrollTo({ left: st.scrollLeft + (er.left - sr.left) - pad, behavior: "smooth" });
+    else if (er.right > sr.right - 2) st.scrollTo({ left: st.scrollLeft + (er.right - sr.right) + pad, behavior: "smooth" });
+  });
 }
 
 /* ── EXIT TRANSITIONS: an explicit close gesture (×, ctrl+X, Escape on the
@@ -1363,6 +1393,9 @@ export function panelActions(
         requestAnimationFrame(() => {
           const sc = document.querySelector(".panel.focused .dt-scroll, .dt-scroll");
           if (sc) sc.scrollTop = sc.scrollHeight;
+          const tr = sc?.querySelector("tbody tr:last-child") as HTMLElement | null;
+          (tr?.querySelector("input") as HTMLElement | null)?.focus();
+          tr?.animate([{ backgroundColor: "color-mix(in oklab, var(--accent) 10%, transparent)" }, { backgroundColor: "transparent" }], { duration: 700, easing: "ease-out" });
         });
       } },
       { id: "del-table", label: "Delete table", icon: AI.trash, kind: "destructive", run: () => { dataApp.removeCollection(key.slice(4)); ws.closePanel(id); } },
@@ -1451,6 +1484,12 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
   const refIndex = ws.state.referenceRailOrder.indexOf(id);
   // per-panel search (the zip's foot search): panels with a real list get it
   const prof = useProfile();
+  useEffect(() => {
+    const h = () => { if (ws.state.focusedPanelId === id) setSOpen(true); };
+    window.addEventListener("stax:search", h);
+    return () => window.removeEventListener("stax:search", h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, ws.state.focusedPanelId]);
   const searchable = !isRef && ((n.children?.length ?? 0) >= 4
     || ["datahome", "notes", "notefolder", "tasks", "datatable"].includes(p.target.panelType));
   const kids = (n.children ?? []).filter((k) =>
@@ -1503,15 +1542,20 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
         ) : !isRoot ? (
           <>
             <button className="bar-btn" title="Focus left panel"
-              onClick={() => { const i = ws.path.indexOf(id); if (i > 0) ws.focusPanel(ws.path[i - 1]); }}>‹</button>
+              onClick={() => { const i = ws.path.indexOf(id); if (i > 0) { ws.focusPanel(ws.path[i - 1]); scrollPanelIntoView(ws.path[i - 1]); } }}>‹</button>
             <button className="bar-btn" title="Focus right panel"
-              onClick={() => { const i = ws.path.indexOf(id); if (i < ws.path.length - 1) ws.focusPanel(ws.path[i + 1]); }}>›</button>
+              onClick={() => { const i = ws.path.indexOf(id); if (i < ws.path.length - 1) { ws.focusPanel(ws.path[i + 1]); scrollPanelIntoView(ws.path[i + 1]); } }}>›</button>
           </>
         ) : null}
         {!isRef && (
           <button className={"pin-btn" + (retained ? " on" : "")} aria-pressed={retained}
             title={isRoot ? "Pin: keep this Space in the rail when you switch" : "Pin: keep this panel when drilling elsewhere"}
-            onClick={() => (retained ? ws.unpinPanel(id) : ws.pinPanel(id))}>
+            onClick={() => {
+              const msg = retained ? "Unpinned"
+                : isRoot ? "Pinned: this root rides the rail across switches" : "Pinned: survives every page";
+              if (retained) ws.unpinPanel(id); else ws.pinPanel(id);
+              window.dispatchEvent(new CustomEvent("stax:say", { detail: msg }));
+            }}>
             PIN
           </button>
         )}
@@ -1524,7 +1568,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
 
       <div className="panel-body" style={isCanvas ? { padding: 0, overflow: "hidden" } : undefined}>
         {isCanvas && <Suspense fallback={<div className="leaf-note">Loading the canvas…</div>}><CanvasBoard panelId={id} /></Suspense>}
-        {!isCanvas && (n.title !== "" || isRef) && p.target.panelType !== "profile" && <h2 className="panel-title" onClick={isRef ? () => deepLink(p.target.resourceKey, id) : undefined}
+        {!isCanvas && (n.title !== "" || isRef) && p.target.panelType !== "profile" && <h2 className={"panel-title" + (isRoot && !isRef ? " root" : "")} onClick={isRef ? () => deepLink(p.target.resourceKey, id) : undefined}
           style={isRef ? { cursor: "pointer" } : undefined}
           title={isRef ? "Reopen this thread" : undefined}>{n.title || titleOfKey(p.target.resourceKey)}</h2>}
         {!isCanvas && n.subtitle && p.target.panelType !== "profile" && <p className="panel-sub">{n.subtitle}</p>}
@@ -1893,6 +1937,7 @@ function Palette({ onClose, deepLink, say, setTheme }: {
       out.push({ tag: "action", label: "Clear saved layouts", run: () => { localStorage.removeItem(LAYOUTS_KEY); say("Layouts cleared"); } });
     out.push({ tag: "action", label: "Open devtools", run: () => ws.openSpace("devtools", targetOf("sys:devtools")) });
     out.push({ tag: "action", label: "Play the tour", run: () => window.dispatchEvent(new CustomEvent("stax:tour")) });
+    out.push({ tag: "action", label: "Keyboard map · ?", run: () => window.dispatchEvent(new CustomEvent("stax:kbmap")) });
     if (ws.state.rootInstanceId)
       out.push({ tag: "action", label: "Copy workspace link", run: () => {
         void encodeShare(ws.state).then(async (b64) => {
@@ -1960,7 +2005,15 @@ function Palette({ onClose, deepLink, say, setTheme }: {
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(s + 1, hits.length - 1)); }
               if (e.key === "ArrowUp") { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
-              if (e.key === "Enter" && hits[sel]) run(hits[sel]);
+              if (e.key === "Enter" && hits[sel]) {
+                const pinAfter = e.metaKey;
+                run(hits[sel]);
+                if (pinAfter) window.setTimeout(() => {
+                  const sx = (window as unknown as { stax?: { pin: () => void } }).stax;
+                  sx?.pin();
+                  window.dispatchEvent(new CustomEvent("stax:say", { detail: "Opened pinned" }));
+                }, 300);
+              }
             }} />
           <span className="palette-esc">esc</span>
         </div>

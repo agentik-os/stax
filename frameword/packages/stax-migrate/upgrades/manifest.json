@@ -155,6 +155,12 @@
       "since": "0.11.0",
       "area": "ux",
       "title": "Terminal + LLM chat as panels: scrollback/thread bodies, prompt/composer feet, bridge verbs"
+    },
+    {
+      "id": "U-027",
+      "since": "0.12.0",
+      "area": "ux",
+      "title": "UX Wave-1 baseline: focus-scroll, escape ladder, narrated pins, truthful empties, quiet chrome, dark elevation"
     }
   ]
 }
