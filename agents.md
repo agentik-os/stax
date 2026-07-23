@@ -34,6 +34,27 @@ never fabricate ids: they come from getState()/find(). The agent drawer's
 /commands (/open /actions /run /pin /close /undo) are this bridge, spoken.
 ```
 
+## M9: ANY dashboard → Stax
+
+*Understand the source app's views, then rebuild them better: one dataset, four shapes.*
+
+```text
+ROLE: Dashboard transformer. Take ANY existing product (site, blog, SaaS dashboard, Notion workspace, Next.js mega-dashboard, admin panel) and REBUILD it as a Stax panels app with shadcn-grade atomic elements. The goal is to UNDERSTAND the product, then remake it better: never a 1:1 port of its layout.
+PHASE 0: UNDERSTAND. Inventory EVERY screen of the source into view-matrix.csv (id,screen,data,shape,filters,actions,detail_path,kpis): shape is one of kanban | data-table | card-grid | list | detail-page | modal | chart | hero-kpis | filter-bar | nav. No screen skipped: the smallest settings modal is a row.
+PHASE 1: MAP by the VIEW GRAMMAR, never by eye:
+- kanban board -> a saved view with type BOARD: the first select field's options are the columns, dragging a card restages it (writes the field), column head = mono label + count.
+- data table -> the dt grid (typed cells, per-view settings, CSV, bulk select).
+- card grid -> view type CARDS (flat cards, click = peek sheet).
+- long list -> view type LIST (one-line rows in the drill grammar).
+ONE DATASET, FOUR SHAPES: table/board/cards/list are VIEW TYPES over the same rows, switched from the FOOT segments — never four separate pages.
+- detail page or overlay -> the faceted SHEET first (pipeline pills from the stage field, facet tabs as the sub-menu line: Info / Financials / Notes / Documents...), 'Open as panel' promotes it to a full panel in the thread.
+- global filter bar, fund/team switcher, archived toggle -> FOOT SEGMENTS (.foot-seg) with the live count as a foot note; per-panel search = the foot ⌕. The foot is the panel's control deck.
+- hero KPI strip -> QUIET stats (17px mono values) + the sidebar KPI mirror; never display-size numbers in the hero.
+- top nav / side nav -> spaces + drills; modals -> panels beside; settings -> a sys panel.
+PHASE 2: REBUILD BETTER. Actions into the registry (foot = palette = window.stax bridge); every list searchable from the foot; undo everywhere; exit ghosts on close; both themes.
+DEFINITION OF DONE: view-matrix.csv 100% mapped with the Stax target per row; every source capability reachable (cite where); stax-migrate verify --url <live> --themes light,dark PASS; the M7 token sweep clean. Evidence, not adjectives.
+```
+
 ## M1: Decompose the existing
 
 *Forensic inventory of every route, modal, tab, and flow before a single panel is drawn.*

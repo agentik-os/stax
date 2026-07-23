@@ -1143,6 +1143,28 @@ async function decodeShare<T>(str: string): Promise<T | null> {
   } catch { return null; }
 }
 
+/* ── the datatable FOOT: view-type segments + live row count. Filters and
+   view switching are FOOT business (the foot is the panel's control deck);
+   the same pattern any converted dashboard should land on. ── */
+function DtFootSeg({ colKey }: { colKey: string }) {
+  const s = useDataApp();
+  const c = s.collections.find((x) => x.id === colKey.slice(4));
+  if (!c) return null;
+  const view = c.views.find((v) => v.id === c.activeView) ?? c.views[0];
+  const t = view.type ?? "table";
+  return (
+    <>
+      <div className="foot-seg" role="tablist" aria-label="View as">
+        {(["table", "board", "cards", "list"] as const).map((x) => (
+          <button key={x} role="tab" aria-selected={t === x} className={t === x ? "on" : undefined}
+            onClick={() => dataApp.patchView(c.id, { type: x })}>{x[0].toUpperCase() + x.slice(1)}</button>
+        ))}
+      </div>
+      <span className="foot-note" style={{ marginLeft: "auto" }}>{c.rows.length} row{c.rows.length === 1 ? "" : "s"}</span>
+    </>
+  );
+}
+
 /* ── EXIT TRANSITIONS: an explicit close gesture (×, ctrl+X, Escape on the
    leaf) leaves a 150ms ghost — object permanence for departures. Engine-driven
    removals (space switches, promotion) stay instant: those are navigations. ── */
@@ -1661,6 +1683,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             <span className="foot-note">Read-only</span>
           );
         })()}
+        {p.target.panelType === "datatable" && !sOpen && !isRef && <DtFootSeg colKey={p.target.resourceKey} />}
         <button className="foot-gear" title="Panel settings" onClick={() => setGear((v) => !v)}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
         </button>

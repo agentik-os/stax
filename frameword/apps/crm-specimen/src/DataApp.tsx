@@ -21,6 +21,8 @@ export interface View {
   id: string; name: string;
   filters: Filter[]; sort?: { fieldId: string; dir: "asc" | "desc" };
   hidden: string[]; groupBy?: string; wrap?: boolean; density?: "cozy" | "compact";
+  /** how the view RENDERS: one dataset, four shapes */
+  type?: "table" | "board" | "cards" | "list";
 }
 export interface Collection {
   id: string; name: string;
@@ -615,6 +617,13 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
             <div className="pop-sub" style={{ margin: "2px 8px 4px" }}>{view.name}</div>
             <button className="tp-slot" onClick={() => { setRenView({ id: view.id, v: view.name }); setMenu(null); }}>Rename view</button>
             <button className="tp-slot" onClick={() => { dataApp.duplicateView(c.id, view.id); setMenu(null); }}>Duplicate view</button>
+            <div className="pop-sub" style={{ margin: "6px 8px 2px" }}>View as</div>
+            <div className="dt-mrow">
+              {(["table", "board", "cards", "list"] as const).map((t) => (
+                <button key={t} className={"tp-slot" + ((view.type ?? "table") === t ? " on" : "")}
+                  onClick={() => dataApp.patchView(c.id, { type: t })}>{t[0].toUpperCase() + t.slice(1)}</button>
+              ))}
+            </div>
             <div className="pop-sub" style={{ margin: "6px 8px 2px" }}>Density</div>
             <div className="dt-mrow">
               <button className={"tp-slot" + ((view.density ?? "cozy") === "cozy" ? " on" : "")} onClick={() => dataApp.patchView(c.id, { density: "cozy" })}>Cozy</button>
@@ -753,6 +762,80 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
             onClose={() => setSheet(null)} />
         </>
       )}
+      {(view.type ?? "table") === "board" && (() => {
+        const stage = c.fields.find((f) => f.type === "select" && (f.options?.length ?? 0) > 1);
+        if (!stage) return <p className="drill-empty" style={{ padding: "14px 4px" }}>Board needs a select field: add one, its options become the columns.</p>;
+        const cols = [...(stage.options ?? []), ""];
+        const title = c.fields.find((f) => f.type === "text");
+        const nums = c.fields.filter((f) => f.type === "number").slice(0, 2);
+        return (
+          <div className="dtb">
+            {cols.map((opt) => {
+              const list = rows.filter((r) => String(r.v[stage.id] ?? "") === opt);
+              if (opt === "" && list.length === 0) return null;
+              return (
+                <div key={opt || "—"} className="dtb-col"
+                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("over"); }}
+                  onDragLeave={(e) => e.currentTarget.classList.remove("over")}
+                  onDrop={(e) => {
+                    e.currentTarget.classList.remove("over");
+                    const rid = e.dataTransfer.getData("text/dtb");
+                    if (rid) dataApp.setCell(c.id, rid, stage.id, opt || undefined);
+                  }}>
+                  <div className="dtb-head"><span className="lab">{opt || "No " + stage.name.toLowerCase()}</span><span className="ct">{list.length}</span></div>
+                  {list.map((r) => (
+                    <button key={r.id} className="dtb-card" draggable
+                      onDragStart={(e) => e.dataTransfer.setData("text/dtb", r.id)}
+                      onClick={() => setSheet(r.id)}>
+                      <span className="tt">{String((title && r.v[title.id]) || "Untitled")}</span>
+                      {nums.length > 0 && (
+                        <span className="meta">{nums.map((f) => `${f.name} ${r.v[f.id] ?? "—"}`).join(" · ")}</span>
+                      )}
+                    </button>
+                  ))}
+                  {list.length === 0 && <div className="dtb-empty">Drop here</div>}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+      {view.type === "cards" && (() => {
+        const title = c.fields.find((f) => f.type === "text");
+        const show = fields.filter((f) => f.id !== title?.id).slice(0, 4);
+        return (
+          <div className="dtc">
+            {rows.map((r) => (
+              <button key={r.id} className="dtc-card" onClick={() => setSheet(r.id)}>
+                <span className="tt">{String((title && r.v[title.id]) || "Untitled")}</span>
+                {show.map((f) => (
+                  <span key={f.id} className="kv"><span className="k">{f.name}</span><span className="v">{Array.isArray(r.v[f.id]) ? (r.v[f.id] as string[]).join(", ") : String(r.v[f.id] ?? "—")}</span></span>
+                ))}
+              </button>
+            ))}
+            {rows.length === 0 && <p className="drill-empty">No rows match: clear the search or filters.</p>}
+          </div>
+        );
+      })()}
+      {view.type === "list" && (() => {
+        const title = c.fields.find((f) => f.type === "text");
+        const sel = c.fields.find((f) => f.type === "select");
+        const num = c.fields.find((f) => f.type === "number");
+        return (
+          <div className="dtl">
+            {rows.map((r) => (
+              <button key={r.id} className="dtl-row" onClick={() => setSheet(r.id)}>
+                <span className="tt">{String((title && r.v[title.id]) || "Untitled")}</span>
+                {sel && r.v[sel.id] !== undefined && String(r.v[sel.id]) !== "" && <span className="pill">{String(r.v[sel.id])}</span>}
+                <span style={{ flex: 1 }} />
+                {num && <span className="num">{String(r.v[num.id] ?? "")}</span>}
+              </button>
+            ))}
+            {rows.length === 0 && <p className="drill-empty">No rows match: clear the search or filters.</p>}
+          </div>
+        );
+      })()}
+      {(view.type ?? "table") === "table" && (
       <div className="dt-scroll">
         <table className={"dt" + (view.density === "compact" ? " compact" : "")}>
           <thead>
@@ -819,6 +902,7 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
           </tfoot>
         </table>
       </div>
+      )}
     </>
   );
 }

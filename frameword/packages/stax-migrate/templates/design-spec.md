@@ -37,7 +37,9 @@ values in this file.
     is flat, structured by hairlines and rhythm.
   - `.stats` — no tiles: a vertical hairline BETWEEN stats (padding 18 both sides);
     the block is a GRID of equal tracks (`grid-auto-columns: minmax(0, 1fr)`, never
-    flex) so the hairlines land at exact even divisions; margin-bottom 12.
+    flex) so the hairlines land at exact even divisions; margin-bottom 12. QUIET:
+    values are 17px mono, never display-size — the sidebar KPI block already
+    carries the numbers, the hero states them without shouting.
   - **Vertical rhythm law** — hairline-carrying blocks stack EDGE TO EDGE (gap 0):
     the air around a hairline comes from the blocks' own paddings (rows 12,
     cards 14/15, sections 15/16), never from ad-hoc spacer divs or inline margins.
@@ -147,6 +149,12 @@ pixel font-size that ignores them is a defect.
 | Focus ring on inputs | ONE accent-tinted border; outline reserved for buttons (keyboard) |
 | Toolbar of 10+ flat buttons | Grouped smart menus (trigger shows active state) |
 | List page with a search box | Foot ⌕ toggle: the foot swaps into a borderless search row (same height); Escape restores the actions |
+| Kanban board | A saved view with type BOARD: the first select field's options are the columns; dragging a card RESTAGES it (writes the field); column head = mono label + count |
+| Card grid | View type CARDS: flat responsive cards, click = the peek sheet |
+| Long list | View type LIST: one-line rows in the drill grammar |
+| One dataset, many layouts | table · board · cards · list are VIEW TYPES over the SAME rows, switched from the foot segments — never separate pages |
+| Global filter bar / fund switcher / archived toggle | FOOT SEGMENTS (.foot-seg: hairline container, mono labels, card-bg active) + the live count as a foot note — the foot is the panel's control deck |
+| Hero KPI strip | QUIET stats (17px mono values) + the sidebar KPI mirror; display-size numbers never sit in a panel hero |
 | Menu / dropdown items | Sans 500 rows; MONO uppercase group labels; selected = accent-soft text + right ✓ — never a filled slab; segments keep the soft fill |
 | Record side peek (Notion-style) | Row hover reveals an `Open` chip on the title cell → the ENTITY SHEET: a fixed right drawer (agent-drawer language, 440px) with header (table eyebrow · icon actions ↗/⋯/×), serif editable title, PIPELINE PILLS derived from the first select field (click = set stage, live in the grid), underline facet tabs (Fields · Page · Activity · n) and a per-row note/task stream with a composer. `Open as panel` converts the peek into a thread panel |
 | Toast / snackbar stacks | `.toast` mono pill, bottom-center |

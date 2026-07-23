@@ -163,7 +163,7 @@ img.avatar { border: 1px solid var(--border); }
 .stat { min-width: 0; border: none; border-radius: 0; padding: 2px 18px 2px 0; }
 .stat + .stat { border-left: 1px solid var(--border); padding-left: 18px; }
 .stat .lab { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stat .val { font-family: var(--font-mono); font-size: calc(var(--fz-title, 27px) * 1.0); line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; font-weight: 500; }
+.stat .val { font-family: var(--font-mono); font-size: 17px; line-height: 1.25; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; font-weight: 500; }
 
 /* section card */
 /* doc card → flat block: mono label + text, a hairline above each block */
@@ -302,6 +302,45 @@ img.avatar { border: 1px solid var(--border); }
 body[data-dots="off"] .stage, body[data-dots="off"] .push-stage { background-image: none; }
 
 /* foot search (the zip's per-panel search) */
+/* foot SEGMENTS: the quiet filter/view switcher every converted dashboard
+   lands on (Moonbase pattern): hairline container, mono labels, card-bg active */
+.foot-seg { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 1px; flex: none; }
+.foot-seg button { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.07em; text-transform: uppercase; padding: 4px 8px 3px; border-radius: 6px; color: var(--muted-foreground); line-height: 1; }
+.foot-seg button:hover { color: var(--foreground); }
+.foot-seg button.on { background: var(--card); color: var(--foreground); box-shadow: 0 0 0 1px var(--border); }
+
+/* BOARD view: columns from the select field's options; drag a card to restage */
+.dtb { display: flex; gap: 10px; align-items: flex-start; overflow-x: auto; padding: 2px 0 8px; flex: 1; min-height: 0; }
+.dtb-col { flex: 0 0 200px; min-width: 0; background: var(--secondary); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 7px; transition: background 130ms var(--ease); }
+.dtb-col.over { background: color-mix(in oklab, var(--accent) 7%, var(--secondary)); }
+.dtb-head { display: flex; align-items: baseline; gap: 7px; padding: 2px 2px 0; }
+.dtb-head .lab { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dtb-head .ct { font-family: var(--font-mono); font-size: 9.5px; color: var(--muted-foreground); margin-left: auto; font-variant-numeric: tabular-nums; }
+.dtb-card { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 9px 10px; text-align: left; display: flex; flex-direction: column; gap: 3px; cursor: grab; transition: border-color 130ms var(--ease); }
+.dtb-card:hover { border-color: var(--ink-4); }
+.dtb-card .tt { font-size: 12.5px; font-weight: 500; }
+.dtb-card .meta { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.dtb-empty { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); text-align: center; padding: 14px 0; border: 1px dashed var(--border); border-radius: 8px; }
+
+/* CARDS view: a responsive grid of flat cards */
+.dtc { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; padding: 2px 0 8px; overflow-y: auto; }
+.dtc-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; text-align: left; display: flex; flex-direction: column; gap: 5px; transition: border-color 130ms var(--ease); }
+.dtc-card:hover { border-color: var(--ink-4); }
+.dtc-card .tt { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.dtc-card .kv { display: flex; gap: 8px; font-size: 11.5px; min-width: 0; }
+.dtc-card .k { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); flex: none; width: 64px; padding-top: 1px; }
+.dtc-card .v { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* LIST view: one-line rows in the drill grammar */
+.dtl { display: flex; flex-direction: column; position: relative; margin: 0 -12px; }
+.dtl-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-align: left; position: relative; transition: background 130ms var(--ease); }
+.dtl-row::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; border-bottom: 1px solid var(--border); }
+.dtl-row:last-child::after { border-bottom-color: transparent; }
+.dtl-row:hover { background: var(--secondary); }
+.dtl-row .tt { font-size: 13px; font-weight: 500; }
+.dtl-row .pill { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); border-radius: 9999px; padding: 3px 8px 2px; }
+.dtl-row .num { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+
 /* the panel SEARCH lives in the FOOT: a quiet ⌕ beside the gear; active
    search swaps the foot content into a borderless row, same height */
 .foot-search-row { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; color: var(--muted-foreground); }
