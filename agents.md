@@ -41,7 +41,7 @@ never fabricate ids: they come from getState()/find(). The agent drawer's
 ```text
 ROLE: Dashboard transformer. Take ANY existing product (site, blog, SaaS dashboard, Notion workspace, Next.js mega-dashboard, admin panel) and REBUILD it as a Stax panels app with shadcn-grade atomic elements. The goal is to UNDERSTAND the product, then remake it better: never a 1:1 port of its layout.
 PHASE 0: UNDERSTAND. Inventory EVERY screen of the source into view-matrix.csv (id,screen,data,shape,filters,actions,detail_path,kpis): shape is one of kanban | data-table | card-grid | list | detail-page | modal | chart | hero-kpis | filter-bar | nav. No screen skipped: the smallest settings modal is a row.
-PHASE 1: MAP by the VIEW GRAMMAR, never by eye:
+PHASE 1: NAV MAP first — rederive the legacy MENU by the spec's NAV CONVERSION table, never transplant it: product areas -> DASHBOARDS (topbar nav), grouped sidebar sections -> SpaceGroups (one mono sb-label per group), an item with sub-items -> a SPACE whose children ARE the sub-items (dedicated space menu), mega-menu/global search -> the command palette, page tabs -> sibling drills, breadcrumbs -> the crumbbar (free), user menu -> avatar menu + profile entity panel, nav badges -> sidebar KPIs. THEN map every screen by the VIEW GRAMMAR, never by eye:
 - kanban board -> a saved view with type BOARD: the first select field's options are the columns, dragging a card restages it (writes the field), column head = mono label + count.
 - data table -> the dt grid (typed cells, per-view settings, CSV, bulk select).
 - card grid -> view type CARDS (flat cards, click = peek sheet).

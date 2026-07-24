@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.21.0
+- **U-036** (ux) — The view deck (named saved views in the foot + board phase bands) + the field law L-FIELD + the nav-conversion table
+
 ## 0.20.0
 - **U-035** (migration) — Scanner v2: whole-text multiline matching, Convex custom builders, fetch→route leak linking, --json, the 100%-loop CI test
 

@@ -23,6 +23,9 @@ export interface View {
   hidden: string[]; groupBy?: string; wrap?: boolean; density?: "cozy" | "compact";
   /** how the view RENDERS: one dataset, four shapes */
   type?: "table" | "board" | "cards" | "list";
+  /** BOARD ONLY: group stage columns under phase bands (SOURCING → ENGAGEMENT →
+   *  DILIGENCE…) — options not named here trail in an unbanded group */
+  colGroups?: { label: string; options: string[] }[];
 }
 export interface Collection {
   id: string; name: string;
@@ -58,6 +61,7 @@ const SEED: DataState = {
       views: [
         { id: "v1", name: "All customers", filters: [], hidden: [] },
         { id: "v2", name: "By plan", filters: [], hidden: ["f-site"], groupBy: "f-plan" },
+        { id: "v3", name: "Pipeline", filters: [], hidden: [], type: "board", colGroups: [{ label: "Self-serve", options: ["Free"] }, { label: "Paid", options: ["Pro", "Scale"] }] },
       ],
       activeView: "v1",
       calcs: { "f-mrr": "sum", "f-name": "count" },
@@ -631,54 +635,6 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
 
       {/* ONE toolbar row: views + filter chips + tools — space is thought through */}
       <div className="dt-toolbar">
-      <div className="dtv-tabs">
-        {c.views.map((v) => (
-          renView?.id === v.id ? (
-            <input key={v.id} className="inline-edit" autoFocus value={renView.v} style={{ width: 120 }}
-              onChange={(e) => setRenView({ id: v.id, v: e.target.value })}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") { dataApp.patchCol(c.id, { views: c.views.map((x) => (x.id === v.id ? { ...x, name: renView.v.trim() || x.name } : x)) }); setRenView(null); }
-                if (e.key === "Escape") setRenView(null);
-              }}
-              onBlur={() => { dataApp.patchCol(c.id, { views: c.views.map((x) => (x.id === v.id ? { ...x, name: renView.v.trim() || x.name } : x)) }); setRenView(null); }} />
-          ) : (
-            <button key={v.id} className={"dtv-tab" + (v.id === c.activeView ? " on" : "")}
-              onClick={(e) => {
-                if (v.id === c.activeView) openMenu("viewcfg", e, 300, 190);
-                else dataApp.patchCol(c.id, { activeView: v.id });
-              }}
-              onDoubleClick={() => setRenView({ id: v.id, v: v.name })}>
-              {v.name}
-              {v.id === c.activeView && <span className="caret" style={{ marginLeft: 4, fontSize: 9, color: "var(--muted-foreground)" }}>⌄</span>}
-            </button>
-          )
-        ))}
-        <button className="dtv-add" title="New view" onClick={() => dataApp.addView(c.id)}>+</button>
-        {menu === "viewcfg" && (
-          <div className="dp-pop dt-selfly" style={{ ...pos, width: 190 }}>
-            <div className="pop-sub" style={{ margin: "2px 8px 4px" }}>{view.name}</div>
-            <button className="tp-slot" onClick={() => { setRenView({ id: view.id, v: view.name }); setMenu(null); }}>Rename view</button>
-            <button className="tp-slot" onClick={() => { dataApp.duplicateView(c.id, view.id); setMenu(null); }}>Duplicate view</button>
-            <div className="pop-sub" style={{ margin: "6px 8px 2px" }}>View as</div>
-            <div className="dt-mrow">
-              {(["table", "board", "cards", "list"] as const).map((t) => (
-                <button key={t} className={"tp-slot" + ((view.type ?? "table") === t ? " on" : "")}
-                  onClick={() => dataApp.patchView(c.id, { type: t })}>{t[0].toUpperCase() + t.slice(1)}</button>
-              ))}
-            </div>
-            <div className="pop-sub" style={{ margin: "6px 8px 2px" }}>Density</div>
-            <div className="dt-mrow">
-              <button className={"tp-slot" + ((view.density ?? "cozy") === "cozy" ? " on" : "")} onClick={() => dataApp.patchView(c.id, { density: "cozy" })}>Cozy</button>
-              <button className={"tp-slot" + (view.density === "compact" ? " on" : "")} onClick={() => dataApp.patchView(c.id, { density: "compact" })}>Compact</button>
-            </div>
-            <button className="tp-slot" onClick={() => { dataApp.resetView(c.id); setMenu(null); }}>Reset view</button>
-            {c.views.length > 1 && (
-              <button className="tp-slot danger" onClick={() => { dataApp.removeView(c.id, view.id); setMenu(null); }}>Delete view</button>
-            )}
-          </div>
-        )}
-      </div>
-
         {view.filters.map((fl, i) => {
           const field = c.fields.find((x) => x.id === fl.fieldId);
           if (!field) return null;
@@ -878,9 +834,11 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
         const cols = [...(stage.options ?? []), ""];
         const title = c.fields.find((f) => f.type === "text");
         const nums = c.fields.filter((f) => f.type === "number").slice(0, 2);
-        return (
-          <div className="dtb">
-            {cols.map((opt) => {
+        const groups = view.colGroups?.length
+          ? [...view.colGroups, { label: "", options: cols.filter((o) => !view.colGroups!.some((g) => g.options.includes(o))) }]
+              .filter((g) => g.options.length)
+          : null;
+        const renderCol = (opt: string) => {
               const list = rows.filter((r) => String(r.v[stage.id] ?? "") === opt);
               if (opt === "" && list.length === 0) return null;
               return (
@@ -915,7 +873,22 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
                   {list.length === 0 && <div className="dtb-empty">Drop here</div>}
                 </div>
               );
-            })}
+        };
+        return (
+          <div className="dtb">
+            {groups
+              ? groups.map((g, gi) => (
+                  <div key={g.label || "tail-" + gi} className="dtb-phase">
+                    {g.label !== "" && (
+                      <div className="dtb-phase-head">
+                        <span className="lab">{g.label}</span>
+                        <span className="ct">{rows.filter((r) => g.options.includes(String(r.v[stage.id] ?? ""))).length}</span>
+                      </div>
+                    )}
+                    <div className="dtb-phase-cols">{g.options.map(renderCol)}</div>
+                  </div>
+                ))
+              : cols.map(renderCol)}
           </div>
         );
       })()}
@@ -1207,6 +1180,73 @@ export function DataRow({ rowKey, panelId }: { rowKey: string; panelId: string }
         <RichNotes key={r.id} html={r.page ?? ""} placeholder="Write the page: this row is also a document…"
           onChange={(h) => dataApp.patchRow(c.id, r.id, { page: h })} />
       </div>
+    </>
+  );
+}
+
+/* ── the FOOT view deck: named views as segments, config on the active one ──
+   The panel foot is the control deck (U-024); the views ARE the deck. */
+export function DtFootViews({ colKey }: { colKey: string }) {
+  const s = useDataApp();
+  const [cfg, setCfg] = useState<{ left: number; bottom: number } | null>(null);
+  const [ren, setRen] = useState<string | null>(null);
+  const c = s.collections.find((x) => x.id === colKey.slice(4));
+  if (!c) return null;
+  const view = c.views.find((v) => v.id === c.activeView) ?? c.views[0];
+  const commitRen = (name: string) => {
+    dataApp.patchCol(c.id, { views: c.views.map((x) => (x.id === view.id ? { ...x, name: name.trim() || x.name } : x)) });
+    setRen(null);
+  };
+  return (
+    <>
+      <div className="foot-seg" role="tablist" aria-label="Views">
+        {c.views.map((v) =>
+          ren !== null && v.id === view.id ? (
+            <input key={v.id} className="inline-edit" autoFocus value={ren} style={{ width: 90 }}
+              onChange={(e) => setRen(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") commitRen(ren); if (e.key === "Escape") { e.stopPropagation(); setRen(null); } }}
+              onBlur={() => commitRen(ren)} />
+          ) : (
+            <button key={v.id} role="tab" aria-selected={v.id === c.activeView} className={v.id === c.activeView ? "on" : undefined}
+              onClick={(e) => {
+                if (v.id === c.activeView) {
+                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  setCfg(cfg ? null : { left: Math.max(8, r.left - 8), bottom: window.innerHeight - r.top + 8 });
+                } else dataApp.patchCol(c.id, { activeView: v.id });
+              }}>
+              {v.name}{v.id === c.activeView && <span style={{ marginLeft: 4, fontSize: 9, color: "var(--muted-foreground)" }}>⌄</span>}
+            </button>
+          ),
+        )}
+        <button title="New view" onClick={() => dataApp.addView(c.id)}>+</button>
+      </div>
+      <span className="foot-note" style={{ marginLeft: "auto" }}>{c.rows.length} row{c.rows.length === 1 ? "" : "s"}</span>
+      {cfg && (
+        <>
+          <div className="pop-bg" onMouseDown={() => setCfg(null)} />
+          <div className="dp-pop dt-selfly" style={{ position: "fixed", left: cfg.left, top: "auto", bottom: cfg.bottom, width: 190 }}>
+            <div className="pop-sub" style={{ margin: "2px 8px 4px" }}>{view.name}</div>
+            <button className="tp-slot" onClick={() => { setRen(view.name); setCfg(null); }}>Rename view</button>
+            <button className="tp-slot" onClick={() => { dataApp.duplicateView(c.id, view.id); setCfg(null); }}>Duplicate view</button>
+            <div className="pop-sub" style={{ margin: "6px 8px 2px" }}>View as</div>
+            <div className="dt-mrow">
+              {(["table", "board", "cards", "list"] as const).map((t) => (
+                <button key={t} className={"tp-slot" + ((view.type ?? "table") === t ? " on" : "")}
+                  onClick={() => dataApp.patchView(c.id, { type: t })}>{t[0].toUpperCase() + t.slice(1)}</button>
+              ))}
+            </div>
+            <div className="pop-sub" style={{ margin: "6px 8px 2px" }}>Density</div>
+            <div className="dt-mrow">
+              <button className={"tp-slot" + ((view.density ?? "cozy") === "cozy" ? " on" : "")} onClick={() => dataApp.patchView(c.id, { density: "cozy" })}>Cozy</button>
+              <button className={"tp-slot" + (view.density === "compact" ? " on" : "")} onClick={() => dataApp.patchView(c.id, { density: "compact" })}>Compact</button>
+            </div>
+            <button className="tp-slot" onClick={() => { dataApp.resetView(c.id); setCfg(null); }}>Reset view</button>
+            {c.views.length > 1 && (
+              <button className="tp-slot danger" onClick={() => { dataApp.removeView(c.id, view.id); setCfg(null); }}>Delete view</button>
+            )}
+          </div>
+        </>
+      )}
     </>
   );
 }

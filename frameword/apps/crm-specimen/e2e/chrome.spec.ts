@@ -43,3 +43,21 @@ for (const w of [1280, 980, 744, 580, 375]) {
     if (w < 640) expect(r.dots).toBe(true); // RR-4: crumbs middle-collapse
   });
 }
+
+for (const dark of [false, true]) {
+  test(`L-FIELD: composer fields are tokenized surfaces (${dark ? "dark" : "light"})`, async ({ page }) => {
+    await fresh(page, { dark });
+    await page.goto(link({ spaceId: "platform", path: [{ t: "section", k: "sec:platform" }, { t: "pfprompt", k: "pf:prompt" }] }));
+    await page.waitForSelector("input.foot-search");
+    const lum = await page.locator("input.foot-search").first().evaluate((el) => {
+      const cnv = document.createElement("canvas"); cnv.width = cnv.height = 1;
+      const cx = cnv.getContext("2d")!;
+      cx.fillStyle = "#fff"; cx.fillRect(0, 0, 1, 1);
+      cx.fillStyle = getComputedStyle(el).backgroundColor; cx.fillRect(0, 0, 1, 1);
+      const d = cx.getImageData(0, 0, 1, 1).data;
+      return (0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2]) / 255;
+    });
+    if (dark) expect(lum).toBeLessThan(0.5); // a white field in dark is the defect
+    else expect(lum).toBeGreaterThan(0.5);
+  });
+}

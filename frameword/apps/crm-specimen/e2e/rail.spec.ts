@@ -94,7 +94,10 @@ test("the LIST view rides the same law: breathing edges + accent hairline", asyn
   await page.waitForTimeout(300);
   await page.locator(".drill").first().click();
   await page.waitForSelector(".dt-toolbar");
-  await page.locator(".foot-seg button", { hasText: "List" }).first().click();
+  // the foot deck lists NAMED views: open the active view's config, set type List
+  await page.locator(".panel-foot .foot-seg button").first().click();
+  await page.locator(".dp-pop .tp-slot", { hasText: "List" }).click();
+  await page.keyboard.press("Escape");
   await page.waitForSelector(".dtl-row");
   const row = page.locator(".dtl-row").first();
   await row.hover();

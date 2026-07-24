@@ -166,15 +166,16 @@ pixel font-size that ignores them is a defect.
 | Native date/time input | Popover calendar (`.dp-pop`, Monday-first) + 30-min time list |
 | Inline rename / boxed edit-in-place | `.inline-edit` — text-like, zero border, zero ring |
 | Focus ring on inputs | ONE accent-tinted border; outline reserved for buttons (keyboard) |
+| Any text field | A TOKENIZED surface: bg `--card`, hairline `--input` border, `--foreground` ink, `--muted-foreground` placeholder — in BOTH themes. A UA-default white field in dark is a defect the verify gate fails mechanically (L-FIELD) |
 | Toolbar of 10+ flat buttons | Grouped smart menus (trigger shows active state) |
 | List page with a search box | Foot ⌕ toggle: the foot swaps into a borderless search row (same height); Escape restores the actions |
-| Kanban board | A saved view with type BOARD: the first select field's options are the columns; dragging a card RESTAGES it (writes the field); column head = mono label + count |
+| Kanban board | A saved view with type BOARD: the first select field's options are the columns; dragging a card RESTAGES it (writes the field); column head = mono label + count. A two-level pipeline (SOURCING → ENGAGEMENT → DILIGENCE) declares `colGroups` on the view: PHASE BANDS — mono eyebrow + count over the grouped columns, a 2px `--accent-2` underline, unnamed options trail unbanded |
 | Card grid | View type CARDS: flat responsive cards, click = the peek sheet |
 | Long list | View type LIST: one-line rows in the drill grammar |
-| One dataset, many layouts | table · board · cards · list are VIEW TYPES over the SAME rows, switched from the foot segments — never separate pages |
+| One dataset, many layouts | table · board · cards · list are VIEW TYPES over the SAME rows — never separate pages. The FOOT deck lists the NAMED SAVED VIEWS as segments (Pipeline · Table · Tuesday · Urgent…, Pipedrive-style); each view owns its type/filters/density; clicking the ACTIVE segment opens the view-config pop UPWARD (rename · duplicate · View as · density · reset · delete), `+` creates; the toolbar keeps only search + filter chips + tools |
 | Global filter bar / fund switcher / archived toggle | FOOT SEGMENTS (.foot-seg: hairline container, mono labels, card-bg active) + the live count as a foot note — the foot is the panel's control deck |
 | Hero KPI strip | QUIET stats (17px mono values) + the sidebar KPI mirror; display-size numbers never sit in a panel hero |
-| Filter builder | CLICK-THROUGH, never typed: pick a field, then per-type value pickers (select options as toggles with "is any of", dates via the popover calendar, check as two segments); active filters render as CHIPS in the toolbar (click the chip to edit values, × to drop); free typing only for text "contains". The table toolbar is ONE row: view tabs + filter chips + tools |
+| Filter builder | CLICK-THROUGH, never typed: pick a field, then per-type value pickers (select options as toggles with "is any of", dates via the popover calendar, check as two segments); active filters render as CHIPS in the toolbar (click the chip to edit values, × to drop); free typing only for text "contains". The table toolbar is ONE row: filter chips + tools (the views moved to the FOOT deck) |
 | Embedded terminal / CLI surface | A PANEL: mono scrollback in the body (❯ accent prompts, err in red), the PROMPT in the FOOT (the action zone), ArrowUp/Down history, Escape blurs; the verbs speak the copilot bridge — status/open/pin/undo really drive the workspace |
 | LLM chat | A chat is CONTENT, not chrome: the thread is a panel body (mono speaker labels, hairline separators, typing beat), the composer is the foot; /commands drive the workspace through the bridge; pin it, drill beside it, share it in the workspace link. The agent DRAWER stays the global assistant |
 | Team task manager | Tasks carry assignee · priority · project; ONE group control (status / person / priority / project) drives BOTH the list sections and the kanban columns, and dropping a card WRITES the group's field; "Mine" filters to the CONNECTED profile; people/project filters are click-through chips; assignees render as initial avatars, projects as ghost tags |
@@ -213,6 +214,22 @@ A converted app ships THIS shell — every element below is part of the transfor
 inventoried in the element matrix and rebuilt to this anatomy. Nothing of the old
 chrome (headers, navbars, user menus, settings pages, notification trays) survives
 outside it.
+
+**NAV CONVERSION (challenge the legacy menu, never transplant it):** a converted
+app's navigation is REDERIVED from this table, not copied:
+
+| legacy nav element | Stax target |
+|---|---|
+| Top-level product areas (Investing / Operations…) | DASHBOARDS (topbar nav dropdowns); each dashboard owns its spaces |
+| Grouped sidebar sections with uppercase headers | `SpaceGroup`s: the sidebar renders one mono `.sb-label` per group over its space list |
+| Nav item with sub-items (expand-in-place) | A SPACE whose children ARE the sub-items: the dedicated space menu lists them (‹ back, one-level expansion ≤14) |
+| Leaf nav item | A space root panel |
+| Mega-menu / global search | ⌘K palette (spaces, panels, actions, layouts) |
+| Tabs inside a page | Sibling drills of one parent panel — never a tab strip |
+| Breadcrumbs | The crumbbar (h34) — free, always true, never rebuilt in-panel |
+| User/account menu | The sidebar avatar menu; profile is an ENTITY PANEL |
+| Nav badges / counters | Sidebar KPIs (root mirror) or the space list's counts — never red dots scattered in the chrome |
+| Settings page link | The settings SYS PANEL via ⌘K or the avatar menu — never a page |
 
 **Topbar (h 52, solid card bg — NEVER backdrop-filter: it breaks fixed descendants):**
 - sidebar toggle (bare icon 16) · dashboard NAV as dropdown triggers (icon 14 + label

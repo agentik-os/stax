@@ -209,6 +209,12 @@
       "since": "0.20.0",
       "area": "migration",
       "title": "Scanner v2: whole-text multiline matching, Convex custom builders, fetch→route leak linking, --json, the 100%-loop CI test"
+    },
+    {
+      "id": "U-036",
+      "since": "0.21.0",
+      "area": "ux",
+      "title": "The view deck (named saved views in the foot + board phase bands) + the field law L-FIELD + the nav-conversion table"
     }
   ]
 }

@@ -5,6 +5,7 @@
  *   L-RHYTHM hairline blocks stack edge to edge (air = block paddings)
  *   L-FOOT   at most ONE accent-filled primary per panel foot
  *   L-FLOW   the document never scrolls horizontally
+ *   L-FIELD  every field is a tokenized surface (no UA-default white in dark)
  * Needs playwright in the TARGET project (or globally resolvable).
  */
 const urlArg = process.argv[2];
@@ -93,6 +94,19 @@ const scanOnce = (tag) => pg.evaluate((tagIn) => {
         if (!((gap >= 0 && gap <= 1) || (gap >= 8 && gap <= 20)))
           out.push({ law: "L-RHYTHM", where: tagIn + " · " + title, detail: `${(el.className || "").toString().slice(0, 16)} sits ${gap}px after ${(prev.className || prev.tagName).toString().slice(0, 16)} (allowed: 0-1 stacked, 8-20 spaced)` });
       }
+    }
+    // L-FIELD: a field keeping the UA default (white bg / black ink) glares
+    // in dark and is invisible drift in light — every input is tokenized.
+    for (const field of panel.querySelectorAll("input, textarea, select")) {
+      const fs = getComputedStyle(field);
+      if (fs.display === "none" || fs.visibility === "hidden" || field.type === "checkbox" || field.type === "radio" || field.type === "range") continue;
+      const cnv = document.createElement("canvas"); cnv.width = cnv.height = 1;
+      const cx = cnv.getContext("2d");
+      const lum = (col) => { cx.fillStyle = "#fff"; cx.fillRect(0, 0, 1, 1); cx.fillStyle = col; cx.fillRect(0, 0, 1, 1); const d = cx.getImageData(0, 0, 1, 1).data; return (0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2]) / 255; };
+      const dark = document.documentElement.getAttribute("data-theme") === "dark";
+      const bg = fs.backgroundColor;
+      if (dark && bg && bg !== "rgba(0, 0, 0, 0)" && lum(bg) > 0.6)
+        out.push({ law: "L-FIELD", where: tagIn + " · " + title, detail: `field ${(field.className || field.tagName).toString().slice(0, 24)} keeps a light bg (${bg}) in DARK — tokenize it (--card/--input)` });
     }
     const foot = panel.querySelector(".panel-foot");
     if (foot && accent) {
