@@ -203,6 +203,12 @@
       "since": "0.19.0",
       "area": "migration",
       "title": "Backend continuity: programmatic data scan (Convex/Supabase/Prisma/REST/tRPC) + the data check gate (80/20 law)"
+    },
+    {
+      "id": "U-035",
+      "since": "0.20.0",
+      "area": "migration",
+      "title": "Scanner v2: whole-text multiline matching, Convex custom builders, fetch→route leak linking, --json, the 100%-loop CI test"
     }
   ]
 }

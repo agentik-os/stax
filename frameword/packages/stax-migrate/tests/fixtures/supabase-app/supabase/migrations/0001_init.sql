@@ -10,3 +10,13 @@ CREATE TABLE public."audit_log" (
   action text
 );
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+
+-- the payments table arrives in a later block, policy declared MULTILINE
+create table payments (
+  id uuid primary key,
+  amount numeric
+);
+alter table payments enable row level security;
+create policy "own payments"
+  on payments
+  for select using (true);

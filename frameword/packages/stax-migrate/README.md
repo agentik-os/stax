@@ -170,10 +170,17 @@ What the scanner proves from SOURCE, with file:line evidence, zero network:
 
 | layer | extracted programmatically |
 |---|---|
-| **Convex** | every `defineTable`, every exported `query`/`mutation`/`action`/`httpAction` (internals listed, not gated), every `useQuery`/`useMutation`/`fetch*` call site in the app, table r/c/w ops from `ctx.db` usage, functions the app never calls (**UNUSED** flag) |
-| **Supabase** | every `CREATE TABLE` in migrations (quoted/schema-prefixed included), RLS + policy counts (**RLS-on with zero policies = lockout warning**), every `.from().select/insert/update/upsert/delete` site, `.rpc()`, `.channel()` realtime, `storage.from()` buckets (never confused with tables), edge functions, dynamic `.from(expr)` flagged for human eyes |
+| **Convex** | every `defineTable`, every exported `query`/`mutation`/`action`/`httpAction` (internals listed, not gated), **custom function builders** (convex-helpers `authedQuery`-style: rows extracted, kind guessed, named in a warning), every `useQuery`/`useMutation`/`fetch*` call site in the app, table r/c/w ops from `ctx.db` usage, functions the app never calls (**UNUSED** flag) |
+| **Supabase** | every `CREATE TABLE` in migrations (quoted/schema-prefixed, multi-line DDL and policies included), RLS + policy counts (**RLS-on with zero policies = lockout warning**), every `.from().select/insert/update/upsert/delete` site, `.rpc()`, `.channel()` realtime, `storage.from()` buckets (never confused with tables), edge functions, dynamic `.from(expr)` flagged for human eyes |
 | **Prisma** | every `model`, r/c/u/d ops from `prisma.<model>.*` call sites |
-| **REST / tRPC** | every `app/api/**/route.ts` method set, `pages/api` handler, every tRPC procedure classified query vs mutation |
+| **REST / tRPC** | every `app/api/**/route.ts` method set, `pages/api` handler, **`fetch("/api/…")` sites bound to their routes** (`[param]` aware) with unmatched fetches flagged as **legacy-leak candidates**, every tRPC procedure classified query vs mutation |
+
+The matcher is WHOLE-TEXT over comment-stripped source: Prettier-formatted
+chains (`supabase⏎.from("x")⏎.select()`), multi-line `useQuery(⏎ api.mod.fn`,
+and multi-line SQL policies all count; commented-out code never does. Both
+commands take `--json` for CI and agent consumption, and the entire loop
+(init → scan → red gate → map → green gate → drift → red gate) runs as a
+committed test on every push.
 
 **The 80/20 law.** The scanner extracts and the gate verifies — that is the 80%
 programmatic. The AI's 20% is ONLY judgment: naming which panel reads each row

@@ -7,3 +7,11 @@ export function Deals() {
   // api.deals.restage is intentionally NEVER called: the scanner must flag it unused
   return <button onClick={() => create({ name: "x" })}>{deals?.length}</button>;
 }
+
+export function Revenue() {
+  const rows = useQuery(
+    api.reports.revenue,
+    { year: 2026 },
+  );
+  return <span>{rows?.length}</span>;
+}

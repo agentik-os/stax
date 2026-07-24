@@ -44,7 +44,17 @@ const supa = scanBackend(join(FIX, "supabase-app"));
 
 test("supabase: tables from SQL DDL (mixed case, quoted, schema-prefixed)", () => {
   const tables = by(supa.rows, "supabase", "table").map((r) => r.name).sort();
-  assert.deepEqual(tables, ["audit_log", "invoices"]);
+  assert.deepEqual(tables, ["audit_log", "invoices", "orders", "payments"]);
+});
+
+test("supabase v2: PRETTIER MULTILINE chains are first-class; comment traps never count", () => {
+  const pay = named(supa.rows, "payments");
+  assert.ok(pay.ops.includes("r") && pay.ops.includes("u"), pay.ops); // multiline select + update
+  assert.ok(!supa.rows.some((r) => r.name === "ghost_table" || r.name === "phantom"));
+});
+
+test("supabase v2: a MULTILINE policy still counts (payments has RLS + 1 policy, no lockout warning)", () => {
+  assert.ok(!supa.warnings.some((w) => w.includes("payments") && w.includes("ZERO")));
 });
 
 test("supabase: RLS-without-policy raises the lockout warning", () => {
@@ -60,10 +70,25 @@ test("supabase: client ops attributed (select+insert on invoices), rpc + realtim
   assert.equal(named(supa.rows, "send-email").kind, "edge-function");
 });
 
+test("supabase v2: a STORED-BUILDER bare .from() still surfaces the table + warns ops-unprovable", () => {
+  const orders = named(supa.rows, "orders");
+  assert.equal(orders.kind, "table");
+  assert.ok(supa.warnings.some((w) => w.includes('"orders"') && w.includes("bare .from()")));
+});
+
 test("supabase: storage.from is a bucket, NEVER a table; dynamic .from() warns", () => {
   assert.equal(named(supa.rows, "avatars").kind, "storage");
   assert.ok(!by(supa.rows, "supabase", "table").some((r) => r.name === "avatars"));
   assert.ok(supa.warnings.some((w) => w.includes("dynamic .from")));
+});
+
+test("convex v2: custom wrapper endpoints extracted (kind guessed), wrapper def is not an endpoint, multiline useQuery binds", () => {
+  const rev = named(convex.rows, "reports.revenue");
+  assert.equal(rev.kind, "query"); // guessed from authedQuery
+  assert.match(rev.evidence, /custom builder/);
+  assert.match(rev.evidence, /1 app call site/); // the MULTILINE useQuery site
+  assert.ok(!convex.rows.some((r) => r.name === "lib.authedQuery")); // the def is a builder
+  assert.ok(convex.warnings.some((w) => w.includes("authedQuery")));
 });
 
 /* ── Prisma · REST · tRPC ───────────────────────────────────────────── */
@@ -79,6 +104,12 @@ test("prisma models + client ops; REST route methods; trpc query vs mutation", (
   assert.equal(route.ops, "rw");
   assert.equal(named(rest.rows, "userList").kind, "query");
   assert.equal(named(rest.rows, "userAdd").kind, "mutation");
+});
+
+test("rest v2: fetch sites bind to routes ([param] aware); unmatched fetch = leak warning", () => {
+  const route = by(rest.rows, "rest", "route").find((r) => /api\/users/.test(r.name));
+  assert.match(route.evidence, /1 fetch site/);
+  assert.ok(rest.warnings.some((w) => w.includes("/api/ghost") && w.includes("NO scanned route")));
 });
 
 /* ── merge + gate ───────────────────────────────────────────────────── */

@@ -8,3 +8,25 @@ export const live = () => supabase.channel("room:invoices").on("postgres_changes
 export const avatar = (id: string) => supabase.storage.from("avatars").getPublicUrl(id);
 const tbl = "dynamic_" + Date.now();
 export const risky = () => supabase.from(tbl).select();
+
+/* Prettier formats real chains across lines — v1 line-grep missed ALL of these */
+export const listPayments = async () =>
+  supabase
+    .from("payments")
+    .select("*")
+    .order("amount");
+
+export const refund = async (id: string) =>
+  supabase
+    .from("payments")
+    .update({ amount: 0 })
+    .eq("id", id);
+
+// a commented-out call must never count: supabase.from("ghost_table").select()
+/* neither must this one:
+   supabase.from("phantom").delete()
+*/
+
+/* the stored-builder pattern: the table must surface + warn (ops unprovable) */
+const ordersBase = supabase.from("orders");
+export const orderList = () => ordersBase.select("*");

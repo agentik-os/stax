@@ -924,6 +924,12 @@ async function cmdData(target, sub, flags) {
     const key = (r) => `${r.layer}|${r.name}|${r.kind}`;
     const have = new Set(rows.map(key));
     const missing = scan.rows.filter((r) => r.kind !== "internal" && !have.has(key(r)));
+    if (flags.json) {
+      const pass = !problems.length && !missing.length;
+      console.log(JSON.stringify({ pass, matrixRows: rows.length, scannedRows: scan.rows.length, problems, drift: missing.map((m) => ({ layer: m.layer, name: m.name, kind: m.kind, source: m.source })), warnings: scan.warnings }, null, 1));
+      if (!pass) process.exitCode = 1;
+      return;
+    }
     console.log(`stax data check · ${rows.length} matrix row(s) vs ${scan.rows.length} scanned`);
     for (const p of problems) console.log(red("  ✗ ") + p);
     for (const m of missing) console.log(red("  ✗ ") + `code has ${m.layer}/${m.name} (${m.kind}, ${m.source}) — NOT in the matrix: re-run data scan --write`);
@@ -935,6 +941,10 @@ async function cmdData(target, sub, flags) {
   }
 
   // scan (default): programmatic extraction, evidence-cited
+  if (flags.json && !flags.write) {
+    console.log(JSON.stringify({ layers: scan.layers, rows: scan.rows, warnings: scan.warnings }, null, 1));
+    return;
+  }
   console.log(bold("stax data scan") + ` · ${target}`);
   for (const l of scan.layers) console.log(`  ${green("✓")} ${bold(l.layer)} — ${l.detected}`);
   const byKind = {};
@@ -978,8 +988,9 @@ ${bold("USAGE")}
   stax-migrate ${cyan("data")}   scan [dir] [--write]    PROGRAMMATIC backend extraction: Convex, Supabase,
                                         Prisma, REST routes, tRPC — tables, functions, rpc, realtime,
                                         every read/write call site, file:line evidence → data-matrix.csv
-  stax-migrate ${cyan("data")}   check [dir]             the mechanical gate: every non-internal row bound,
+  stax-migrate ${cyan("data")}   check [dir] [--json]    the mechanical gate: every non-internal row bound,
                                         every writable row has its write_path, zero code-vs-matrix drift
+                                        (--json on scan/check: machine-readable output for CI and agents)
 
 ${bold("THE INTEGRATION CONTRACT")}
   ${cyan("full")}      100% integrated — everything migrated, old UI purged. Nothing deferred.  ${green("(recommended)")}

@@ -6,7 +6,13 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const CLI = join(dirname(dirname(fileURLToPath(import.meta.url))), "index.mjs");
-const run = (...args) => spawnSync("node", [CLI, ...args], { encoding: "utf8", timeout: 30000 });
+const run = (...args) => {
+  // under parallel suite load a spawn occasionally dies with status null
+  // (signal, not a real exit): retry once — NEVER retry a real exit value
+  let r = spawnSync("node", [CLI, ...args], { encoding: "utf8", timeout: 30000 });
+  if (r.status === null) r = spawnSync("node", [CLI, ...args], { encoding: "utf8", timeout: 30000 });
+  return r;
+};
 
 test("parity without a contract file exits 2 with usage", () => {
   const r = run("parity", "--url", "http://localhost:1", "--file", "/nonexistent/parity.csv");
