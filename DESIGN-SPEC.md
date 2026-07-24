@@ -312,6 +312,14 @@ clicks; the agent drawer's /commands speak it. Contract: agents.md M8.
 shortcuts) — never a page; profile = entity panel (fs-head name/role); language and
 theme are DEVICE-LOCAL prefs (localStorage), never navigation state.
 
+**Backend continuity (the 80/20 law):** a migration NEVER touches the backend —
+Convex, Supabase, Prisma, REST and tRPC all survive intact; panels are a view
+grammar over the same queries and mutations. The data matrix is extracted
+PROGRAMMATICALLY (`stax-migrate data scan --write`: tables, functions, rpc,
+realtime, storage, call sites, RLS lockout warnings — file:line evidence), the
+AI only maps panel_binding + write_path, and `stax-migrate data check` exit-1s
+until 100% of the backend is bound to the new front end (drift included).
+
 **Responsive rules (numbered — a migration implements ALL of them):**
 
 - **RR-1 Three tiers.** ≥900 the sidebar is DOCKED (240px beside the stage);

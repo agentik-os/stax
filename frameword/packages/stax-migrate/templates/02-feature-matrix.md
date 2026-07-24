@@ -54,7 +54,14 @@ per line. Never reorder or delete existing rows.
 
 The classic 10%-integration failure: the screens get rebuilt, the data layer
 stays half-wired, and nobody can prove what still runs on the old paths. So the
-data layer is a matrix too — data-matrix.csv, D-NNN rows:
+data layer is a matrix too — data-matrix.csv, D-NNN rows. RUN THE SCANNER
+FIRST — it fills the matrix programmatically from source with file:line
+evidence (Convex, Supabase, Prisma, REST routes, tRPC):
+
+    stax-migrate data scan {{TARGET}} --write
+
+Only what the scanner flags as unprovable (dynamic table names, warnings) or
+misses is yours to add by hand. D-NNN row grammar:
 
 - ONE ROW PER PERSISTED MODEL: every table / collection / document type /
   external store. Sources: SQL migrations, `schema.prisma`, Convex `schema.ts`,

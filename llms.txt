@@ -7,7 +7,7 @@
 - [README](README.md): what Stax is, quickstart, migration engine
 - [PANEL-LOGIC.md](PANEL-LOGIC.md): the grammar — state, intents, laws
 - [DESIGN-SPEC.md](DESIGN-SPEC.md): the pixel contract (anatomy, tokens, conversions)
-- [agents.md](agents.md): ten paste-ready master prompts (M1-M10) for coding agents — incl. M9 any-dashboard and M10 enterprise strangler (the 100% transfer)
+- [agents.md](agents.md): six paste-ready master prompts (M1-M6) for coding agents
 - [stax-migrate](frameword/packages/stax-migrate/README.md): gated migration CLI — contracted integration levels, three matrices
 
 ## Code

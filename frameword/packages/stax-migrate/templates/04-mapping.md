@@ -70,7 +70,11 @@ undocumented judgment call is a bug.
 
 ## Data binding — every D row names its panels
 
-For every data-matrix row (unless it carries a reasoned skip status):
+For every data-matrix row (unless it carries a reasoned skip status) — this is
+the AI's 20%: the facts are already extracted, you ONLY map. When done, close
+the loop mechanically: `stax-migrate data check {{TARGET}}` must print
+DATA 100% (it exit-1s on any unbound row, writable-without-write_path, bare
+skip, or code-vs-matrix drift):
 
 - `panel_binding` — the panel surface that READS it, in mapping vocabulary:
   `space-root/deals`, `drill/deal-detail`, `data-panel/customers-table`. A

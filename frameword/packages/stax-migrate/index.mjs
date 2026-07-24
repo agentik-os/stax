@@ -910,6 +910,52 @@ function cmdUpgrade(target, pos, flags) {
   console.log();
 }
 
+async function cmdData(target, sub, flags) {
+  const { scanBackend, mergeDataRows, checkDataRows } = await import(new URL("./datascan.mjs", import.meta.url).href);
+  const scan = scanBackend(target);
+  if (!scan.layers.length && sub !== "check")
+    console.log(yellow("no backend layer detected") + " (convex/ · supabase/ · prisma/ · app/api routes · trpc procedures all absent)");
+
+  if (sub === "check") {
+    requireWorkspace(target);
+    const rows = readData(target);
+    const problems = checkDataRows(rows);
+    // drift: what the CODE has that the matrix does not
+    const key = (r) => `${r.layer}|${r.name}|${r.kind}`;
+    const have = new Set(rows.map(key));
+    const missing = scan.rows.filter((r) => r.kind !== "internal" && !have.has(key(r)));
+    console.log(`stax data check · ${rows.length} matrix row(s) vs ${scan.rows.length} scanned`);
+    for (const p of problems) console.log(red("  ✗ ") + p);
+    for (const m of missing) console.log(red("  ✗ ") + `code has ${m.layer}/${m.name} (${m.kind}, ${m.source}) — NOT in the matrix: re-run data scan --write`);
+    for (const w of scan.warnings) console.log(yellow("  ⚠ ") + w);
+    if (!problems.length && !missing.length) { console.log(green(bold(`DATA 100% — every backend surface bound to the new front end.`))); return; }
+    console.log(`\n${problems.length + missing.length} problem(s) — the backend is NOT fully carried over.`);
+    process.exitCode = 1;
+    return;
+  }
+
+  // scan (default): programmatic extraction, evidence-cited
+  console.log(bold("stax data scan") + ` · ${target}`);
+  for (const l of scan.layers) console.log(`  ${green("✓")} ${bold(l.layer)} — ${l.detected}`);
+  const byKind = {};
+  for (const r of scan.rows) byKind[`${r.layer}:${r.kind}`] = (byKind[`${r.layer}:${r.kind}`] ?? 0) + 1;
+  for (const [k, n] of Object.entries(byKind)) console.log(`      ${k} × ${n}`);
+  for (const w of scan.warnings) console.log(yellow("  ⚠ ") + w);
+  if (flags.write) {
+    requireWorkspace(target);
+    const existing = readData(target);
+    const { rows, stale } = mergeDataRows(existing, scan.rows);
+    fs.writeFileSync(wsPath(target, "data-matrix.csv"), serializeCSV(rows, DATA_HEADER));
+    const fresh = rows.length - existing.length + stale.length ? rows.filter((r) => r.status === "pending" && !existing.some((e) => e.id === r.id)).length : 0;
+    console.log(`\n  wrote data-matrix.csv: ${rows.length} row(s) (${fresh} new · ${existing.length - stale.length} refreshed · ${stale.length} kept-manual)`);
+    if (stale.length) console.log(yellow("  ⚠ ") + `${stale.length} row(s) not re-found by the scan (manual or removed): ${stale.map((r) => r.id).join(" ")}`);
+    console.log(dim("  the AI's 20%: fill panel_binding + write_path (phase 4), then: stax-migrate data check"));
+  } else {
+    console.log(dim("\n  dry run — add --write to merge into stax-migration/data-matrix.csv (ids and mappings are preserved)"));
+  }
+  console.log(dim("  80% programmatic / 20% AI: the scanner extracts and gates; the agent only maps."));
+}
+
 function cmdHelp() {
   console.log(`
 ${bold(mag("stax-migrate"))} — any legacy web app → the Stax panels-inside-panels grammar
@@ -929,6 +975,11 @@ ${bold("USAGE")}
                                         print a unit's brief · drive an agent to apply it · record it
   stax-migrate ${cyan("run")}    [dir] --agent claude|codex [--phase n]
                                         drive ONE phase via an agent CLI, then re-check the gate
+  stax-migrate ${cyan("data")}   scan [dir] [--write]    PROGRAMMATIC backend extraction: Convex, Supabase,
+                                        Prisma, REST routes, tRPC — tables, functions, rpc, realtime,
+                                        every read/write call site, file:line evidence → data-matrix.csv
+  stax-migrate ${cyan("data")}   check [dir]             the mechanical gate: every non-internal row bound,
+                                        every writable row has its write_path, zero code-vs-matrix drift
 
 ${bold("THE INTEGRATION CONTRACT")}
   ${cyan("full")}      100% integrated — everything migrated, old UI purged. Nothing deferred.  ${green("(recommended)")}
@@ -1046,6 +1097,12 @@ async function main() {
       case "run":
         cmdRun(resolveTarget(pos[0]), flags.agent, flags.phase);
         break;
+      case "data": {
+        const sub = ["scan", "check"].includes(pos[0]) ? pos[0] : "scan";
+        const dirArg = ["scan", "check"].includes(pos[0]) ? pos[1] : pos[0];
+        await cmdData(resolveTarget(dirArg), sub, flags);
+        break;
+      }
       case undefined:
       case "help":
       case "--help":

@@ -197,6 +197,12 @@
       "since": "0.18.0",
       "area": "ux",
       "title": "UX Wave 4: wayfinding truth (home/refs/accent crumbs, split eyebrows), first-run care (tour pill + flag-on-completion, push foot), platform conventions (reduced-motion, coarse pointers, platform keys, wheel)"
+    },
+    {
+      "id": "U-034",
+      "since": "0.19.0",
+      "area": "migration",
+      "title": "Backend continuity: programmatic data scan (Convex/Supabase/Prisma/REST/tRPC) + the data check gate (80/20 law)"
     }
   ]
 }

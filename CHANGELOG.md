@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.19.0
+- **U-034** (migration) — Backend continuity: programmatic data scan (Convex/Supabase/Prisma/REST/tRPC) + the data check gate (80/20 law)
+
 ## 0.18.0
 - **U-033** (ux) — UX Wave 4: wayfinding truth (home/refs/accent crumbs, split eyebrows), first-run care (tour pill + flag-on-completion, push foot), platform conventions (reduced-motion, coarse pointers, platform keys, wheel)
 

@@ -147,7 +147,53 @@ sub-rows (`F-012.1`, `E-007.1`) are gated individually — a parent existing
 never auto-migrates its children. Data rows: `layer` ∈ db · function; `ops` is
 the c/r/u/d set the row supports; a writable row is only ever migrated with a
 named `write_path`. A project with genuinely no backend waives the data matrix
-at init with `--no-data` (recorded in the contract).
+at init with `--no-data` (recorded in the contract). `stax-migrate data scan
+--write` fills this matrix PROGRAMMATICALLY (see Backend continuity below);
+the agent only fills `panel_binding` and `write_path`.
+
+## Backend continuity — Convex · Supabase · Prisma · REST · tRPC (80% programmatic / 20% AI)
+
+**Yes: Convex works. Supabase works.** So do Prisma, Next.js API routes and tRPC —
+because Stax only replaces the FRONT-END GRAMMAR. Panels are a view layer: your
+queries, mutations, RLS policies, RPCs, realtime channels and edge functions
+survive the migration untouched. What changes is WHERE each read renders (a
+panel body) and WHERE each write lives (a foot action). The data matrix is the
+map between the two, and it is now extracted MECHANICALLY:
+
+```sh
+stax-migrate data scan .            # detect the backend, extract every surface (dry run)
+stax-migrate data scan . --write    # merge into data-matrix.csv (ids + mappings preserved)
+stax-migrate data check .           # the gate: exit 1 until 100% of the backend is bound
+```
+
+What the scanner proves from SOURCE, with file:line evidence, zero network:
+
+| layer | extracted programmatically |
+|---|---|
+| **Convex** | every `defineTable`, every exported `query`/`mutation`/`action`/`httpAction` (internals listed, not gated), every `useQuery`/`useMutation`/`fetch*` call site in the app, table r/c/w ops from `ctx.db` usage, functions the app never calls (**UNUSED** flag) |
+| **Supabase** | every `CREATE TABLE` in migrations (quoted/schema-prefixed included), RLS + policy counts (**RLS-on with zero policies = lockout warning**), every `.from().select/insert/update/upsert/delete` site, `.rpc()`, `.channel()` realtime, `storage.from()` buckets (never confused with tables), edge functions, dynamic `.from(expr)` flagged for human eyes |
+| **Prisma** | every `model`, r/c/u/d ops from `prisma.<model>.*` call sites |
+| **REST / tRPC** | every `app/api/**/route.ts` method set, `pages/api` handler, every tRPC procedure classified query vs mutation |
+
+**The 80/20 law.** The scanner extracts and the gate verifies — that is the 80%
+programmatic. The AI's 20% is ONLY judgment: naming which panel reads each row
+(`panel_binding`) and which foot action writes it (`write_path`). Then
+`data check` closes the loop mechanically: an unbound row, a writable row with
+no write path, a bare "skipped" with no reason, or code-vs-matrix drift (a table
+in code the matrix doesn't know) each exit 1 and name themselves. Re-running
+`scan --write` is always safe: existing ids and AI mappings are preserved,
+facts are refreshed, manual rows are kept and flagged.
+
+**Workspace state rides your backend too.** The panel workspace itself persists
+through a two-method `StorageAdapter` — the root README shows a Convex adapter;
+the Supabase twin is symmetrical:
+
+```ts
+const supabaseAdapter = (sb: SupabaseClient, userId: string): StorageAdapter => ({
+  load: async () => (await sb.from("workspaces").select("state").eq("user_id", userId).single()).data?.state ?? null,
+  save: (state) => void sb.from("workspaces").upsert({ user_id: userId, state }),
+});
+```
 
 ## Using agents
 

@@ -238,6 +238,15 @@ bunx stax-migrate parity --url https://your-app.example
 Rebuilt screens swap their row's probe from the embed to the grammar target; less
 than 100% reverts the swap. The full playbook is the M10 master prompt.
 
+**And the backend? Untouched — and gated.** Convex, Supabase, Prisma, REST and
+tRPC all survive: panels are a view grammar over your existing queries and
+mutations. `stax-migrate data scan --write` extracts every table, function,
+RPC, realtime channel and call site PROGRAMMATICALLY from source (file:line
+evidence, RLS-lockout warnings included), the AI only maps each row to the
+panel that reads it and the foot action that writes it, and `stax-migrate
+data check` exits non-zero until 100% of the backend is bound to the new
+front end — drift included. 80% programmatic, 20% AI judgment.
+
 ### The design-integration prompt — restyle ANY project onto the Stax design system
 
 Design only (no grammar migration needed): paste this into Claude Code or Codex with
