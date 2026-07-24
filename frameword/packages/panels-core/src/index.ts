@@ -457,20 +457,54 @@ const safeDecode = (x: string): string | null => {
 };
 
 /**
- * Encode the shareable ContextPath as a READABLE hash —
- * `/<space>/<type>~<key>/<type>~<key>…` (e.g. `/crm/space~accounts/contact~jo`),
- * NOT a percent-encoded JSON blob. The URL stays human-readable and shareable.
+ * A SlugCodec turns the engine's addressing (panelType + resourceKey) into the
+ * short words a human would type, and back. The engine stays domain-free: it
+ * knows a slug is a string, never what "blotter" means. An app supplies the
+ * mapping from its own domain, and everything keeps working when it does not:
+ * a codec that returns null for a target falls through to the `type~key` form.
+ *
+ * With a codec:    #/analytics/blotter
+ * Without one:     #/pf-analytics/section~sec:pf-analytics/anblotter~an:blotter
+ * Both decode. The second is still accepted forever, so old links never rot.
  */
-export function encodeLocation(s: WorkspaceState): string | null {
-  if (!s.spaceId || !s.rootInstanceId) return null;
-  const segs = getContextPath(s).map((id) => {
-    const t = s.panelsById[id].target;
-    return `${encField(t.panelType)}~${encField(t.resourceKey)}`;
-  });
-  return "/" + [encField(s.spaceId), ...segs].join("/");
+export interface SlugCodec {
+  /** target -> a short slug unique within the space, or null to fall back */
+  slug(target: PanelTarget, spaceId: string): string | null;
+  /** slug -> target, within a space; null when the slug is unknown */
+  target(slug: string, spaceId: string): PanelTarget | null;
+  /** the space's root target — omitted from the URL because a space always opens it */
+  root?(spaceId: string): PanelTarget | null;
+  /** the space's own public slug, when it differs from its id (pf-analytics -> analytics) */
+  spaceSlug?(spaceId: string): string | null;
+  /** public slug -> spaceId, the inverse of spaceSlug */
+  spaceId?(slug: string): string | null;
 }
 
-export function decodeLocation(encoded: string): EncodedLocation | null {
+// the existing sameTarget takes two real targets; the URL codec compares slots
+// that may legitimately be empty (no root declared, empty path)
+const sameSlot = (a: PanelTarget | null | undefined, b: PanelTarget | null | undefined) =>
+  !!a && !!b && sameTarget(a, b);
+
+/**
+ * Encode the shareable ContextPath as a READABLE hash. With a SlugCodec the URL
+ * reads like a path a person would guess (`/analytics/blotter`); without one it
+ * falls back to `/<space>/<type>~<key>/…`, which stays a valid input forever.
+ */
+export function encodeLocation(s: WorkspaceState, codec?: SlugCodec): string | null {
+  if (!s.spaceId || !s.rootInstanceId) return null;
+  const targets = getContextPath(s).map((id) => s.panelsById[id].target);
+  // the space root is implied by the space itself: naming it twice is noise
+  const root = codec?.root?.(s.spaceId);
+  const body = root && sameSlot(targets[0], root) ? targets.slice(1) : targets;
+  const segs = body.map((t) => {
+    const short = codec?.slug(t, s.spaceId!);
+    return short ? encField(short) : `${encField(t.panelType)}~${encField(t.resourceKey)}`;
+  });
+  const space = codec?.spaceSlug?.(s.spaceId) ?? s.spaceId;
+  return "/" + [encField(space), ...segs].join("/");
+}
+
+export function decodeLocation(encoded: string, codec?: SlugCodec): EncodedLocation | null {
   if (!encoded) return null;
   // Legacy form — percent-encoded JSON object. Keep old shared/bookmarked links working.
   const raw = safeDecode(encoded);
@@ -485,21 +519,33 @@ export function decodeLocation(encoded: string): EncodedLocation | null {
       return null;
     }
   }
-  // Readable path form.
+  // Readable path form. Two shapes are accepted in the SAME url, segment by
+  // segment: a bare slug (needs the codec) and the explicit `type~key` (never
+  // needs it). Mixing them is legal, which is what keeps every old link alive.
   try {
     const parts = encoded.replace(/^\/+/, "").split("/").filter(Boolean);
     if (!parts.length) return null;
-    const spaceId = decodeURIComponent(parts[0]);
-    if (!spaceId) return null;
+    const spaceToken = decodeURIComponent(parts[0]);
+    if (!spaceToken) return null;
+    const spaceId = codec?.spaceId?.(spaceToken) ?? spaceToken;
     const path: { t: string; k: string }[] = [];
     for (const seg of parts.slice(1)) {
-      const i = seg.indexOf("~");
-      if (i < 0) return null;
-      path.push({
-        t: decodeURIComponent(seg.slice(0, i)),
-        k: decodeURIComponent(seg.slice(i + 1)),
-      });
+      const raw = decodeURIComponent(seg);
+      const i = raw.indexOf("~");
+      if (i >= 0) {
+        path.push({ t: raw.slice(0, i), k: raw.slice(i + 1) });
+        continue;
+      }
+      const resolved = codec?.target(raw, spaceId);
+      // an unknown bare slug is a dead link, not a reason to drop the whole path:
+      // stop here and open what did resolve, so a renamed leaf still lands nearby.
+      if (!resolved) break;
+      path.push({ t: resolved.panelType, k: resolved.resourceKey });
     }
+    // the space root was omitted on encode because the space implies it: put it back
+    const root = codec?.root?.(spaceId);
+    if (root && !sameSlot(path[0] && { panelType: path[0].t, resourceKey: path[0].k }, root))
+      path.unshift({ t: root.panelType, k: root.resourceKey });
     // a valid location always carries at least the space root; a bare token is garbage.
     if (path.length === 0) return null;
     return { spaceId, path };

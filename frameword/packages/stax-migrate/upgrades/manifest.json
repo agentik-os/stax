@@ -233,6 +233,12 @@
       "since": "0.24.0",
       "area": "design",
       "title": "A money surface is a PANEL, not a table in a trench coat \u2014 blotter, treasury, close"
+    },
+    {
+      "id": "U-040",
+      "since": "0.25.0",
+      "area": "engine",
+      "title": "Readable URLs via an injectable SlugCodec \u2014 the space root is implied, the public surface wins a contested slug"
     }
   ]
 }

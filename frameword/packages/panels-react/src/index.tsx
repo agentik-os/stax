@@ -29,6 +29,7 @@ import {
   getContextPath,
   encodeLocation,
   decodeLocation,
+  type SlugCodec,
   reconcileLocation,
   validate,
   type WorkspaceState,
@@ -135,6 +136,10 @@ export interface WorkspaceProviderProps {
   /** custom persistence backend; takes precedence over storageKey.
    *  `localStorageAdapter(key)` is what storageKey builds internally. */
   storage?: StorageAdapter;
+  /** optional domain mapping that turns the URL into short readable words
+   *  (`#/analytics/blotter` instead of `#/pf-analytics/section~sec:pf-analytics/…`).
+   *  Omit it and the explicit `type~key` form is used, which always decodes. */
+  slugCodec?: SlugCodec;
   children: ReactNode;
 }
 
@@ -143,6 +148,7 @@ export function WorkspaceProvider({
   urlSync = true,
   storageKey,
   storage,
+  slugCodec,
   children,
 }: WorkspaceProviderProps) {
   const urlMode = urlSync === true ? "replace" : urlSync; // false | "replace" | "push"
@@ -159,7 +165,7 @@ export function WorkspaceProvider({
     const loaded = adapter?.load();
     if (loaded && !(loaded instanceof Promise)) base = loaded;
     if (urlMode && typeof location !== "undefined" && location.hash.length > 1) {
-      const loc = decodeLocation(location.hash.slice(1));
+      const loc = decodeLocation(location.hash.slice(1), slugCodec);
       if (loc) return reconcileLocation(base, loc);
     }
     return base;
@@ -176,7 +182,7 @@ export function WorkspaceProvider({
       if (!snap) return;
       setState(() => {
         if (urlMode && typeof location !== "undefined" && location.hash.length > 1) {
-          const loc = decodeLocation(location.hash.slice(1));
+          const loc = decodeLocation(location.hash.slice(1), slugCodec);
           if (loc) return reconcileLocation(snap, loc);
         }
         return snap;
@@ -194,7 +200,7 @@ export function WorkspaceProvider({
 
   useEffect(() => {
     if (urlMode && typeof location !== "undefined") {
-      const encoded = encodeLocation(state);
+      const encoded = encodeLocation(state, slugCodec);
       const current = location.hash.slice(1);
       if (encoded !== current) {
         if (urlMode === "push" && !popApply.current && current !== "" && encoded) {
@@ -214,7 +220,7 @@ export function WorkspaceProvider({
     const onPop = () => {
       const hash = location.hash.slice(1);
       if (!hash) return; // pre-app entry — let the browser leave naturally
-      const loc = decodeLocation(hash);
+      const loc = decodeLocation(hash, slugCodec);
       if (!loc) return;
       popApply.current = true;
       setState((s) => reconcileLocation(s, loc));

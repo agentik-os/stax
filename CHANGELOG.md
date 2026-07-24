@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.25.0
+- **U-040** (engine) — Readable URLs: an injectable SlugCodec turns #/pf-analytics/section~sec:pf-analytics/anblotter~an:blotter into #/analytics/blotter, with three decode forms and self-normalising old links
+
 ## 0.24.0
 - **U-039** (design) — A money surface is a PANEL, not a table in a trench coat: blotter as a fill stream, treasury as a cash ladder, the close as a P&L walk, figures reconciling across panels
 

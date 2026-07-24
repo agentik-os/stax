@@ -24,6 +24,7 @@ import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, FolderPanel, notesApp, us
 import { DataHome, DataTable, DataRow, dataApp, useDataApp, DtFootViews } from "./DataApp";
 import { headPlan, HEAD_LAYOUTS, DEFAULT_HEAD_LAYOUT, DEFAULT_DENSITY, type HeadLayout, type Density } from "./headLayouts";
 import { PlatformBody, PlatformFoot, pfApp, usePfApp } from "./PlatformApp";
+import { slugCodec } from "./slugs";
 import { BlotterBody, TreasuryBody, CfoBody, AnalyticsFoot } from "./AnalyticsApp";
 import { NotifBell } from "./Notifications";
 import { Flag } from "./Flags";
@@ -206,7 +207,7 @@ const titleOfKey = (key: string): string =>
 
 export function App() {
   return (
-    <WorkspaceProvider registry={REGISTRY} urlSync="push" storageKey="frameword-crm">
+    <WorkspaceProvider registry={REGISTRY} urlSync="push" storageKey="frameword-crm" slugCodec={slugCodec}>
       <Shell />
     </WorkspaceProvider>
   );
