@@ -356,6 +356,21 @@ describe("URL codec — ContextPath alone is shareable", () => {
   test("malformed URLs degrade to null, never throw", () => {
     expect(decodeLocation("%7Bnot-json")).toBeNull();
     expect(decodeLocation(encodeURIComponent('{"nope":1}'))).toBeNull();
+    expect(decodeLocation("not-json")).toBeNull(); // bare token, no path
+  });
+  test("the hash is readable, not a percent-encoded JSON blob", () => {
+    const url = encodeLocation(crmChain())!;
+    expect(url.startsWith("/crm/")).toBe(true);
+    expect(url).not.toContain("%7B"); // no encoded "{"
+    expect(url).toContain("~"); // type~key segments
+  });
+  test("legacy JSON-blob links still decode (backward-compat)", () => {
+    const legacy = encodeURIComponent(
+      JSON.stringify({ spaceId: "crm", path: [{ t: "space", k: "accounts" }] }),
+    );
+    const loc = decodeLocation(legacy)!;
+    expect(loc.spaceId).toBe("crm");
+    expect(loc.path.map((p) => p.k)).toEqual(["accounts"]);
   });
 });
 

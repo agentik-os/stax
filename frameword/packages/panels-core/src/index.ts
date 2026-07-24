@@ -445,25 +445,64 @@ export interface EncodedLocation {
   path: { t: string; k: string }[];
 }
 
+// per-field encode: keep the readable chars, but protect the two delimiters —
+// "/" (segment) is already percent-escaped by encodeURIComponent, "~" (field) is not.
+const encField = (x: string) => encodeURIComponent(x).replace(/~/g, "%7E");
+const safeDecode = (x: string): string | null => {
+  try {
+    return decodeURIComponent(x);
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Encode the shareable ContextPath as a READABLE hash —
+ * `/<space>/<type>~<key>/<type>~<key>…` (e.g. `/crm/space~accounts/contact~jo`),
+ * NOT a percent-encoded JSON blob. The URL stays human-readable and shareable.
+ */
 export function encodeLocation(s: WorkspaceState): string | null {
   if (!s.spaceId || !s.rootInstanceId) return null;
-  const loc: EncodedLocation = {
-    spaceId: s.spaceId,
-    path: getContextPath(s).map((id) => ({
-      t: s.panelsById[id].target.panelType,
-      k: s.panelsById[id].target.resourceKey,
-    })),
-  };
-  return encodeURIComponent(JSON.stringify(loc));
+  const segs = getContextPath(s).map((id) => {
+    const t = s.panelsById[id].target;
+    return `${encField(t.panelType)}~${encField(t.resourceKey)}`;
+  });
+  return "/" + [encField(s.spaceId), ...segs].join("/");
 }
 
 export function decodeLocation(encoded: string): EncodedLocation | null {
+  if (!encoded) return null;
+  // Legacy form — percent-encoded JSON object. Keep old shared/bookmarked links working.
+  const raw = safeDecode(encoded);
+  if (raw && raw.trimStart().startsWith("{")) {
+    try {
+      const loc = JSON.parse(raw);
+      if (typeof loc?.spaceId !== "string" || !Array.isArray(loc?.path)) return null;
+      for (const seg of loc.path)
+        if (typeof seg?.t !== "string" || typeof seg?.k !== "string") return null;
+      return loc as EncodedLocation;
+    } catch {
+      return null;
+    }
+  }
+  // Readable path form.
   try {
-    const loc = JSON.parse(decodeURIComponent(encoded));
-    if (typeof loc?.spaceId !== "string" || !Array.isArray(loc?.path)) return null;
-    for (const seg of loc.path)
-      if (typeof seg?.t !== "string" || typeof seg?.k !== "string") return null;
-    return loc as EncodedLocation;
+    const parts = encoded.replace(/^\/+/, "").split("/").filter(Boolean);
+    if (!parts.length) return null;
+    const spaceId = decodeURIComponent(parts[0]);
+    if (!spaceId) return null;
+    const path: { t: string; k: string }[] = [];
+    for (const seg of parts.slice(1)) {
+      const i = seg.indexOf("~");
+      if (i < 0) return null;
+      path.push({
+        t: decodeURIComponent(seg.slice(0, i)),
+        k: decodeURIComponent(seg.slice(i + 1)),
+      });
+    }
+    // a valid location always carries at least the space root; a bare token is garbage.
+    if (path.length === 0) return null;
+    return { spaceId, path };
   } catch {
     return null;
   }
