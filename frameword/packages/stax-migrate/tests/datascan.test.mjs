@@ -30,7 +30,7 @@ test("convex: query/mutation extracted; internal listed but excluded from the ga
 
 test("convex: app call sites bind; the never-called mutation is flagged UNUSED", () => {
   assert.match(named(convex.rows, "deals.list").evidence, /1 app call site.*App\.tsx/);
-  assert.match(named(convex.rows, "deals.restage").evidence, /UNUSED by the app/);
+  assert.match(named(convex.rows, "deals.restage").evidence, /no direct api\.\* call site found/);
 });
 
 test("convex: table ops carry reads and writes from ctx.db usage", () => {

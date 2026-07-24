@@ -104,9 +104,16 @@ function scanConvex(root, appTexts) {
   // tables: `key: defineTable(` — whole-text, so the key may sit on its own line
   const schemaFile = files.find((f) => /schema\.(ts|js|mjs)$/.test(f));
   const tables = new Map();
+  for (const tf of files) {
+    // `key: defineTable(` in the schema AND `export const key = defineTable(`
+    // in split-schema helper files (feature-owned tables spread into defineSchema)
+    for (const h of scanAll(texts.get(tf) ?? "", /(\w+)\s*[:=]\s*defineTable\s*\(/g))
+      if (!tables.has(h.m[1])) tables.set(h.m[1], { source: `${rel(root, tf)}:${h.line}`, ops: new Set() });
+  }
   if (schemaFile) {
-    for (const h of scanAll(texts.get(schemaFile) ?? "", /(\w+)\s*:\s*defineTable\s*\(/g))
-      tables.set(h.m[1], { source: `${rel(root, schemaFile)}:${h.line}`, ops: new Set() });
+    const block = /defineSchema\s*\(\s*\{([\s\S]*?)\}\s*\)/.exec(texts.get(schemaFile) ?? "");
+    if (block) for (const sp of block[1].matchAll(/\.\.\.(\w+)/g))
+      warnings.push(`convex schema spreads ...${sp[1]} — an external table pack (e.g. authTables) is not statically resolvable; add its tables by hand`);
   } else warnings.push("convex/ present but no schema.(ts|js) found — tables cannot be extracted");
 
   // functions: known builders + CUSTOM WRAPPERS (convex-helpers style: authedQuery,
@@ -117,38 +124,48 @@ function scanConvex(root, appTexts) {
   const customBuilders = new Set();
   for (const f of files) {
     const text = texts.get(f) ?? "";
-    const mod = path.basename(f).replace(/\.(ts|js|mjs|tsx|jsx)$/, "");
+    const mod = rel(dir, f).replace(/\.(ts|js|mjs|tsx|jsx)$/, "").split(path.sep).join(".");
     for (const h of scanAll(text, FN_RE)) {
       const name = h.m[1] || "default";
       const builder = h.m[2];
       // a wrapper DEFINITION (`export const authedQuery = customQuery(...)`) is a
       // builder, not an endpoint: skip defs whose body is customQuery/customMutation
-      if (/^custom/i.test(builder)) { customBuilders.add(name); continue; }
+      if (/custom/i.test(builder)) { customBuilders.add(name); continue; }
       const known = CONVEX_BUILDERS.has(builder);
       fns.push({ mod, name, builder, known, source: `${rel(root, f)}:${h.line}` });
       if (!known) customBuilders.add(builder);
     }
     // db ops: reads/creates by table literal; patch/replace/delete → 'w' on tables
     // this module references by string (honest approximation, ids carry no table)
-    for (const h of scanAll(text, /ctx\.db\.(query|insert)\s*\(\s*["'`](\w+)["'`]/g)) {
+    for (const h of scanAll(text, /ctx\.db\s*\.\s*(query|insert)\s*\(\s*["'`](\w+)["'`]/g)) {
       const t = tables.get(h.m[2]);
       if (t) t.ops.add(h.m[1] === "query" ? "r" : "c");
     }
-    if (/ctx\.db\.(patch|replace|delete)\s*\(/.test(text)) {
+    if (/ctx\.db\s*\.\s*(patch|replace|delete)\s*\(/.test(text)) {
       for (const [name, t] of tables)
         if (new RegExp(`["'\`]${name}["'\`]`).test(text)) t.ops.add("w");
     }
+  }
+  // http router: http.route({ path, method, handler }) — inline handlers and
+  // both key orders; an external webhook is exactly what a migration must carry
+  for (const hf of files) {
+    const text = texts.get(hf) ?? "";
+    for (const h of scanAll(text, /\.route\s*\(\s*\{[\s\S]{0,400}?path\s*:\s*["'`]([^"'`]+)["'`][\s\S]{0,240}?method\s*:\s*["'`](\w+)["'`]/g))
+      rows.push({ layer: "convex", name: `${h.m[2]} ${h.m[1]}`, kind: "route", source: `${rel(root, hf)}:${h.line}`, ops: h.m[2] === "GET" ? "r" : "w", evidence: "convex http.route" });
+    for (const h of scanAll(text, /\.route\s*\(\s*\{[\s\S]{0,240}?method\s*:\s*["'`](\w+)["'`][\s\S]{0,400}?path\s*:\s*["'`]([^"'`]+)["'`]/g))
+      if (!rows.some((r) => r.layer === "convex" && r.name === `${h.m[1]} ${h.m[2]}`))
+        rows.push({ layer: "convex", name: `${h.m[1]} ${h.m[2]}`, kind: "route", source: `${rel(root, hf)}:${h.line}`, ops: h.m[1] === "GET" ? "r" : "w", evidence: "convex http.route" });
   }
   if (customBuilders.size)
     warnings.push(`convex custom function builder(s) detected: ${[...customBuilders].join(", ")} — rows extracted with kind GUESSED from the name; confirm by hand`);
 
   // app call sites — whole-text, so `useQuery(\n  api.deals.list` binds too
   const sites = { read: new Map(), write: new Map() };
-  const SITE_RE = /(useQuery|usePaginatedQuery|fetchQuery|preloadQuery|useMutation|useAction|fetchMutation|fetchAction)\s*\(\s*api\.(\w+)\.(\w+)/g;
+  const SITE_RE = /(useQuery|usePaginatedQuery|fetchQuery|preloadQuery|convexQuery|useMutation|useAction|fetchMutation|fetchAction|convexAction)\s*\(\s*api\.([\w.]+)\.(\w+)\b(?!\s*\.)/g;
   for (const [f, text] of appTexts) {
     for (const h of scanAll(text, SITE_RE)) {
       const key = `${h.m[2]}.${h.m[3]}`;
-      const isRead = /^(useQuery|usePaginatedQuery|fetchQuery|preloadQuery)$/.test(h.m[1]);
+      const isRead = /^(useQuery|usePaginatedQuery|fetchQuery|preloadQuery|convexQuery)$/.test(h.m[1]);
       const map = isRead ? sites.read : sites.write;
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(`${rel(root, f)}:${h.line}`);
@@ -169,7 +186,7 @@ function scanConvex(root, appTexts) {
     rows.push({ layer: "convex", name: key, kind, source: fn.source,
       ops: kind === "query" ? "r" : kind === "internal" ? "-" : "w",
       evidence: `${b}${fn.known ? "" : " (custom builder, kind guessed)"} · ${reads.length + writes.length} app call site(s)` +
-        (reads[0] ? ` e.g. ${reads[0]}` : writes[0] ? ` e.g. ${writes[0]}` : internal ? "" : " — UNUSED by the app"),
+        (reads[0] ? ` e.g. ${reads[0]}` : writes[0] ? ` e.g. ${writes[0]}` : internal ? "" : " — no direct api.* call site found (aliases/wrappers not traceable)"),
     });
   }
   return { layer: "convex", rows, warnings, detected: `convex/ (${files.length} files${schemaFile ? ", schema" : ""})` };
@@ -179,7 +196,7 @@ function scanConvex(root, appTexts) {
 
 function scanSupabase(root, appTexts) {
   const dir = path.join(root, "supabase");
-  const usesClient = [...appTexts.values()].some((t) => t.includes("@supabase/supabase-js"));
+  const usesClient = [...appTexts.values()].some((t) => /@supabase\/(supabase-js|ssr|auth-helpers)|create(Server|Browser)Client\s*\(/.test(t));
   if (!fs.existsSync(dir) && !usesClient) return null;
   const rows = [];
   const warnings = [];
@@ -188,14 +205,20 @@ function scanSupabase(root, appTexts) {
   const tables = new Map();
   const migDir = path.join(dir, "migrations");
   const sqlFiles = fs.existsSync(migDir) ? walk(migDir, new Set([".sql"])) : [];
-  for (const f of sqlFiles) {
+  for (const f of sqlFiles.sort()) {
     const sql = stripSqlComments(fs.readFileSync(f, "utf8"));
     for (const h of scanAll(sql, /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:"?\w+"?\.)?"?(\w+)"?/gi))
       if (!tables.has(h.m[1])) tables.set(h.m[1], { source: `${rel(root, f)}:${h.line}`, rls: false, policies: 0, ops: new Set() });
+    for (const h of scanAll(sql, /create\s+(?:or\s+replace\s+)?view\s+(?:"?\w+"?\.)?"?(\w+)"?/gi))
+      if (!tables.has(h.m[1])) tables.set(h.m[1], { source: `${rel(root, f)}:${h.line}`, rls: false, policies: 0, ops: new Set(), view: true });
+    // migrations are append-only history: a later `drop table` tombstones the surface
+    for (const h of scanAll(sql, /drop\s+(?:table|view)\s+(?:if\s+exists\s+)?(?:"?\w+"?\.)?"?(\w+)"?/gi))
+      tables.delete(h.m[1]);
     for (const h of scanAll(sql, /alter\s+table\s+(?:"?\w+"?\.)?"?(\w+)"?\s+enable\s+row\s+level\s+security/gi)) {
       const t = tables.get(h.m[1]); if (t) t.rls = true;
     }
-    for (const h of scanAll(sql, /create\s+policy\s+[\s\S]*?\bon\s+(?:"?\w+"?\.)?"?(\w+)"?/gi)) {
+    // the policy NAME may itself contain " on ": skip the quoted name explicitly
+    for (const h of scanAll(sql, /create\s+policy\s+(?:"[^"]*"|\w+)\s+on\s+(?:"?\w+"?\.)?"?(\w+)"?/gi)) {
       const t = tables.get(h.m[1]); if (t) t.policies++;
     }
   }
@@ -204,10 +227,10 @@ function scanSupabase(root, appTexts) {
   // client sites — storage buckets FIRST, then their spans are masked so the
   // table pass can never confuse `storage.from("bucket")` with a table read
   const STORAGE_RE = /\bstorage\s*\.\s*from\s*\(\s*["'`]([\w-]+)["'`]\s*\)/g;
-  const FROM_RE = /\.from\s*\(\s*["'`](\w+)["'`]\s*\)\s*\.\s*(select|insert|update|upsert|delete)/g;
+  const FROM_RE = /\.from\s*(?:<[^>]{0,120}>)?\s*\(\s*["'`](\w+)["'`]\s*\)\s*\.\s*(select|insert|update|upsert|delete)/g;
   const RPC_RE = /\.rpc\s*\(\s*["'`](\w+)["'`]/g;
   const RT_RE = /\.channel\s*\(\s*["'`]([\w:.-]+)["'`]/g;
-  const DYN_FROM_RE = /\.from\s*\(\s*(?!["'`])[^)\n]{1,80}\)/g;
+  const DYN_FROM_RE = /\.from\s*(?:<[^>]{0,120}>)?\s*\(\s*(?!["'`])[^)]{1,120}\)/g;
   const rpcs = new Map(); const channels = new Map(); const buckets = new Map();
   for (const [f, raw] of appTexts) {
     for (const h of scanAll(raw, STORAGE_RE)) {
@@ -229,7 +252,7 @@ function scanSupabase(root, appTexts) {
     // `const base = supabase.from("orders"); base.select()`): the table is
     // real but its ops are not chain-provable — record it, then WARN.
     const chained = new Set(scanAll(text, FROM_RE).map((h) => h.index));
-    for (const h of scanAll(text, /\.from\s*\(\s*["'`](\w+)["'`]\s*\)/g)) {
+    for (const h of scanAll(text, /\.from\s*(?:<[^>]{0,120}>)?\s*\(\s*["'`](\w+)["'`]\s*\)/g)) {
       if (chained.has(h.index)) continue;
       let t = tables.get(h.m[1]);
       if (!t) { t = { source: `${rel(root, f)}:${h.line}`, rls: null, policies: 0, ops: new Set(), inferred: true }; tables.set(h.m[1], t); }
@@ -252,9 +275,9 @@ function scanSupabase(root, appTexts) {
       warnings.push(`table "${name}" has RLS ENABLED and ZERO policies — the new front end cannot read it until a policy ships`);
     if (t.bare?.length && t.ops.size === 0)
       warnings.push(`table "${name}": ${t.bare.length} bare .from() reference(s) (stored builder) — ops not statically provable, verify reads/writes by hand, e.g. ${t.bare[0]}`);
-    rows.push({ layer: "supabase", name, kind: "table", source: t.source,
-      ops: [...t.ops].sort().join("") || "r",
-      evidence: (t.inferred ? "inferred from client sites" : "migration DDL") +
+    rows.push({ layer: "supabase", name, kind: t.view ? "view" : "table", source: t.source,
+      ops: t.view ? "r" : [...t.ops].sort().join("") || "r",
+      evidence: (t.inferred ? "inferred from client sites" : t.view ? "migration DDL (view)" : "migration DDL") +
         (t.rls === true ? ` · RLS on, ${t.policies} policy(ies)` : "") +
         (t.sites?.[0] ? ` · e.g. ${t.sites[0]}` : ""),
     });
@@ -277,7 +300,7 @@ function scanPrisma(root, appTexts) {
     const client = model[0].toLowerCase() + model.slice(1);
     const ops = new Set();
     for (const [, text] of appTexts) {
-      for (const s of scanAll(text, new RegExp(`prisma\\.${client}\\.(findMany|findUnique|findFirst|count|aggregate|create|createMany|update|updateMany|upsert|delete|deleteMany)`, "g")))
+      for (const s of scanAll(text, new RegExp(`\\b(?:ctx\\.)?(?:prisma|db)\\.${client}\\.(findMany|findUnique|findFirst|count|aggregate|create|createMany|update|updateMany|upsert|delete|deleteMany)`, "g")))
         ops.add(/^find|^count|^aggregate/.test(s.m[1]) ? "r" : /^create/.test(s.m[1]) ? "c" : /^delete/.test(s.m[1]) ? "d" : "u");
     }
     rows.push({ layer: "prisma", name: model, kind: "table", source: `${rel(root, schema)}:${h.line}`, ops: [...ops].sort().join("") || "r", evidence: "prisma model" });
@@ -294,10 +317,16 @@ function scanRest(root, appTexts) {
       if (!/route\.(ts|js|mjs)$/.test(f)) continue;
       const text = stripJsComments(fs.readFileSync(f, "utf8"));
       const methods = scanAll(text, /export\s+(?:async\s+)?(?:function|const)\s+(GET|POST|PUT|PATCH|DELETE)\b/g).map((h) => h.m[1]);
-      if (!methods.length) continue;
-      const route = "/" + rel(path.dirname(r) === root ? r : path.join(root, "src"), path.dirname(f)).replace(/^app\//, "").replace(/\\/g, "/");
+      // re-exported handlers: `export { GET, POST } from "…"` and `export const { GET, POST } = handlers`
+      for (const h of scanAll(text, /export\s+(?:const\s*)?\{([^}]*)\}/g))
+        for (const m of h.m[1].matchAll(/\b(GET|POST|PUT|PATCH|DELETE)\b/g)) methods.push(m[1]);
+      if (!methods.length) {
+        warnings.push(`route file ${rel(root, f)} exports no parsable HTTP method — handler shape not statically provable, add its route by hand`);
+        continue;
+      }
+      const route = ("/" + rel(path.dirname(r) === root ? r : path.join(root, "src"), path.dirname(f)).replace(/^app\//, "").replace(/\\/g, "/")).replace(/\/\([^)/]+\)/g, "");
       rows.push({ layer: "rest", name: route, kind: "route", source: rel(root, f),
-        ops: methods.every((m) => m === "GET") ? "r" : "rw", evidence: methods.join("/"), _sites: [] });
+        ops: methods.every((m) => m === "GET") ? "r" : "rw", evidence: [...new Set(methods)].join("/"), _sites: [] });
     }
   }
   const pagesApi = [path.join(root, "pages", "api"), path.join(root, "src", "pages", "api")];
@@ -337,16 +366,26 @@ function scanRest(root, appTexts) {
 
 function scanTrpc(root, appTexts) {
   const rows = [];
+  const warnings = [];
+  const customProcs = new Set();
   for (const [f, text] of appTexts) {
-    if (!/(publicProcedure|protectedProcedure|t\.procedure)/.test(text)) continue;
-    for (const h of scanAll(text, /(\w+)\s*:\s*(?:publicProcedure|protectedProcedure|t\.procedure)/g)) {
+    if (!/(\w*[Pp]rocedure)\b/.test(text) || !/\.(query|mutation|subscription)\s*\(/.test(text)) continue;
+    for (const h of scanAll(text, /(\w+)\s*:\s*(\w*[Pp]rocedure)\b/g)) {
+      const builder = h.m[2];
+      if (!/^(publicProcedure|protectedProcedure|\w*[Pp]rocedure)$/.test(builder)) continue;
+      const custom = !/^(publicProcedure|protectedProcedure)$/.test(builder) && builder !== "procedure";
       const tail = text.slice(h.index);
-      const q = tail.indexOf(".query("), mu = tail.indexOf(".mutation(");
-      const kind = mu !== -1 && (q === -1 || mu < q) ? "mutation" : "query";
-      rows.push({ layer: "trpc", name: h.m[1], kind, source: `${rel(root, f)}:${h.line}`, ops: kind === "query" ? "r" : "w", evidence: "trpc procedure" });
+      const q = tail.indexOf(".query("), mu = tail.indexOf(".mutation("), sub = tail.indexOf(".subscription(");
+      const first = [["query", q], ["mutation", mu], ["realtime", sub]]
+        .filter(([, i]) => i !== -1).sort((a, b) => a[1] - b[1])[0];
+      const kind = first ? first[0] : "query";
+      if (custom) customProcs.add(builder);
+      rows.push({ layer: "trpc", name: h.m[1], kind, source: `${rel(root, f)}:${h.line}`, ops: kind === "mutation" ? "w" : "r", evidence: custom ? `trpc procedure (custom builder ${builder})` : "trpc procedure" });
     }
   }
-  return rows.length ? { layer: "trpc", rows, warnings: [], detected: `${rows.length} procedure(s)` } : null;
+  if (customProcs.size)
+    warnings.push(`trpc custom procedure builder(s) detected: ${[...customProcs].join(", ")} — middleware semantics not statically provable; confirm auth scope by hand`);
+  return rows.length ? { layer: "trpc", rows, warnings, detected: `${rows.length} procedure(s)` } : null;
 }
 
 /* ─────────────────────────── the scan ─────────────────────────── */
