@@ -1302,6 +1302,16 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .pf-list > *:last-child { border-bottom: none; }
 .pf-hubs .pf-hubcard:last-child { border-bottom: none; }
 .panel-body > .drills:first-child::before { border-top: none; }
+/* THE ABSORPTION LAW, generalized (U-037): when a head layout empties the body,
+   its FIRST block would paint a hairline 18px under the bar's own — two parallel
+   lines, which the spec forbids. A container absorbs its first child's top rule.
+   With a head present the h2 is first, so these never match: no regression. */
+.panel-body > .card:first-child, .panel-body > .anat-row:first-child,
+.panel-body > .section:first-child, .panel-body > .mini-flow:first-child,
+.panel-body > .stats:first-child, .panel-body > .codeblock:first-child,
+.panel-body > .pf-list:first-child, .panel-body > .dt:first-child { border-top: none; }
+.panel-body > .card:first-child::before, .panel-body > .anat-row:first-child::before,
+.panel-body > .section:first-child::before { border-top: none; }
 .pf-alertrow .pf-pill { flex: none; }
 
 /* drill meta: flat mono, never a pill inside the row */
@@ -1376,6 +1386,9 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .bar-glyph { flex: none; width: 17px; height: 17px; display: grid; place-items: center; color: var(--muted-foreground); }
 .bar-glyph svg { width: 14px; height: 14px; }
 .bar-title { font-size: calc(var(--fz-body, 13.5px) * 1.03); font-weight: 600; letter-spacing: -0.005em; color: var(--foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+/* RANK (spec: the thread shows a visible hierarchy of rank). A ROOT wears the
+   serif display voice at a small optical size; a drilled panel stays sans. */
+.bar-title.root { font-family: var(--font-serif); font-weight: 450; font-size: calc(var(--fz-body, 13.5px) * 1.16); letter-spacing: -0.01em; }
 .bar-title.editable { cursor: text; }
 .bar-title.editable:hover { text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
 .bar-title-edit { font-size: calc(var(--fz-body, 13.5px) * 1.03); font-weight: 600; font-family: var(--font-sans); color: var(--foreground); background: transparent; border: none; border-bottom: 1px solid var(--accent); outline: none; padding: 0 0 1px; min-width: 60px; flex: 0 1 auto; }
@@ -1387,7 +1400,12 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .bar-info:hover, .title-info:hover { color: var(--accent); }
 /* the description the body no longer prints, on demand */
 .head-info { position: absolute; top: 40px; left: 14px; right: 14px; z-index: 40; background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-lg); padding: 12px 14px; font-size: calc(var(--fz-body, 13.5px) * 0.95); color: var(--ink-2); line-height: 1.55; }
-/* RR: the bar folds by priority — meta first, then the eyebrow, never the title */
+/* RR-7, keyed on the PANEL and not the viewport: an S 380 panel on a 1500px
+   screen must fold its numbers too, or the title truncates while telemetry
+   keeps its pixels. The numbers go first, the eyebrow next, the title NEVER. */
+.panel { container-type: inline-size; }
+@container (max-width: 430px) { .bar-meta { display: none; } }
+@container (max-width: 340px) { .panel-bar .eyebrow { display: none; } }
 @media (max-width: 640px) { .bar-meta { display: none; } }
 
 /* the vertical spine: the title leaves the flow and becomes an edge */

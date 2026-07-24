@@ -151,3 +151,62 @@ test("a data table's bar title renames the collection in place", async ({ page }
   // the rename reached the store: the parent row shows it too
   await expect(page.locator(".panel").first().locator(".drill", { hasText: "Clients EU" })).toHaveCount(1);
 });
+
+/* ── the three defects the design panel found in the shipped default ──────
+   Each was reproduced at runtime before being fixed; these guard the fix. */
+
+test("ABSORPTION: with the head gone, no panel paints a second hairline under its bar", async ({ page }) => {
+  await fresh(page);
+  const VIEWS = [
+    link({ spaceId: "glossary", path: [{ t: "section", k: "sec:glossary" }, { t: "doc", k: "gl:mechanic" }] }),
+    link({ spaceId: "model", path: [{ t: "section", k: "sec:model" }] }),
+    link({ spaceId: "architecture", path: [{ t: "section", k: "sec:architecture" }] }),
+    link({ spaceId: "crm", path: [{ t: "space", k: "space:crm" }, { t: "account", k: "acc:acme" }] }),
+  ];
+  for (const v of VIEWS) {
+    await page.goto(v);
+    await page.waitForSelector(".panel");
+    await page.waitForTimeout(350);
+    const doubled = await page.evaluate(() => [...document.querySelectorAll(".panel")].filter((p) => {
+      const body = p.querySelector(".panel-body");
+      const first = body && [...body.children].find((c) => c.getBoundingClientRect().height > 0);
+      if (!first) return false;
+      const cs = getComputedStyle(first);
+      return parseFloat(cs.borderTopWidth) > 0 && cs.borderTopStyle !== "none"
+        && cs.borderTopColor !== "rgba(0, 0, 0, 0)";
+    }).length);
+    expect(doubled).toBe(0);
+  }
+});
+
+test("RR-7 in the bar is keyed on the PANEL: an S panel folds its numbers, never its title", async ({ page }) => {
+  await fresh(page);
+  await page.setViewportSize({ width: 1500, height: 850 });
+  await page.goto(link({ spaceId: "overview", path: [{ t: "section", k: "sec:overview" }] }));
+  await page.waitForSelector(".bar-title");
+  await page.waitForTimeout(400);
+  const r = await page.evaluate(async () => {
+    const p = document.querySelector(".panel") as HTMLElement;
+    p.style.width = "380px"; p.style.flex = "0 0 380px";
+    await new Promise((res) => setTimeout(res, 250));
+    const t = p.querySelector(".bar-title") as HTMLElement;
+    return { clipped: t.scrollWidth > t.clientWidth + 1,
+      metaWidth: p.querySelector(".bar-meta")?.getBoundingClientRect().width ?? 0 };
+  });
+  expect(r.metaWidth).toBe(0);   // the numbers fold first
+  expect(r.clipped).toBe(false); // the title never truncates
+});
+
+test("RANK: a root's bar title is visibly senior to a drilled panel's", async ({ page }) => {
+  await fresh(page);
+  await page.goto(link({ spaceId: "crm", path: [{ t: "space", k: "space:crm" }, { t: "account", k: "acc:acme" }] }));
+  await page.waitForSelector(".bar-title");
+  await page.waitForTimeout(400);
+  const sizes = await page.evaluate(() => [...document.querySelectorAll(".panel .bar-title")].map((t) => {
+    const cs = getComputedStyle(t);
+    return { size: parseFloat(cs.fontSize), serif: /Newsreader|serif|Iowan|Georgia/i.test(cs.fontFamily) };
+  }));
+  expect(sizes.length).toBeGreaterThan(1);
+  expect(sizes[0].size).toBeGreaterThan(sizes[1].size); // the root is bigger
+  expect(sizes[0].serif).toBe(true);                    // and wears the display voice
+});

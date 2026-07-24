@@ -1656,7 +1656,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
               }}
               onBlur={(e) => { const v = e.target.value.trim(); if (v) rename?.(v); setRenaming(false); }} />
           ) : (
-            <span className={"bar-title" + (rename ? " editable" : "")}
+            <span className={"bar-title" + (isRoot && !isRef ? " root" : "") + (rename ? " editable" : "")}
               title={rename ? label + " — double-click to rename" : label}
               onDoubleClick={rename ? (e) => { e.stopPropagation(); setRenaming(true); } : undefined}>{label}</span>
           );

@@ -352,11 +352,21 @@ fork of the render):
 LAWS that bind every treatment: (1) a panel ALWAYS states its identity somewhere
 (bar title, body title, spine or eyebrow) — the gate and the e2e suite check it;
 (2) the foot stays the ONLY action zone, the bar stays navigation and identity;
-(3) the bar folds by PRIORITY under 640px — the live numbers go first, the
-eyebrow next, the title NEVER; (4) a bar title is EDITABLE (double-click, inline,
+(3) the bar folds by PRIORITY keyed on the PANEL, not the viewport — a container
+query drops the live numbers under 430px and the eyebrow under 340px, and the
+title NEVER truncates (keyed on the viewport instead, an S 380 panel on a wide
+screen keeps its telemetry and clips its name: measured, the app's longest title
+needed 187px in a 126px box); (4) a bar title is EDITABLE (double-click, inline,
 Escape cancels) exactly where the node is the user's own (collections, folders,
 records) and static on authored content; (5) the live numbers are DERIVED, never
-authored. The app sets its default; the user may override per device in Settings.
+authored; (6) RANK survives the move: a ROOT wears the serif display voice at a
+small optical size (1.16x body) while a drilled panel stays sans semibold, so the
+thread keeps the visible hierarchy the rank law demands; (7) THE ABSORPTION LAW
+generalizes — when a treatment empties the body, its first block must not paint a
+hairline under the bar's own (two parallel rules): `.card`, `.anat-row`,
+`.section`, `.mini-flow`, `.stats`, `.codeblock`, `.pf-list` and `.dt` drop their
+top rule at `:first-child`, exactly as `.drills` always did. The app sets its
+default; the user may override per device in Settings.
 
 **Panels-only surfaces:** settings = a sys PANEL (appearance, fonts, accent, zoom,
 shortcuts, HEAD LAYOUT) — never a page; profile = entity panel (fs-head name/role);
