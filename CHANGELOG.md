@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.23.0
+- **U-038** (migration) — The console pattern table: 20 SaaS-admin screens mapped to a LIVE reference panel + stax-migrate patterns
+
 ## 0.22.0
 - **U-037** (design) — The head layouts: ten identity treatments as a data registry, dense-bar by default (28% chrome to 13%)
 

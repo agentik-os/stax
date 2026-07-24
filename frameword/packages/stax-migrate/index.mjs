@@ -966,6 +966,32 @@ async function cmdData(target, sub, flags) {
   console.log(dim("  80% programmatic / 20% AI: the scanner extracts and gates; the agent only maps."));
 }
 
+function cmdPatterns(query, flags) {
+  const p = new URL("./patterns.json", import.meta.url);
+  let cat;
+  try { cat = JSON.parse(fs.readFileSync(p, "utf8")); }
+  catch { die("patterns.json missing from this install"); }
+  const q = String(query ?? "").toLowerCase().trim();
+  const hits = q
+    ? cat.patterns.filter((x) => (x.legacy + " " + x.panelType + " " + x.grammar).toLowerCase().includes(q))
+    : cat.patterns;
+  if (flags.json) { console.log(JSON.stringify({ query: q || null, count: hits.length, patterns: hits }, null, 1)); return; }
+  if (!hits.length) {
+    console.log(`no console/analytics pattern matches "${query}".`);
+    console.log(dim("  This screen is not one the framework already proves: design it from the view grammar"));
+    console.log(dim("  (a screen is a PANEL, its list is a view type, its actions are the foot, its detail is a drill)."));
+    process.exitCode = 1;
+    return;
+  }
+  console.log(bold(mag("stax patterns")) + dim(q ? ` · "${q}"` : " · the console and analytics screens the framework proves"));
+  for (const h of hits) {
+    console.log("\n  " + bold(h.legacy));
+    console.log("  " + dim("target  ") + h.grammar.replace(/`/g, ""));
+    console.log("  " + dim("live    ") + cyan(h.reference));
+  }
+  console.log(dim(`\n  ${hits.length} pattern(s) · open the reference and copy its grammar, never improvise a proven screen.`));
+}
+
 function cmdHelp() {
   console.log(`
 ${bold(mag("stax-migrate"))} — any legacy web app → the Stax panels-inside-panels grammar
@@ -985,6 +1011,9 @@ ${bold("USAGE")}
                                         print a unit's brief · drive an agent to apply it · record it
   stax-migrate ${cyan("run")}    [dir] --agent claude|codex [--phase n]
                                         drive ONE phase via an agent CLI, then re-check the gate
+  stax-migrate ${cyan("patterns")} [query] [--json]      the console + analytics screens the framework already
+                                        PROVES (api keys, billing, usage, logs, health, funnel…): each
+                                        prints its Stax grammar and a LIVE reference panel to copy
   stax-migrate ${cyan("data")}   scan [dir] [--write]    PROGRAMMATIC backend extraction: Convex, Supabase,
                                         Prisma, REST routes, tRPC — tables, functions, rpc, realtime,
                                         every read/write call site, file:line evidence → data-matrix.csv
@@ -1107,6 +1136,9 @@ async function main() {
         break;
       case "run":
         cmdRun(resolveTarget(pos[0]), flags.agent, flags.phase);
+        break;
+      case "patterns":
+        cmdPatterns(pos.join(" "), flags);
         break;
       case "data": {
         const sub = ["scan", "check"].includes(pos[0]) ? pos[0] : "scan";

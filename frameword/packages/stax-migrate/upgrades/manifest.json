@@ -221,6 +221,12 @@
       "since": "0.22.0",
       "area": "design",
       "title": "The head layouts: ten identity treatments as a data registry, dense-bar by default (28% chrome to 13%)"
+    },
+    {
+      "id": "U-038",
+      "since": "0.23.0",
+      "area": "migration",
+      "title": "The console pattern table: 20 SaaS-admin screens mapped to a LIVE reference panel + stax-migrate patterns"
     }
   ]
 }

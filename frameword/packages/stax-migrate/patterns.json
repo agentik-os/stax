@@ -1,0 +1,125 @@
+{
+ "generated": "from DESIGN-SPEC.md console/analytics table",
+ "patterns": [
+  {
+   "legacy": "API keys / tokens page (create, reveal once, roll, revoke)",
+   "panelType": "pfkeys",
+   "grammar": "`pfkeys`: a `.dt` of keys with masked secrets, a REVEAL-ONCE dialog on creation (the secret is never re-shown), roll and revoke as row actions, the row drills to the key's panel",
+   "reference": "/#/pf-console/section~sec:pf-console/pfkeys~pf:keys"
+  },
+  {
+   "legacy": "Team / members / seats page with invitations",
+   "panelType": "pfpeople",
+   "grammar": "`pfpeople`: ONE segmented collection (members + pending invitations), the invite composer in the FOOT, role as segments per row, owner-guarded destructive actions",
+   "reference": "/#/pf-console/section~sec:pf-console/pfpeople~pf:people"
+  },
+  {
+   "legacy": "Projects / environments / workspaces switcher page",
+   "panelType": "pfprojects",
+   "grammar": "`pfprojects`: rows carrying geography, retention and spend; create in the foot, archive from the detail",
+   "reference": "/#/pf-console/section~sec:pf-console/pfprojects~pf:projects"
+  },
+  {
+   "legacy": "Billing page (plan, payment method, invoices)",
+   "panelType": "pfbilling",
+   "grammar": "`pfbilling`: credit balance + auto-recharge in the body, sub-pages as DRILLS (payment methods, billing history) — the hub pattern, never tabs",
+   "reference": "/#/pf-console/section~sec:pf-console/pfbilling~pf:billing"
+  },
+  {
+   "legacy": "Usage / metering / consumption charts",
+   "panelType": "pfusage",
+   "grammar": "`pfusage`: a range switcher as foot segments over one dataset, mono tabular figures, the chart is a block not a page",
+   "reference": "/#/pf-console/section~sec:pf-console/pfusage~pf:usage"
+  },
+  {
+   "legacy": "Rate limits / quotas / spend caps",
+   "panelType": "pflimits",
+   "grammar": "`pflimits`: threshold rows with inline edit, the alert address as a field, never a modal",
+   "reference": "/#/pf-console/section~sec:pf-console/pflimits~pf:limits"
+  },
+  {
+   "legacy": "Live log stream / event console",
+   "panelType": "pflogs",
+   "grammar": "`pflogs`: append-only mono scrollback with level colours, a line drills to its error context",
+   "reference": "/#/pf-console/section~sec:pf-console/pflogs~pf:logs"
+  },
+  {
+   "legacy": "Service status / health page",
+   "panelType": "pfhealth",
+   "grammar": "`pfhealth`: component rows with state dots (accent ramp, never green), incident history as drills",
+   "reference": "/#/pf-console/section~sec:pf-console/pfhealth~pf:health"
+  },
+  {
+   "legacy": "Security / audit / access review",
+   "panelType": "pfsecurity",
+   "grammar": "`pfsecurity`: posture rows with a state per control; the evidence drills out of the row",
+   "reference": "/#/pf-console/section~sec:pf-console/pfsecurity~pf:security"
+  },
+  {
+   "legacy": "Data controls / retention / privacy toggles",
+   "panelType": "pfcontrols",
+   "grammar": "`pfcontrols`: switch rows with their consequence written beside them, saved on flip",
+   "reference": "/#/pf-console/section~sec:pf-console/pfcontrols~pf:controls"
+  },
+  {
+   "legacy": "Asset / media library",
+   "panelType": "pfimages",
+   "grammar": "`pfimages`: a density-switchable gallery, the item drills to its detail panel",
+   "reference": "/#/pf-studio/section~sec:pf-studio/pfimages~pf:images"
+  },
+  {
+   "legacy": "API playground / request builder",
+   "panelType": "pfprompt",
+   "grammar": "`pfprompt`: the config column becomes stacked sections, model and options are SEGMENTS (never native selects), the composer is anchored in the FOOT",
+   "reference": "/#/pf-studio/section~sec:pf-studio/pfprompt~pf:prompt"
+  },
+  {
+   "legacy": "Embedded terminal / CLI",
+   "panelType": "pfterm",
+   "grammar": "`pfterm`: mono scrollback in the body, the PROMPT in the foot, ArrowUp history, verbs drive the workspace through the bridge",
+   "reference": "/#/pf-studio/section~sec:pf-studio/pfterm~pf:terminal"
+  },
+  {
+   "legacy": "Support / assistant chat",
+   "panelType": "pfchat",
+   "grammar": "`pfchat`: the thread IS the panel body, the composer is the foot, slash commands speak the bridge",
+   "reference": "/#/pf-studio/section~sec:pf-studio/pfchat~pf:chat"
+  },
+  {
+   "legacy": "Realtime / streaming session surface",
+   "panelType": "pfrealtime",
+   "grammar": "`pfrealtime`: the live session as a panel, its controls in the foot",
+   "reference": "/#/pf-studio/section~sec:pf-studio/pfrealtime~pf:realtime"
+  },
+  {
+   "legacy": "Getting-started hub / integration launcher",
+   "panelType": "pfhub",
+   "grammar": "`pfhub`: paste-ready recipes as rows, each drilling into the prefilled composer",
+   "reference": "/#/pf-studio/section~sec:pf-studio/pfhub~pf:hub"
+  },
+  {
+   "legacy": "Conversion funnel report",
+   "panelType": "report",
+   "grammar": "`report`: the funnel is a BLOCK in the body; a step drills the lost or passed cohort",
+   "reference": "/#/ana-overview/section~sec:ana-overview/report~ana:funnel"
+  },
+  {
+   "legacy": "Traffic sources / attribution report",
+   "panelType": "report",
+   "grammar": "`report`: sources as rows with tabular figures; a source drills its detail",
+   "reference": "/#/ana-overview/section~sec:ana-overview/report~ana:sources"
+  },
+  {
+   "legacy": "Revenue by segment / MRR breakdown",
+   "panelType": "report",
+   "grammar": "`report`: one dataset, the segment drills; the numbers stay mono tabular",
+   "reference": "/#/ana-revenue/section~sec:ana-revenue/report~ana:mrr"
+  },
+  {
+   "legacy": "Forecast / projection report",
+   "panelType": "report",
+   "grammar": "`report`: the projection block plus its assumptions as rows the reader can inspect",
+   "reference": "/#/ana-revenue/section~sec:ana-revenue/report~ana:forecast"
+  }
+ ]
+}

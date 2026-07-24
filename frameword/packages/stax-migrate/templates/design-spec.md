@@ -208,6 +208,41 @@ Every migrated element ships all of: default · hover · focus/active · empty �
 loading/skeleton · error. Empty states are sentences with a next action, not blank
 space. A migrated element missing a state keeps its matrix row open.
 
+
+### The console and analytics patterns (a SaaS admin, screen by screen)
+
+The table above converts UI PRIMITIVES. This one converts the SCREENS a developer-facing
+product actually ships, and every row points at a panel that already exists in the specimen:
+open the link, read the panel, copy the grammar. A migration should never improvise these.
+
+| Legacy screen | Stax target (live reference) |
+|---|---|
+| API keys / tokens page (create, reveal once, roll, revoke) | `pfkeys`: a `.dt` of keys with masked secrets, a REVEAL-ONCE dialog on creation (the secret is never re-shown), roll and revoke as row actions, the row drills to the key's panel · [`/#/pf-console/section~sec:pf-console/pfkeys~pf:keys`](/#/pf-console/section~sec:pf-console/pfkeys~pf:keys) |
+| Team / members / seats page with invitations | `pfpeople`: ONE segmented collection (members + pending invitations), the invite composer in the FOOT, role as segments per row, owner-guarded destructive actions · [`/#/pf-console/section~sec:pf-console/pfpeople~pf:people`](/#/pf-console/section~sec:pf-console/pfpeople~pf:people) |
+| Projects / environments / workspaces switcher page | `pfprojects`: rows carrying geography, retention and spend; create in the foot, archive from the detail · [`/#/pf-console/section~sec:pf-console/pfprojects~pf:projects`](/#/pf-console/section~sec:pf-console/pfprojects~pf:projects) |
+| Billing page (plan, payment method, invoices) | `pfbilling`: credit balance + auto-recharge in the body, sub-pages as DRILLS (payment methods, billing history) — the hub pattern, never tabs · [`/#/pf-console/section~sec:pf-console/pfbilling~pf:billing`](/#/pf-console/section~sec:pf-console/pfbilling~pf:billing) |
+| Usage / metering / consumption charts | `pfusage`: a range switcher as foot segments over one dataset, mono tabular figures, the chart is a block not a page · [`/#/pf-console/section~sec:pf-console/pfusage~pf:usage`](/#/pf-console/section~sec:pf-console/pfusage~pf:usage) |
+| Rate limits / quotas / spend caps | `pflimits`: threshold rows with inline edit, the alert address as a field, never a modal · [`/#/pf-console/section~sec:pf-console/pflimits~pf:limits`](/#/pf-console/section~sec:pf-console/pflimits~pf:limits) |
+| Live log stream / event console | `pflogs`: append-only mono scrollback with level colours, a line drills to its error context · [`/#/pf-console/section~sec:pf-console/pflogs~pf:logs`](/#/pf-console/section~sec:pf-console/pflogs~pf:logs) |
+| Service status / health page | `pfhealth`: component rows with state dots (accent ramp, never green), incident history as drills · [`/#/pf-console/section~sec:pf-console/pfhealth~pf:health`](/#/pf-console/section~sec:pf-console/pfhealth~pf:health) |
+| Security / audit / access review | `pfsecurity`: posture rows with a state per control; the evidence drills out of the row · [`/#/pf-console/section~sec:pf-console/pfsecurity~pf:security`](/#/pf-console/section~sec:pf-console/pfsecurity~pf:security) |
+| Data controls / retention / privacy toggles | `pfcontrols`: switch rows with their consequence written beside them, saved on flip · [`/#/pf-console/section~sec:pf-console/pfcontrols~pf:controls`](/#/pf-console/section~sec:pf-console/pfcontrols~pf:controls) |
+| Asset / media library | `pfimages`: a density-switchable gallery, the item drills to its detail panel · [`/#/pf-studio/section~sec:pf-studio/pfimages~pf:images`](/#/pf-studio/section~sec:pf-studio/pfimages~pf:images) |
+| API playground / request builder | `pfprompt`: the config column becomes stacked sections, model and options are SEGMENTS (never native selects), the composer is anchored in the FOOT · [`/#/pf-studio/section~sec:pf-studio/pfprompt~pf:prompt`](/#/pf-studio/section~sec:pf-studio/pfprompt~pf:prompt) |
+| Embedded terminal / CLI | `pfterm`: mono scrollback in the body, the PROMPT in the foot, ArrowUp history, verbs drive the workspace through the bridge · [`/#/pf-studio/section~sec:pf-studio/pfterm~pf:terminal`](/#/pf-studio/section~sec:pf-studio/pfterm~pf:terminal) |
+| Support / assistant chat | `pfchat`: the thread IS the panel body, the composer is the foot, slash commands speak the bridge · [`/#/pf-studio/section~sec:pf-studio/pfchat~pf:chat`](/#/pf-studio/section~sec:pf-studio/pfchat~pf:chat) |
+| Realtime / streaming session surface | `pfrealtime`: the live session as a panel, its controls in the foot · [`/#/pf-studio/section~sec:pf-studio/pfrealtime~pf:realtime`](/#/pf-studio/section~sec:pf-studio/pfrealtime~pf:realtime) |
+| Getting-started hub / integration launcher | `pfhub`: paste-ready recipes as rows, each drilling into the prefilled composer · [`/#/pf-studio/section~sec:pf-studio/pfhub~pf:hub`](/#/pf-studio/section~sec:pf-studio/pfhub~pf:hub) |
+| Conversion funnel report | `report`: the funnel is a BLOCK in the body; a step drills the lost or passed cohort · [`/#/ana-overview/section~sec:ana-overview/report~ana:funnel`](/#/ana-overview/section~sec:ana-overview/report~ana:funnel) |
+| Traffic sources / attribution report | `report`: sources as rows with tabular figures; a source drills its detail · [`/#/ana-overview/section~sec:ana-overview/report~ana:sources`](/#/ana-overview/section~sec:ana-overview/report~ana:sources) |
+| Revenue by segment / MRR breakdown | `report`: one dataset, the segment drills; the numbers stay mono tabular · [`/#/ana-revenue/section~sec:ana-revenue/report~ana:mrr`](/#/ana-revenue/section~sec:ana-revenue/report~ana:mrr) |
+| Forecast / projection report | `report`: the projection block plus its assumptions as rows the reader can inspect · [`/#/ana-revenue/section~sec:ana-revenue/report~ana:forecast`](/#/ana-revenue/section~sec:ana-revenue/report~ana:forecast) |
+
+Reading the table: the LEFT column is what the source app calls the screen; the RIGHT column is the
+panel type plus the grammar that makes it Stax, and the link is a live panel in the specimen (all 20
+verified today). When a source screen is not listed, convert it with the primitive table above and the
+view grammar: a screen is a PANEL, its list is a view type, its actions are the foot, its detail is a drill.
+
 ## 8 · The Shell: the chrome contract (topbar · sidebar · crumbbar)
 
 A converted app ships THIS shell — every element below is part of the transformation,
