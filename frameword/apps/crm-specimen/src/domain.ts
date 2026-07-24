@@ -88,24 +88,18 @@ export const DASHBOARDS: Dashboard[] = [
     }],
   },
   {
-    id: "analytics", label: "Analytics", glyph: "▲",
-    groups: [{
-      label: "Analytics",
-      spaces: [
-        { spaceId: "ana-overview", rootKey: "sec:ana-overview", label: "Overview" },
-        { spaceId: "ana-revenue", rootKey: "sec:ana-revenue", label: "Revenue" },
-        { spaceId: "ana-poss", rootKey: "sec:ana-poss", label: "Possibilities" },
-      ],
-    }],
-  },
-  {
     id: "platform", label: "Platform", glyph: "▣",
+    // the Analytics dashboard folded IN: a platform IS its console, its studio,
+    // its possibilities and its analytics — four faces of one product, not four
+    // products. The old ana-overview / ana-revenue demos retire with it.
     groups: [{
       label: "Platform",
       spaces: [
         { spaceId: "pf-tour", rootKey: "sec:pf-tour", label: "How it maps" },
         { spaceId: "pf-console", rootKey: "sec:pf-console", label: "Console" },
         { spaceId: "pf-studio", rootKey: "sec:pf-studio", label: "Studio" },
+        { spaceId: "ana-poss", rootKey: "sec:ana-poss", label: "Possibilities" },
+        { spaceId: "pf-analytics", rootKey: "sec:pf-analytics", label: "Analytics" },
       ],
     }],
   },
@@ -582,30 +576,7 @@ export const DOMAIN: Record<string, DomainNode> = {
   "rep:activite": { panelType: "report", title: "Sales activity", subtitle: "Last 30 days", body: "5 activities logged. A read-only panel has no action foot.",
     blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "report · M 480 · leaf. Empty of verbs by design: read-only is stated in the foot, never implied." }] },
 
-  /* ═══ ANALYTICS dashboard ═══ */
-  "sec:ana-overview": {
-    panelType: "space", title: "Overview", subtitle: "The same engine, another dashboard: the sidebar switched with it.",
-    kpis: [{ v: "€46k", l: "pipeline" }, { v: "12", l: "deals" }, { v: "37%", l: "win rate" }],
-    children: ["ana:funnel", "ana:sources"],
-    blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "Space root · L 640. Opening this dashboard replaced the previous thread (Law 1): pinned references rode across, and the sidebar swapped with it." }],
-    footActions: [{ label: "See every block live", kind: "primary", space: "ana-poss" }],
-  },
-  "ana:funnel": { panelType: "report", title: "Conversion funnel", subtitle: "Visit → lead → deal", body: "1,240 visits · 86 leads (6.9%) · 12 deals (14%). Each stage could drill into its cohort.",
-    blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "report · M 480 · leaf. In production each stage is a DrillTrigger to its cohort: see the funnel block live in Possibilities." }] },
-  "ana:sources": { panelType: "report", title: "Sources", subtitle: "Last 30 days", body: "Organic 44% · Outbound 31% · Referral 25%. A canvas panel (React Flow) would render the attribution graph.",
-    blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "report · M 480 · leaf. Relational data wants the canvas panel (XL, flexes): drilling a graph node opens its inspector as the next column." }] },
-  "sec:ana-revenue": {
-    panelType: "space", title: "Revenue", subtitle: "MRR and projection: read-only.",
-    kpis: [{ v: "€8.2k", l: "MRR" }, { v: "+12%", l: "vs June" }, { v: "€98k", l: "proj. ARR" }],
-    children: ["ana:mrr", "ana:forecast"],
-    blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "Space root · L 640. Every KPI value renders in tabular mono: numbers are never serif." }],
-  },
-  "ana:mrr": { panelType: "report", title: "MRR by plan", subtitle: "July 2026", body: "Starter €2.1k · Pro €4.6k · Enterprise €1.5k. Numbers render in the token map's tabular mono: never serif.",
-    blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "report · M 480 · leaf. A block-built version of this panel is one drill away in Possibilities (big number, stat card)." }] },
-  "ana:forecast": { panelType: "report", title: "Q4 projection", subtitle: "Median scenario", body: "€11.4k MRR by end of December if the win rate holds at 37%.",
-    blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "report · M 480 · leaf. A projection could chain one drill per scenario: depth is always available, never required." }] },
-
-  /* ═══ ANALYTICS · Possibilities: the live block gallery ═══ */
+  /* ═══ PLATFORM · Possibilities: the live block gallery ═══ */
   "sec:ana-poss": {
     panelType: "section", title: "Possibilities.", eyebrow: "Possibilities · Analytics",
     subtitle: "Every dashboard element, live: click any row to open the real interactive demo beside this list.",
@@ -954,6 +925,43 @@ DOMAIN["gl:agents"] = {
 DOMAIN["sec:canvas"] = {
   panelType: "canvas", title: "Canvas", eyebrow: "Canvas board",
   subtitle: "Your whiteboard: cards, notes, shapes, steps and connections. Multiple boards; right-click for menus; ask the agent (⌘J) to build one.",
+};
+
+/* ═══ PLATFORM · 05 Analytics: the money surfaces, on real tables ═══
+   Four collections a finance team actually lives in. Every figure is
+   self-consistent: market value equals quantity x mark, allocations sum to
+   100, notional equals quantity x price, and EBITDA equals revenue minus the
+   four cost lines on BOTH the plan and the actual. The panels are real
+   `datatable`s, so views, filters, board groups and the entity sheet all come
+   for free: analytics is not a separate widget language, it is the data
+   grammar pointed at money. */
+DOMAIN["sec:pf-analytics"] = {
+  panelType: "section", title: "Analytics.", eyebrow: "Platform · 05",
+  subtitle: "Crypto treasury, execution blotter, banking and the CFO view: four complete tables, one grammar. Drill any row and it opens as a page beside its table.",
+  kpis: [{ v: "$13.9M", l: "crypto AUM" }, { v: "$2.09M", l: "traded today" }, { v: "€100k", l: "EBITDA Jun" }],
+  blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "Section root · L 640. Each child is a real datatable: the SAME engine as the Data space, pointed at money. No chart library, no bespoke widget: a financial dashboard is tables, views and drills." }],
+  children: ["dtc:c-crypto", "dtc:c-blotter", "dtc:c-treasury", "dtc:c-cfo"],
+  footActions: [{ label: "See every block live", kind: "outline", space: "ana-poss" }],
+};
+DOMAIN["dtc:c-crypto"] = {
+  panelType: "datatable", title: "Crypto treasury", eyebrow: "Analytics · table",
+  subtitle: "6 positions · $13.87M market value · $2.69M unrealised. Custody is a first-class column: self, exchange, qualified custodian.",
+  meta: "TABLE",
+};
+DOMAIN["dtc:c-blotter"] = {
+  panelType: "datatable", title: "Trading blotter", eyebrow: "Analytics · table",
+  subtitle: "7 orders · $2.09M notional · $1,096 fees. Notional equals quantity times price on every line, and the board groups working against done.",
+  meta: "TABLE",
+};
+DOMAIN["dtc:c-treasury"] = {
+  panelType: "datatable", title: "Banking & treasury", eyebrow: "Analytics · table",
+  subtitle: "6 accounts across 3 currencies and 5 rails. Reconciliation is a status, so unmatched cash is one filter away.",
+  meta: "TABLE",
+};
+DOMAIN["dtc:c-cfo"] = {
+  panelType: "datatable", title: "CFO monthly", eyebrow: "Analytics · table",
+  subtitle: "Plan against actual, line by line, with the variance computed. EBITDA reconciles to the cost lines above it on both columns.",
+  meta: "TABLE",
 };
 
 /* system panels: reachable from the account menu & the palette, in no dashboard */

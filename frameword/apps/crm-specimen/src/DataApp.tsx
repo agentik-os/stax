@@ -67,6 +67,126 @@ const SEED: DataState = {
       calcs: { "f-mrr": "sum", "f-name": "count" },
     },
     {
+      id: "c-crypto", name: "Crypto treasury",
+      fields: [
+        { id: "k-asset", name: "Asset", type: "text", width: "s" },
+        { id: "k-venue", name: "Custody", type: "select", options: ["Self-custody", "Exchange", "Qualified custodian"], width: "m" },
+        { id: "k-qty", name: "Quantity", type: "number", width: "s" },
+        { id: "k-cost", name: "Avg cost USD", type: "number", width: "s" },
+        { id: "k-mark", name: "Mark USD", type: "number", width: "s" },
+        { id: "k-mv", name: "Market value USD", type: "number", width: "m" },
+        { id: "k-pnl", name: "Unrealised P&L USD", type: "number", width: "m" },
+        { id: "k-alloc", name: "Allocation %", type: "number", width: "s" },
+      ],
+      rows: [
+        { id: "k1", ts: now, v: { "k-asset": "BTC", "k-venue": "Qualified custodian", "k-qty": 62.5, "k-cost": 48200, "k-mark": 71400, "k-mv": 4462500, "k-pnl": 1450000, "k-alloc": 32.2 } },
+        { id: "k2", ts: now, v: { "k-asset": "ETH", "k-venue": "Qualified custodian", "k-qty": 1180, "k-cost": 2640, "k-mark": 3180, "k-mv": 3752400, "k-pnl": 637200, "k-alloc": 27.0 } },
+        { id: "k3", ts: now, v: { "k-asset": "SOL", "k-venue": "Self-custody", "k-qty": 14500, "k-cost": 138, "k-mark": 176, "k-mv": 2552000, "k-pnl": 551000, "k-alloc": 18.4 } },
+        { id: "k4", ts: now, v: { "k-asset": "USDC", "k-venue": "Exchange", "k-qty": 1850000, "k-cost": 1, "k-mark": 1, "k-mv": 1850000, "k-pnl": 0, "k-alloc": 13.3 } },
+        { id: "k5", ts: now, v: { "k-asset": "LINK", "k-venue": "Self-custody", "k-qty": 42000, "k-cost": 15.1, "k-mark": 18.4, "k-mv": 772800, "k-pnl": 138600, "k-alloc": 5.6 } },
+        { id: "k6", ts: now, v: { "k-asset": "AVAX", "k-venue": "Exchange", "k-qty": 18000, "k-cost": 31.5, "k-mark": 26.8, "k-mv": 482400, "k-pnl": -84600, "k-alloc": 3.5 } },
+      ],
+      views: [
+        { id: "v1", name: "Positions", filters: [], hidden: [] },
+        { id: "v2", name: "By custody", filters: [], hidden: ["k-cost"], groupBy: "k-venue" },
+        { id: "v3", name: "Custody board", filters: [], hidden: [], type: "board",
+          colGroups: [{ label: "Off exchange", options: ["Self-custody", "Qualified custodian"] }, { label: "On exchange", options: ["Exchange"] }] },
+      ],
+      activeView: "v1",
+      calcs: { "k-mv": "sum", "k-pnl": "sum", "k-asset": "count" },
+    },
+    {
+      id: "c-blotter", name: "Trading blotter",
+      fields: [
+        { id: "b-time", name: "Time UTC", type: "text", width: "s" },
+        { id: "b-sym", name: "Instrument", type: "text", width: "s" },
+        { id: "b-side", name: "Side", type: "select", options: ["Buy", "Sell"], width: "s" },
+        { id: "b-qty", name: "Quantity", type: "number", width: "s" },
+        { id: "b-px", name: "Price USD", type: "number", width: "s" },
+        { id: "b-notional", name: "Notional USD", type: "number", width: "m" },
+        { id: "b-venue", name: "Venue", type: "select", options: ["Coinbase", "Kraken", "Binance", "OTC desk"], width: "s" },
+        { id: "b-type", name: "Order", type: "select", options: ["Market", "Limit", "VWAP", "TWAP", "Block"], width: "s" },
+        { id: "b-fees", name: "Fees USD", type: "number", width: "s" },
+        { id: "b-status", name: "Status", type: "select", options: ["Filled", "Partial", "Cancelled"], width: "s" },
+      ],
+      rows: [
+        { id: "b1", ts: now, v: { "b-time": "09:14:02", "b-sym": "BTC-USD", "b-side": "Buy", "b-qty": 4.5, "b-px": 71180, "b-notional": 320310, "b-venue": "Coinbase", "b-type": "VWAP", "b-fees": 320, "b-status": "Filled" } },
+        { id: "b2", ts: now, v: { "b-time": "09:41:55", "b-sym": "ETH-USD", "b-side": "Sell", "b-qty": 210, "b-px": 3196, "b-notional": 671160, "b-venue": "Kraken", "b-type": "Limit", "b-fees": 168, "b-status": "Filled" } },
+        { id: "b3", ts: now, v: { "b-time": "10:02:18", "b-sym": "SOL-USD", "b-side": "Buy", "b-qty": 2400, "b-px": 174.2, "b-notional": 418080, "b-venue": "Binance", "b-type": "Market", "b-fees": 209, "b-status": "Filled" } },
+        { id: "b4", ts: now, v: { "b-time": "11:26:40", "b-sym": "AVAX-USD", "b-side": "Sell", "b-qty": 6000, "b-px": 27.05, "b-notional": 162300, "b-venue": "Kraken", "b-type": "Limit", "b-fees": 97, "b-status": "Partial" } },
+        { id: "b5", ts: now, v: { "b-time": "13:05:11", "b-sym": "LINK-USD", "b-side": "Buy", "b-qty": 8000, "b-px": 18.12, "b-notional": 144960, "b-venue": "Coinbase", "b-type": "TWAP", "b-fees": 145, "b-status": "Filled" } },
+        { id: "b6", ts: now, v: { "b-time": "14:48:29", "b-sym": "BTC-USD", "b-side": "Sell", "b-qty": 1.2, "b-px": 71640, "b-notional": 85968, "b-venue": "OTC desk", "b-type": "Block", "b-fees": 86, "b-status": "Filled" } },
+        { id: "b7", ts: now, v: { "b-time": "15:30:07", "b-sym": "ETH-USD", "b-side": "Buy", "b-qty": 90, "b-px": 3172, "b-notional": 285480, "b-venue": "Binance", "b-type": "Limit", "b-fees": 71, "b-status": "Cancelled" } },
+      ],
+      views: [
+        { id: "v1", name: "Blotter", filters: [], hidden: [] },
+        { id: "v2", name: "By venue", filters: [], hidden: ["b-time"], groupBy: "b-venue" },
+        { id: "v3", name: "Execution board", filters: [], hidden: [], type: "board",
+          colGroups: [{ label: "Working", options: ["Partial"] }, { label: "Done", options: ["Filled", "Cancelled"] }] },
+      ],
+      activeView: "v1",
+      calcs: { "b-notional": "sum", "b-fees": "sum", "b-sym": "count" },
+    },
+    {
+      id: "c-treasury", name: "Banking & treasury",
+      fields: [
+        { id: "t-acct", name: "Account", type: "text", width: "m" },
+        { id: "t-bank", name: "Bank", type: "select", options: ["BNP Paribas", "JP Morgan", "Qonto", "Wise", "Stripe"], width: "s" },
+        { id: "t-ccy", name: "Currency", type: "select", options: ["EUR", "USD", "GBP"], width: "s" },
+        { id: "t-bal", name: "Balance", type: "number", width: "m" },
+        { id: "t-avail", name: "Available", type: "number", width: "m" },
+        { id: "t-rail", name: "Rail", type: "select", options: ["SEPA", "SWIFT", "Wire", "Card", "Faster Payments"], width: "s" },
+        { id: "t-value", name: "Value date", type: "date", width: "s" },
+        { id: "t-recon", name: "Reconciliation", type: "select", options: ["Matched", "Unmatched", "Investigating"], width: "s" },
+      ],
+      rows: [
+        { id: "t1", ts: now, v: { "t-acct": "Operating EUR", "t-bank": "BNP Paribas", "t-ccy": "EUR", "t-bal": 2450000, "t-avail": 2380000, "t-rail": "SEPA", "t-value": "2026-07-24", "t-recon": "Matched" } },
+        { id: "t2", ts: now, v: { "t-acct": "Payroll EUR", "t-bank": "Qonto", "t-ccy": "EUR", "t-bal": 680000, "t-avail": 680000, "t-rail": "SEPA", "t-value": "2026-07-25", "t-recon": "Matched" } },
+        { id: "t3", ts: now, v: { "t-acct": "Operating USD", "t-bank": "JP Morgan", "t-ccy": "USD", "t-bal": 3120000, "t-avail": 2890000, "t-rail": "SWIFT", "t-value": "2026-07-24", "t-recon": "Investigating" } },
+        { id: "t4", ts: now, v: { "t-acct": "Reserve USD", "t-bank": "JP Morgan", "t-ccy": "USD", "t-bal": 5000000, "t-avail": 5000000, "t-rail": "Wire", "t-value": "2026-07-31", "t-recon": "Matched" } },
+        { id: "t5", ts: now, v: { "t-acct": "Card float", "t-bank": "Stripe", "t-ccy": "EUR", "t-bal": 145000, "t-avail": 96500, "t-rail": "Card", "t-value": "2026-07-26", "t-recon": "Unmatched" } },
+        { id: "t6", ts: now, v: { "t-acct": "GBP collections", "t-bank": "Wise", "t-ccy": "GBP", "t-bal": 410000, "t-avail": 410000, "t-rail": "Faster Payments", "t-value": "2026-07-24", "t-recon": "Matched" } },
+      ],
+      views: [
+        { id: "v1", name: "Accounts", filters: [], hidden: [] },
+        { id: "v2", name: "Reconciliation", filters: [], hidden: ["t-rail"], groupBy: "t-recon" },
+        { id: "v3", name: "By currency", filters: [], hidden: [], type: "board",
+          colGroups: [{ label: "Euro area", options: ["EUR"] }, { label: "Rest", options: ["USD", "GBP"] }] },
+      ],
+      activeView: "v1",
+      calcs: { "t-bal": "sum", "t-avail": "sum", "t-acct": "count" },
+    },
+    {
+      id: "c-cfo", name: "CFO monthly",
+      fields: [
+        { id: "c-line", name: "Line", type: "text", width: "m" },
+        { id: "c-month", name: "Month", type: "select", options: ["May 2026", "Jun 2026"], width: "s" },
+        { id: "c-plan", name: "Plan EUR", type: "number", width: "m" },
+        { id: "c-actual", name: "Actual EUR", type: "number", width: "m" },
+        { id: "c-var", name: "Variance EUR", type: "number", width: "m" },
+        { id: "c-varpct", name: "Variance %", type: "number", width: "s" },
+        { id: "c-owner", name: "Owner", type: "select", options: ["Sales", "Ops", "Engineering", "Marketing", "Finance"], width: "s" },
+        { id: "c-state", name: "Status", type: "select", options: ["Ahead", "On plan", "Behind"], width: "s" },
+      ],
+      rows: [
+        { id: "f1", ts: now, v: { "c-line": "Revenue", "c-month": "Jun 2026", "c-plan": 1250000, "c-actual": 1318000, "c-var": 68000, "c-varpct": 5.4, "c-owner": "Sales", "c-state": "Ahead" } },
+        { id: "f2", ts: now, v: { "c-line": "COGS", "c-month": "Jun 2026", "c-plan": 275000, "c-actual": 261000, "c-var": -14000, "c-varpct": -5.1, "c-owner": "Ops", "c-state": "Ahead" } },
+        { id: "f3", ts: now, v: { "c-line": "R&D opex", "c-month": "Jun 2026", "c-plan": 420000, "c-actual": 447000, "c-var": 27000, "c-varpct": 6.4, "c-owner": "Engineering", "c-state": "Behind" } },
+        { id: "f4", ts: now, v: { "c-line": "S&M opex", "c-month": "Jun 2026", "c-plan": 310000, "c-actual": 352000, "c-var": 42000, "c-varpct": 13.5, "c-owner": "Marketing", "c-state": "Behind" } },
+        { id: "f5", ts: now, v: { "c-line": "G&A opex", "c-month": "Jun 2026", "c-plan": 165000, "c-actual": 158000, "c-var": -7000, "c-varpct": -4.2, "c-owner": "Finance", "c-state": "Ahead" } },
+        { id: "f6", ts: now, v: { "c-line": "EBITDA", "c-month": "Jun 2026", "c-plan": 80000, "c-actual": 100000, "c-var": 20000, "c-varpct": 25, "c-owner": "Finance", "c-state": "Ahead" } },
+        { id: "f7", ts: now, v: { "c-line": "Net cash movement", "c-month": "Jun 2026", "c-plan": 40000, "c-actual": 62000, "c-var": 22000, "c-varpct": 55, "c-owner": "Finance", "c-state": "Ahead" } },
+      ],
+      views: [
+        { id: "v1", name: "Plan vs actual", filters: [], hidden: [] },
+        { id: "v2", name: "By owner", filters: [], hidden: ["c-month"], groupBy: "c-owner" },
+        { id: "v3", name: "Variance board", filters: [], hidden: [], type: "board",
+          colGroups: [{ label: "Favourable", options: ["Ahead"] }, { label: "Watch", options: ["On plan", "Behind"] }] },
+      ],
+      activeView: "v1",
+      calcs: { "c-plan": "sum", "c-actual": "sum", "c-line": "count" },
+    },
+    {
       id: "c-content", name: "Content calendar",
       fields: [
         { id: "g-title", name: "Title", type: "text", width: "l" },
@@ -447,9 +567,17 @@ function Cell({ colId, row, field, wrap }: { colId: string; row: Row; field: Fie
     case "date":
       return <DatePicker value={v ? String(v) : undefined} onChange={(nv) => set(nv)} />;
     case "number":
+      // money is unreadable raw: group thousands AT REST, hand back the plain
+      // number the moment the caret lands so editing stays arithmetic
       return (
-        <input className="dt-cell num" inputMode="decimal" value={v == null ? "" : String(v)}
-          onChange={(e) => set(e.target.value === "" ? undefined : Number(e.target.value) || 0)} />
+        <input className="dt-cell num" inputMode="decimal"
+          value={v == null ? "" : fly ? String(v) : Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 })}
+          onFocus={() => setFly(true)}
+          onBlur={() => setFly(false)}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/,/g, "");
+            set(raw === "" ? undefined : Number(raw) || 0);
+          }} />
       );
     default: {
       const cls = "dt-cell" + (field.type === "url" || field.type === "email" ? " url" : "");
