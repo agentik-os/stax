@@ -939,8 +939,8 @@ DOMAIN["sec:pf-analytics"] = {
   panelType: "section", title: "Analytics.", eyebrow: "Platform · 05",
   subtitle: "Crypto treasury, execution blotter, banking and the CFO view: four complete tables, one grammar. Drill any row and it opens as a page beside its table.",
   kpis: [{ v: "$13.9M", l: "crypto AUM" }, { v: "$2.09M", l: "traded today" }, { v: "€100k", l: "EBITDA Jun" }],
-  blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "Section root · L 640. Each child is a real datatable: the SAME engine as the Data space, pointed at money. No chart library, no bespoke widget: a financial dashboard is tables, views and drills." }],
-  children: ["dtc:c-crypto", "dtc:c-blotter", "dtc:c-treasury", "dtc:c-cfo"],
+  blocks: [{ kind: "row", label: "IN THE GRAMMAR", text: "Section root · L 640. A money surface is a PANEL, not a table in a trench coat: a blotter is a fill stream, a treasury is a cash ladder with a reconciliation state, a CFO close is the P&L walking down to EBITDA. Only the crypto book stays a table, because a position book genuinely is one. Still zero chart library: the bars are divs and the figures reconcile across panels." }],
+  children: ["dtc:c-crypto", "an:blotter", "an:treasury", "an:cfo"],
   footActions: [{ label: "See every block live", kind: "outline", space: "ana-poss" }],
 };
 DOMAIN["dtc:c-crypto"] = {
@@ -948,21 +948,9 @@ DOMAIN["dtc:c-crypto"] = {
   subtitle: "6 positions · $13.87M market value · $2.69M unrealised. Custody is a first-class column: self, exchange, qualified custodian.",
   meta: "TABLE",
 };
-DOMAIN["dtc:c-blotter"] = {
-  panelType: "datatable", title: "Trading blotter", eyebrow: "Analytics · table",
-  subtitle: "7 orders · $2.09M notional · $1,096 fees. Notional equals quantity times price on every line, and the board groups working against done.",
-  meta: "TABLE",
-};
-DOMAIN["dtc:c-treasury"] = {
-  panelType: "datatable", title: "Banking & treasury", eyebrow: "Analytics · table",
-  subtitle: "6 accounts across 3 currencies and 5 rails. Reconciliation is a status, so unmatched cash is one filter away.",
-  meta: "TABLE",
-};
-DOMAIN["dtc:c-cfo"] = {
-  panelType: "datatable", title: "CFO monthly", eyebrow: "Analytics · table",
-  subtitle: "Plan against actual, line by line, with the variance computed. EBITDA reconciles to the cost lines above it on both columns.",
-  meta: "TABLE",
-};
+DOMAIN["an:blotter"] = { panelType: "anblotter", title: "Trading blotter", eyebrow: "Analytics · execution", subtitle: "Every order of the session with its venue, its cost and its realised P&L." };
+DOMAIN["an:treasury"] = { panelType: "antreasury", title: "Banking and treasury", eyebrow: "Analytics · cash", subtitle: "Cash by account across three currencies, with the reconciliation state on each line." };
+DOMAIN["an:cfo"] = { panelType: "ancfo", title: "CFO monthly", eyebrow: "Analytics · close", subtitle: "June closed: the P&L walking from revenue down to EBITDA, plan against actual." };
 
 /* system panels: reachable from the account menu & the palette, in no dashboard */
 DOMAIN["sec:data"] = {

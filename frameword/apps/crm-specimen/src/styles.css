@@ -246,6 +246,8 @@ img.avatar { border: 1px solid var(--border); }
 @container (max-width: 380px) { .panel-foot > .foot-search-toggle { display: none; } }
 /* whatever survives must still fit: the deck scrolls rather than pushing */
 .panel-foot .foot-seg { min-width: 0; overflow-x: auto; scrollbar-width: none; }
+/* below the S 380 floor the deck itself yields rather than pushing the foot */
+@container (max-width: 340px) { .panel-foot .foot-seg { display: none; } }
 .panel-foot .foot-seg::-webkit-scrollbar { display: none; }
 .foot-cta { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-foreground); border-radius: 7px; padding: 9px 14px 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1; flex: none; }
 .foot-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
@@ -1458,3 +1460,102 @@ body[data-density="dense"] .panel-bar { height: 38px; }
 .ho-def { color: var(--accent); }
 .ho-blurb { font-size: calc(var(--fz-body, 13.5px) * 0.9); color: var(--ink-2); line-height: 1.45; }
 .ho-gain { color: var(--muted-foreground); }
+
+/* ── Analytics surfaces: money as a real panel, never a table in disguise ──
+   Every colour is a token. The side of a trade, the sign of a variance and the
+   state of a reconciliation are the only things allowed to carry hue. */
+
+/* the execution stream: one line per order, columns that collapse by container */
+.an-stream { display: flex; flex-direction: column; }
+.an-fill {
+  display: grid; align-items: center; gap: 8px;
+  grid-template-columns: auto 14px minmax(70px, auto) auto auto 1fr auto auto auto;
+  padding: 6px 0; border-bottom: 1px solid var(--rule-1);
+  font-size: calc(var(--fz-body, 13px) * 0.92);
+}
+.an-fill:last-child { border-bottom: 0; }
+.an-fill.void { opacity: 0.45; }
+.an-fill.void .nt { text-decoration: line-through; }
+.an-fill .t, .an-fill .vn, .an-fill .ty { color: var(--muted-foreground); font-size: calc(var(--fz-mono, 10px) * 1.02); }
+.an-fill .sd {
+  display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: 3px;
+  font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); font-weight: 600;
+}
+.an-fill .sd.buy { background: var(--success-soft); color: var(--success); }
+.an-fill .sd.sell { background: color-mix(in oklab, var(--destructive) 14%, transparent); color: var(--destructive); }
+.an-fill .sym { font-weight: 500; letter-spacing: -0.01em; }
+.an-fill .qty, .an-fill .at, .an-fill .nt, .an-fill .pl { font-variant-numeric: tabular-nums; }
+.an-fill .at { color: var(--muted-foreground); }
+.an-fill .nt { text-align: right; }
+.an-fill .pl { color: var(--success); text-align: right; min-width: 76px; }
+.an-fill .pl.neg { color: var(--destructive); }
+@container (max-width: 720px) { .an-fill .ty, .an-fill .at { display: none; } .an-fill { grid-template-columns: auto 14px minmax(64px, auto) auto 1fr auto auto; } }
+@container (max-width: 540px) { .an-fill .vn, .an-fill .t { display: none; } .an-fill { grid-template-columns: 14px 1fr auto auto auto; } }
+
+/* the cash ladder: state dot, proportional bar, pending as a signed tail */
+.an-acct {
+  display: grid; align-items: center; gap: 9px;
+  grid-template-columns: 7px minmax(90px, auto) auto 1fr auto auto;
+  padding: 7px 0; border-bottom: 1px solid var(--rule-1);
+  font-size: calc(var(--fz-body, 13px) * 0.92);
+}
+.an-acct:last-child { border-bottom: 0; }
+.an-acct .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+.an-acct .dot.unmatched { background: var(--destructive); }
+.an-acct .dot.investigating { background: var(--amber); }
+.an-acct .bk { color: var(--muted-foreground); font-size: calc(var(--fz-mono, 10px) * 1.02); }
+.an-acct .bar { height: 5px; border-radius: 3px; background: var(--secondary); overflow: hidden; min-width: 40px; }
+.an-acct .bar > span { display: block; height: 100%; background: color-mix(in oklab, var(--accent) 55%, var(--secondary)); border-radius: 3px; }
+.an-acct .v { font-variant-numeric: tabular-nums; text-align: right; }
+.an-acct .pd { color: var(--success); font-size: calc(var(--fz-mono, 10px) * 1.02); font-variant-numeric: tabular-nums; }
+.an-acct .pd.out { color: var(--muted-foreground); }
+@container (max-width: 620px) { .an-acct .bk { display: none; } .an-acct { grid-template-columns: 7px 1fr auto auto; } .an-acct .bar { display: none; } }
+
+/* the P&L walk: plan is the ghost, actual is the bar, the sign carries meaning */
+.an-pl {
+  display: grid; align-items: center; gap: 10px;
+  grid-template-columns: minmax(110px, 1.1fr) 2fr auto auto;
+  padding: 7px 0; font-size: calc(var(--fz-body, 13px) * 0.92);
+}
+.an-pl.cost .nm { padding-left: 12px; color: var(--muted-foreground); }
+.an-pl.total { border-top: 1px solid var(--rule-2); border-bottom: 1px solid var(--rule-2); font-weight: 500; }
+.an-pl .bar { position: relative; height: 14px; }
+.an-pl .bar > .plan, .an-pl .bar > .act { position: absolute; left: 0; border-radius: 2px; }
+.an-pl .bar > .plan { top: 0; height: 14px; background: var(--secondary); }
+.an-pl .bar > .act { top: 3px; height: 8px; background: color-mix(in oklab, var(--accent) 62%, var(--secondary)); }
+.an-pl .bar > .act.bad { background: color-mix(in oklab, var(--destructive) 42%, var(--secondary)); }
+.an-pl .v, .an-pl .dv { font-variant-numeric: tabular-nums; text-align: right; }
+.an-pl .dv { min-width: 82px; color: var(--success); }
+.an-pl .dv.bad { color: var(--destructive); }
+
+/* variance: a centred zero line, the bar leaves it left or right */
+.an-var {
+  display: grid; align-items: center; gap: 10px;
+  grid-template-columns: minmax(110px, 1fr) 2fr auto;
+  padding: 7px 0; font-size: calc(var(--fz-body, 13px) * 0.92);
+}
+.an-var .track { position: relative; height: 12px; background: var(--secondary); border-radius: 2px; }
+.an-var .track > .fill { position: absolute; top: 0; height: 12px; background: var(--success); border-radius: 2px; }
+.an-var .track > .fill.bad { background: var(--destructive); }
+.an-var .track > .zero { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--rule-3); }
+.an-var .dv { font-variant-numeric: tabular-nums; text-align: right; min-width: 62px; color: var(--success); }
+.an-var .dv.bad { color: var(--destructive); }
+
+/* the tie: where a figure comes from, said out loud */
+.an-tie { color: var(--muted-foreground); font-family: var(--font-sans); font-size: calc(var(--fz-mono, 10px) * 1.0); font-style: italic; }
+
+/* the venue row carries full money, not a compact usage figure: give the
+   number its own column and let the bar yield instead of the digits clipping */
+.pf-modelrow.an-venue .nm { width: 118px; }
+.pf-modelrow.an-venue .v { width: auto; min-width: 96px; }
+.pf-modelrow.an-venue .bar { min-width: 30px; }
+
+/* plan-vs-actual: the plan ghost must SURVIVE dark, it is half the comparison.
+   An outlined track reads at any luminance where a filled --secondary does not. */
+.an-pl .bar > .plan { background: transparent; box-shadow: inset 0 0 0 1px var(--rule-3); }
+/* a negative line (a loss) is hatched so its bar is never read as a gain */
+.an-pl .bar > .act.below {
+  background: repeating-linear-gradient(135deg,
+    color-mix(in oklab, var(--destructive) 38%, var(--secondary)) 0 4px,
+    color-mix(in oklab, var(--destructive) 16%, var(--secondary)) 4px 8px);
+}

@@ -243,6 +243,49 @@ panel type plus the grammar that makes it Stax, and the link is a live panel in 
 verified today). When a source screen is not listed, convert it with the primitive table above and the
 view grammar: a screen is a PANEL, its list is a view type, its actions are the foot, its detail is a drill.
 
+
+### Money surfaces: a panel, never a table in a trench coat
+
+The data grammar can express anything, and that is exactly the trap. Because a
+`datatable` CAN hold trades, cash and a P&L, it is tempting to ship three grids
+and call it a financial dashboard. That is a rationalization, not a design: the
+grammar being capable is not the same as the surface being built.
+
+Ask what the user's first question is, then build the shape that answers it.
+
+| Surface | The question | The shape |
+| --- | --- | --- |
+| Position book | "what do I hold" | a TABLE, genuinely: a row set the user edits |
+| Execution blotter | "did my orders fill, what did they cost" | a fill stream + notional by venue + a cost block |
+| Treasury | "how much can I move, what is unmatched" | a cash ladder with a state dot + open items + a rate |
+| Monthly close | "where did we land against plan" | the P&L walk, plan against actual, then cash and runway |
+
+The laws that keep such a surface honest:
+
+- **Derive, never type twice.** Totals, gross margin, EBITDA, fill rate and
+  runway are computed from the line items. Two panels sharing a figure compute it
+  from the same source, so the treasury's closing cash over the CFO's average
+  burn IS the runway the CFO prints. A number typed in two places is a lie
+  waiting for the first edit.
+- **The sign carries meaning, and costs invert it.** A revenue line above plan is
+  favourable; a cost line above plan is not. Colour from
+  `good = isCost ? delta < 0 : delta > 0`, never from the raw sign. This is the
+  most common defect in a hand-built finance view.
+- **No chart library.** Bars are divs with a percentage width against the row
+  set's own maximum. A rich money surface costs zero dependency.
+- **Tokens carry state, and dark is the harder case.** A plan ghost filled with
+  `--secondary` vanishes on a dark canvas: outline it
+  (`inset 0 0 0 1px var(--rule-3)`) so the comparison survives. A negative actual
+  gets a hatched fill so a loss is never read as a gain from bar length alone.
+- **Reserve the number's width.** A value column sized for `$1.2k` clips
+  `$10,709,250`. Let the bar yield, never the digits.
+- **Fold by container.** Drop the low-value columns at `@container` breakpoints
+  (order type and price first, then venue and timestamp) so the row survives a
+  narrow panel instead of wrapping.
+
+Live: Platform · 05 Analytics. The crypto book stays a table because a position
+book genuinely is one; the other three are panels.
+
 ## 8 · The Shell: the chrome contract (topbar · sidebar · crumbbar)
 
 A converted app ships THIS shell — every element below is part of the transformation,
