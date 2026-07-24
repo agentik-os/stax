@@ -20,9 +20,7 @@ button { outline: none; font: inherit; color: inherit; background: none; border:
 button:focus-visible { outline: 2px solid color-mix(in oklab, var(--foreground) 40%, transparent); outline-offset: 2px; border-radius: 4px; }
 button:hover:focus-visible, button:active:focus-visible { outline: none; }
 input:focus-visible, textarea:focus-visible { outline: none; }
-[data-theme="dark"] { --ink-2: oklch(0.82 0 0); --ink-4: oklch(0.58 0 0);
-  --success-soft: color-mix(in oklab, oklch(0.62 0.13 152) 18%, var(--card));
-  --amber-soft: color-mix(in oklab, oklch(0.78 0.11 60) 18%, var(--card)); }
+/* theme tokens live in tokens.css, and ONLY there (see --ink-2, --success-soft) */
 
 @keyframes panelIn { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
 @keyframes riseIn { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: none; } }
@@ -229,7 +227,26 @@ img.avatar { border: 1px solid var(--border); }
 .leaf-note { border: none; border-top: 1px solid var(--border); border-radius: 0; padding: 13px 0 0; font-size: 13px; line-height: 1.6; color: var(--ink-2); text-wrap: pretty; }
 
 /* foot — the single action zone */
-.panel-foot { flex: none; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 14px; position: relative; }
+.panel-foot { flex: none; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 14px; position: relative; flex-wrap: nowrap; container-type: inline-size; overflow: hidden; }
+
+/* THE FOOT FOLDS, IT NEVER WRAPS (measured: 4 rows at a 900px panel, the foot
+   grew from 44px to 117px). The control deck is ONE line at every width, and it
+   sheds by PRIORITY keyed on the PANEL, not the viewport, in this order:
+   the row count, then the inactive views, then the secondary action labels,
+   then the search glyph. The PRIMARY action and the gear never leave. */
+@container (max-width: 620px) { .panel-foot .foot-note { display: none; } }
+@container (max-width: 560px) {
+  .panel-foot .foot-seg button:not(.on):not(:last-child) { display: none; }
+}
+@container (max-width: 470px) {
+  /* secondary actions keep their icon and drop their words */
+  .panel-foot .foot-actions .d-btn:not(.primary) .lbl { display: none; }
+  .panel-foot .foot-actions .d-btn:not(.primary) { padding-left: 8px; padding-right: 8px; }
+}
+@container (max-width: 380px) { .panel-foot > .foot-search-toggle { display: none; } }
+/* whatever survives must still fit: the deck scrolls rather than pushing */
+.panel-foot .foot-seg { min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.panel-foot .foot-seg::-webkit-scrollbar { display: none; }
 .foot-cta { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-foreground); border-radius: 7px; padding: 9px 14px 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1; flex: none; }
 .foot-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .foot-cta.ghost { border: 1px solid var(--border); background: transparent; color: var(--ink-2); }
@@ -716,6 +733,16 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 .drill .no { width: 26px; border: none; background: transparent; border-radius: 0; display: block; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.05); font-variant-numeric: tabular-nums; color: var(--muted-foreground); flex: none; }
 /* the sidebar is its own recessed surface */
 .sidebar { background: var(--sidebar); box-shadow: 1px 0 0 oklch(0.2 0.01 80 / 0.03), 7px 0 22px -10px oklch(0.2 0.01 80 / 0.10); }
+/* THE GUTTER LAW: a panel must NEVER touch the main menu. The stage's padding
+   scrolls WITH its content, so a scrolled panel slid flush against the sidebar
+   (measured: gap 18px at rest, -272px once the stage scrolled). The sidebar now
+   casts a SOLID band of the app background over the stage's first pixels, so
+   panels disappear UNDER a permanent gutter, at rest, while scrolling and
+   during the entry animation alike. */
+.sidebar { position: relative; z-index: 6; }
+.sidebar::after { content: ""; position: absolute; top: 0; bottom: 0; left: 100%; width: var(--stage-pad, 18px); background: var(--background); pointer-events: none; }
+/* the stage is the scroller: it must paint BELOW the gutter */
+.stage { position: relative; z-index: 1; }
 [data-theme="dark"] .sidebar { box-shadow: 1px 0 0 oklch(0 0 0 / 0.3), 7px 0 22px -10px oklch(0 0 0 / 0.45); }
 /* topbar: translucent paper over the scrolling stage */
 /* no backdrop-filter here: it would make .topbar the containing block for fixed backdrops (dead click-away) */
@@ -741,7 +768,7 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 /* canvas card eyebrow sigil */
 .cv-eyebrow .sig { color: var(--accent); }
 
-.foot-actions { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+.foot-actions { display: flex; gap: 7px; align-items: center; flex-wrap: nowrap; min-width: 0; }
 /* unified foot buttons — same size, accent family, always an icon */
 .panel-foot .foot-cta, .panel-foot .d-btn {
   height: 30px; padding: 0 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;
@@ -1055,8 +1082,7 @@ a.crumb-gh { margin-right: 0; text-decoration: none; }
 
 /* status pills — one vocabulary: green live, neutral off */
 .pf-pill { display: inline-block; padding: 2px 8px 1.5px; border-radius: 999px; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.03em; }
-.pf-pill.ok { background: color-mix(in oklab, #0F7B4D 14%, var(--card)); color: #0F7B4D; box-shadow: inset 0 0 0 1px color-mix(in oklab, #0F7B4D 35%, transparent); }
-:root[data-theme="dark"] .pf-pill.ok, .dark .pf-pill.ok { color: #4ADE80; background: color-mix(in oklab, #4ADE80 12%, var(--card)); box-shadow: inset 0 0 0 1px color-mix(in oklab, #4ADE80 30%, transparent); }
+.pf-pill.ok { background: var(--success-soft); color: var(--success); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--success) 35%, transparent); }
 .pf-pill.off { background: var(--secondary); color: var(--muted-foreground); box-shadow: inset 0 0 0 1px var(--border); }
 .pf-geo { display: inline-block; padding: 2px 8px 1.5px; border-radius: 999px; background: var(--secondary); font-size: calc(var(--fz-body, 13.5px) - 2.5px); color: var(--ink-2); }
 
@@ -1093,8 +1119,7 @@ a.crumb-gh { margin-right: 0; text-decoration: none; }
 .pf-idcard .em { font-size: calc(var(--fz-mono, 10px) * 1.1); color: var(--muted-foreground); font-family: var(--font-mono); }
 
 /* billing */
-.pf-banner { display: flex; align-items: center; gap: 9px; border: 1px solid color-mix(in oklab, #0F7B4D 35%, var(--border)); background: color-mix(in oklab, #0F7B4D 9%, var(--card)); color: #0F7B4D; border-radius: 10px; padding: 9px 12px; font-size: calc(var(--fz-body, 13.5px) - 1px); margin-bottom: 14px; }
-:root[data-theme="dark"] .pf-banner, .dark .pf-banner { color: #4ADE80; border-color: color-mix(in oklab, #4ADE80 30%, var(--border)); background: color-mix(in oklab, #4ADE80 8%, var(--card)); }
+.pf-banner { display: flex; align-items: center; gap: 9px; border: 1px solid color-mix(in oklab, var(--success) 35%, var(--border)); background: color-mix(in oklab, var(--success) 9%, var(--card)); color: var(--success); border-radius: 10px; padding: 9px 12px; font-size: calc(var(--fz-body, 13.5px) - 1px); margin-bottom: 14px; }
 .pf-banner span { flex: 1; }
 .pf-banner button { color: inherit; font-size: 15px; opacity: 0.7; }
 .pf-banner button:hover { opacity: 1; }
@@ -1153,17 +1178,15 @@ a.crumb-gh { margin-right: 0; text-decoration: none; }
 
 /* service health */
 .pf-okline { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--foreground); font-size: calc(var(--fz-body, 13.5px)); margin-bottom: 12px; }
-.pf-okline .dot { width: 8px; height: 8px; border-radius: 50%; background: #0F7B4D; box-shadow: 0 0 0 3px color-mix(in oklab, #0F7B4D 20%, transparent); }
-:root[data-theme="dark"] .pf-okline .dot, .dark .pf-okline .dot { background: #4ADE80; box-shadow: 0 0 0 3px color-mix(in oklab, #4ADE80 20%, transparent); }
+.pf-okline .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px color-mix(in oklab, var(--success) 20%, transparent); }
 .pf-svc { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--card); color: var(--ink-2); }
 .pf-svc:hover { border-color: color-mix(in oklab, var(--accent) 35%, var(--border)); }
-.pf-svc > svg { color: #0F7B4D; flex: none; }
-:root[data-theme="dark"] .pf-svc > svg, .dark .pf-svc > svg { color: #4ADE80; }
+.pf-svc > svg { color: var(--success); flex: none; }
 .pf-svc .nm { flex: 1; font-weight: 500; color: var(--foreground); font-size: calc(var(--fz-body, 13.5px) - 0.5px); }
 .pf-svc .up { font-size: calc(var(--fz-mono, 10px) * 1.05); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 .pf-svc .car { color: var(--muted-foreground); font-size: 12px; }
 .pf-upbar { display: flex; align-items: center; gap: 2.5px; padding: 8px 12px 4px; flex-wrap: wrap; }
-.pf-upbar > span:not(.pf-hint) { width: 14px; height: 16px; border-radius: 3px; background: color-mix(in oklab, #0F7B4D 55%, var(--secondary)); }
+.pf-upbar > span:not(.pf-hint) { width: 14px; height: 16px; border-radius: 3px; background: color-mix(in oklab, var(--success) 55%, var(--secondary)); }
 .pf-upbar > span.warn { background: var(--accent-2, #D97706); }
 .pf-upbar .pf-hint { width: 100%; margin-top: 4px; }
 

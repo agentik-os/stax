@@ -33,7 +33,9 @@ export interface Collection {
   views: View[]; activeView: string;
   calcs?: Record<string, string>;
 }
-interface DataState { collections: Collection[] }
+interface DataState {
+  /** seed collection ids this device has already been offered (see load()) */
+  seedSeen?: string[]; collections: Collection[] }
 
 const KEY = "frameword-data";
 const now = Date.now();
@@ -219,6 +221,18 @@ function load(): DataState {
         if (!c.activeView || !c.views.some((v: View) => v.id === c.activeView)) c.activeView = c.views[0].id;
         for (const v of c.views) { v.filters ??= []; v.hidden ??= []; }
       }
+      // SHIPPING A NEW DEMO TABLE must reach a device that already has a store,
+      // without resurrecting one the user deliberately deleted. `seedSeen`
+      // records the seed ids this device has ALREADY been offered: an id absent
+      // from it is new to this build and gets added; an id present but missing
+      // from the collections was deleted on purpose and stays gone.
+      const seen: string[] = Array.isArray(raw.seedSeen) ? raw.seedSeen : [];
+      const fresh = SEED.collections.filter((sc) => !seen.includes(sc.id));
+      if (fresh.length) {
+        const have = new Set(raw.collections.map((c: Collection) => c.id));
+        raw.collections = [...raw.collections, ...fresh.filter((sc) => !have.has(sc.id))];
+      }
+      raw.seedSeen = [...new Set([...seen, ...SEED.collections.map((c) => c.id)])];
       return raw as DataState;
     }
   } catch { /* seed */ }

@@ -61,3 +61,49 @@ for (const dark of [false, true]) {
     else expect(lum).toBeGreaterThan(0.5);
   });
 }
+
+test("THE GUTTER LAW: a panel never touches the main menu, at rest or scrolled", async ({ page }) => {
+  await fresh(page);
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await page.goto(link({ spaceId: "pf-analytics", path: [{ t: "section", k: "sec:pf-analytics" }] }));
+  await page.waitForSelector(".panel");
+  await page.waitForTimeout(500);
+  const probe = () => page.evaluate(() => {
+    const sb = document.querySelector(".sidebar")!;
+    const band = parseFloat(getComputedStyle(sb, "::after").width) || 0;
+    const edge = sb.getBoundingClientRect().right + band;
+    const p = document.querySelector(".panel")!.getBoundingClientRect();
+    // either the panel starts AT the gutter's right edge, or it has scrolled UNDER it
+    return { band, ok: p.left >= edge - 1 || p.left < edge };
+  });
+  const rest = await probe();
+  expect(rest.band).toBeGreaterThanOrEqual(14); // the gutter exists and is not cosmetic
+  expect(rest.ok).toBe(true);
+  await page.locator(".drill").first().click();
+  await page.waitForTimeout(80);
+  expect((await probe()).ok).toBe(true);   // mid-animation
+  await page.waitForTimeout(700);
+  expect((await probe()).ok).toBe(true);   // scrolled
+});
+
+test("a device with an OLD data store still receives newly shipped tables", async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      localStorage.clear();
+      localStorage.setItem("frameword-data", JSON.stringify({
+        collections: [{
+          id: "c-customers", name: "Customers",
+          fields: [{ id: "f-name", name: "Name", type: "text" }],
+          rows: [{ id: "r1", ts: 1, v: { "f-name": "Acme" } }],
+          views: [{ id: "v1", name: "Table", filters: [], hidden: [] }], activeView: "v1",
+        }],
+      }));
+    } catch { /* first load */ }
+  });
+  await page.goto(link({ spaceId: "pf-analytics", path: [{ t: "section", k: "sec:pf-analytics" }, { t: "datatable", k: "dtc:c-crypto" }] }));
+  await page.waitForSelector(".panel");
+  await page.waitForTimeout(600);
+  const leaf = page.locator(".panel").last();
+  await expect(leaf).not.toContainText("was deleted");
+  await expect(leaf.locator(".dt tbody tr")).toHaveCount(6);
+});

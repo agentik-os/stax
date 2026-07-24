@@ -117,6 +117,32 @@
 
 /* ── Dark mode tokens (parallel) ─────────────────────────── */
 .dark, [data-theme="dark"] {
+  /* THE RULES MUST WHISPER. Measured before this block: --rule-1 computed to
+     luminance 0.934 on a 0.09 panel, a 7:1 hairline, so every table in dark
+     read as a white grid on black. A rule sits just ABOVE its surface, never
+     across from it: card 0.205 -> rule 0.26, the strong rule 0.32. */
+  --rule-1:               oklch(0.262 0 0);
+  --rule-2:               var(--border);
+  --rule-3:               oklch(0.325 0 0);
+  --rule-ink:             oklch(0.985 0 0);
+  /* paper tiers invert with the theme: they are SURFACES, not accents */
+  --paper-3:              oklch(0.245 0 0);
+  --paper-4:              oklch(0.285 0 0);
+  /* semantic and chart hues stay legible on a dark ground: same family,
+     lifted lightness, softs become tints of the dark surface */
+  --amber:                oklch(0.82 0.12 60);
+  --amber-soft:           color-mix(in oklab, oklch(0.82 0.12 60) 18%, oklch(0.205 0 0));
+  --success:              oklch(0.72 0.14 152);
+  --success-soft:         color-mix(in oklab, oklch(0.72 0.14 152) 18%, oklch(0.205 0 0));
+  --ink-2:                oklch(0.82 0 0);
+  --ink-4:                oklch(0.58 0 0);
+  --destructive:          oklch(0.70 0.19 27.325);
+  --destructive-foreground: oklch(0.145 0 0);
+  --chart-1:              oklch(0.72 0.16 25);
+  --chart-2:              oklch(0.82 0.12 60);
+  --chart-3:              oklch(0.66 0.15 250);
+  --chart-4:              oklch(0.72 0.14 152);
+  --chart-5:              oklch(0.64 0.07 280);
   --background:           oklch(0.145 0 0);
   --foreground:           oklch(0.985 0 0);
   --card:                 oklch(0.205 0 0);
