@@ -1,0 +1,493 @@
+<title>Stax · Le head des panneaux : 9 propositions</title>
+<style>
+  :root {
+    --bg: #fbfaf9; --card: #ffffff; --ink: #17161a; --ink-2: #46454b; --muted: #8a8790;
+    --line: #e6e3df; --line-2: #f0eeeb; --accent: oklch(0.578 0.245 27); --accent-soft: oklch(0.955 0.035 27);
+    --good: oklch(0.55 0.13 155); --shadow: 0 1px 2px rgba(20,18,16,.05), 0 12px 32px -18px rgba(20,18,16,.22);
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e0e10; --card: #17171a; --ink: #f4f2f0; --ink-2: #c3c0bd; --muted: #8c8a8f;
+      --line: #2a2a2e; --line-2: #232326; --accent: oklch(0.72 0.15 25); --accent-soft: oklch(0.30 0.06 25);
+      --good: oklch(0.72 0.13 155); --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 40px -22px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e0e10; --card: #17171a; --ink: #f4f2f0; --ink-2: #c3c0bd; --muted: #8c8a8f;
+    --line: #2a2a2e; --line-2: #232326; --accent: oklch(0.72 0.15 25); --accent-soft: oklch(0.30 0.06 25);
+    --good: oklch(0.72 0.13 155); --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 40px -22px rgba(0,0,0,.7);
+  }
+  :root[data-theme="light"] {
+    --bg: #fbfaf9; --card: #ffffff; --ink: #17161a; --ink-2: #46454b; --muted: #8a8790;
+    --line: #e6e3df; --line-2: #f0eeeb; --accent: oklch(0.578 0.245 27); --accent-soft: oklch(0.955 0.035 27);
+    --good: oklch(0.55 0.13 155); --shadow: 0 1px 2px rgba(20,18,16,.05), 0 12px 32px -18px rgba(20,18,16,.22);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
+         font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 28px 120px; }
+
+  .kicker { font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+            color: var(--accent); margin-bottom: 14px; }
+  h1 { font-family: var(--serif); font-size: clamp(34px, 5.2vw, 54px); line-height: 1.05; font-weight: 400;
+       letter-spacing: -.02em; margin: 0 0 18px; text-wrap: balance; }
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 64ch; margin: 0 0 8px; }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  h2 { font-family: var(--serif); font-size: 27px; font-weight: 400; letter-spacing: -.015em;
+       margin: 72px 0 6px; }
+  h2 + .sub { color: var(--muted); font-size: 14px; margin: 0 0 26px; max-width: 68ch; }
+
+  /* evidence numbers */
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: 0;
+           border: 1px solid var(--line); border-radius: 14px; background: var(--card);
+           box-shadow: var(--shadow); overflow: hidden; margin: 34px 0 10px; }
+  .fact { padding: 18px 20px; border-right: 1px solid var(--line); }
+  .fact:last-child { border-right: none; }
+  .fact .n { font-family: var(--mono); font-size: 28px; font-variant-numeric: tabular-nums;
+             letter-spacing: -.03em; line-height: 1.1; }
+  .fact .n.hot { color: var(--accent); }
+  .fact .l { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+             color: var(--muted); margin-top: 7px; }
+  .fact .d { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; line-height: 1.45; }
+
+  .echo { border: 1px solid var(--accent); border-left-width: 3px; border-radius: 12px; background: var(--card);
+          padding: 20px 22px; margin: 24px 0 0; box-shadow: var(--shadow); }
+  .echo h3 { margin: 0 0 8px; font-size: 15px; font-weight: 650; }
+  .echo p { margin: 0 0 10px; color: var(--ink-2); font-size: 14px; }
+  .echo .proof { font-family: var(--mono); font-size: 12px; background: var(--bg); border: 1px solid var(--line);
+                 border-radius: 8px; padding: 12px 14px; color: var(--ink-2); overflow-x: auto; white-space: pre; }
+
+  /* proposal grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 22px; margin-top: 30px; }
+  .card { border: 1px solid var(--line); border-radius: 16px; background: var(--card); overflow: hidden;
+          box-shadow: var(--shadow); display: flex; flex-direction: column; }
+  .card-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line-2); }
+  .card-num { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .1em; }
+  .card-name { font-family: var(--serif); font-size: 23px; font-weight: 400; letter-spacing: -.01em;
+               margin: 4px 0 6px; line-height: 1.15; }
+  .card-one { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+  .card-body { padding: 16px 20px 18px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+
+  /* the mini panel mockup */
+  .mock { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg);
+          font-size: 10px; user-select: none; }
+  .mock .mbar { height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 8px;
+                border-bottom: 1px solid var(--line); background: var(--card); }
+  .mock .mbar.tall { height: 32px; }
+  .mock .eyeb { font-family: var(--mono); font-size: 7.5px; letter-spacing: .1em; text-transform: uppercase;
+                color: var(--muted); white-space: nowrap; }
+  .mock .btitle { font-size: 11px; font-weight: 650; color: var(--ink); white-space: nowrap;
+                  overflow: hidden; text-overflow: ellipsis; }
+  .mock .btitle.serif { font-family: var(--serif); font-weight: 400; font-size: 13px; }
+  .mock .spacer { flex: 1; }
+  .mock .ctl { font-family: var(--mono); font-size: 7px; color: var(--muted); letter-spacing: .08em; }
+  .mock .glyph { width: 13px; height: 13px; border-radius: 4px; background: var(--accent-soft);
+                 border: 1px solid var(--accent); flex: none; }
+  .mock .mbody { padding: 9px 8px; min-height: 118px; }
+  .mock .mtitle { font-family: var(--serif); font-size: 16px; line-height: 1.1; margin-bottom: 4px; }
+  .mock .mtitle.sm { font-size: 13px; }
+  .mock .msub { font-size: 9px; color: var(--muted); line-height: 1.35; margin-bottom: 9px; }
+  .mock .mrow { display: flex; align-items: center; gap: 6px; padding: 6px 0;
+                border-bottom: 1px solid var(--line-2); }
+  .mock .mrow:last-child { border-bottom: none; }
+  .mock .mno { font-family: var(--mono); font-size: 7px; color: var(--muted); }
+  .mock .mtt { flex: 1; font-size: 9.5px; color: var(--ink); }
+  .mock .marr { color: var(--muted); font-size: 8px; }
+  .mock .mfoot { height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 8px;
+                 border-top: 1px solid var(--line); background: var(--card); }
+  .mock .pill { font-size: 8px; padding: 2px 7px; border-radius: 5px; background: var(--accent);
+                color: #fff; white-space: nowrap; }
+  .mock .meta { font-family: var(--mono); font-size: 7.5px; color: var(--muted); }
+  .mock .gained { position: relative; border-radius: 5px; text-align: center; font-family: var(--mono);
+                  font-size: 8px; color: var(--accent); padding: 6px 0; margin-bottom: 8px;
+                  letter-spacing: .05em; border: 1px dashed var(--accent); background: var(--accent-soft);
+                  font-weight: 600; }
+  .mock .spine { display: flex; }
+  .mock .spine-rail { width: 16px; border-right: 1px solid var(--line); background: var(--card);
+                      display: flex; align-items: center; justify-content: center; }
+  .mock .spine-rail span { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--mono);
+                           font-size: 7px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+
+  /* reclaim gauge */
+  .gauge { display: flex; align-items: center; gap: 10px; }
+  .gauge .track { flex: 1; height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .gauge .fill { height: 100%; background: var(--accent); border-radius: 3px; }
+  .gauge .val { font-family: var(--mono); font-size: 11px; font-variant-numeric: tabular-nums;
+                color: var(--ink); white-space: nowrap; }
+
+  dl.meta { margin: 0; display: grid; grid-template-columns: 74px 1fr; gap: 7px 12px; align-items: baseline; }
+  dl.meta dt { font-family: var(--mono); font-size: 8.5px; letter-spacing: .11em; text-transform: uppercase;
+               color: var(--muted); }
+  dl.meta dd { margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+  dl.meta dd.cost { color: var(--ink-2); }
+  dl.meta dd.cost b { color: var(--accent); font-weight: 600; }
+
+  .tagrow { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-family: var(--mono); font-size: 8.5px; letter-spacing: .08em; text-transform: uppercase;
+         border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; color: var(--muted); }
+  .tag.hot { border-color: var(--accent); color: var(--accent); }
+  .tag.safe { border-color: var(--good); color: var(--good); }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 22px; font-size: 13.5px; }
+  th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+       color: var(--muted); font-weight: 400; }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroller { overflow-x: auto; }
+
+  .reco { border: 1px solid var(--line); border-radius: 16px; background: var(--card); padding: 26px 28px;
+          box-shadow: var(--shadow); margin-top: 26px; }
+  .reco h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; margin: 0 0 10px; }
+  .reco ol { margin: 0; padding-left: 20px; }
+  .reco li { margin-bottom: 10px; color: var(--ink-2); }
+  .reco li b { color: var(--ink); }
+
+  .ask { margin-top: 30px; border-left: 3px solid var(--accent); padding: 4px 0 4px 18px; }
+  .ask p { margin: 0 0 6px; }
+  .ask .code { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+
+  footer { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--line);
+           font-family: var(--mono); font-size: 10.5px; letter-spacing: .07em; color: var(--muted); }
+
+  @media print {
+    body { background: #fff; }
+    .card, .facts, .reco, .echo { box-shadow: none; break-inside: avoid; }
+    .wrap { padding: 0; max-width: none; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="kicker">Stax · proposition de design · à valider</div>
+  <h1>Le head des panneaux mange 28% de l'écran. Neuf façons de le reprendre.</h1>
+  <p class="lede">Tu as raison, et c'est pire que tu ne le penses. Mesuré sur l'app live aujourd'hui, sur un MacBook 13 pouces : la barre (44px), le titre et sa description (75 à 122px) et le pied (44px) consomment <strong>28% de la hauteur d'un panneau</strong>, 32% sur un écran plus petit. Et 100% des drills ouvrent un panneau dont le titre répète mot pour mot la ligne que tu viens de cliquer, ligne qui reste affichée juste à côté.</p>
+
+  <div class="facts">
+    <div class="fact"><div class="n hot">28%</div><div class="l">chrome / panneau</div><div class="d">Barre 44 + head 75 à 122 + pied 44, sur MacBook 13 pouces. 32% sur 1280x700.</div></div>
+    <div class="fact"><div class="n hot">100%</div><div class="l">de redondance</div><div class="d">15 drills testés sur 15 : titre ET description identiques à la ligne cliquée.</div></div>
+    <div class="fact"><div class="n">552px</div><div class="l">chrome cumulé</div><div class="d">Un fil CRM de 4 panneaux paie quatre fois le même prix vertical.</div></div>
+    <div class="fact"><div class="n">4×</div><div class="l">identité répétée</div><div class="d">Crumbbar, eyebrow de barre, ligne parente visible, titre de corps.</div></div>
+    <div class="fact"><div class="n">233px</div><div class="l">libres dans la barre</div><div class="d">Même en panneau S 380. Les contrôles ne prennent que 105px.</div></div>
+  </div>
+
+  <div class="echo">
+    <h3>La découverte qui change tout : l'écho</h3>
+    <p>Dans une interface Miller (colonnes qui s'empilent), le parent reste à l'écran. Donc quand tu cliques une ligne, son titre et sa description sont <em>déjà affichés</em>, à 40 pixels à gauche. Le panneau enfant les réimprime en serif 27px plus une ligne grise. C'est du pur doublon, structurellement, pas par accident de contenu.</p>
+    <div class="proof">ECHO  ligne "Pivot table"          -> panneau "Pivot table"          + DESCRIPTION IDENTIQUE
+ECHO  ligne "Jo Lambert"           -> panneau "Jo Lambert"           + DESCRIPTION IDENTIQUE
+ECHO  ligne "E-commerce replatform"-> panneau "E-commerce replatform"+ DESCRIPTION IDENTIQUE
+      15/15 drills (100%) sur Blocks, Glossary, Laws, Model, Architecture</div>
+    <p style="margin: 12px 0 0;">Conséquence de design : le head n'est pas trop gros, il est souvent <strong>inutile</strong>. Un panneau racine (sans parent visible) mérite son titre editorial. Un panneau ouvert depuis une ligne, presque jamais.</p>
+  </div>
+
+  <h2>Ta vérification mécanique : oui, le titre tient dans la barre</h2>
+  <p class="sub">243 titres réels mesurés dans le graphe de contenu. Médiane 80px de large, 90e centile 167px, en sans 14px. Les contrôles de barre (‹ › PIN ×) ne coûtent que 105px, plus 26px de padding.</p>
+  <div class="scroller">
+    <table>
+      <thead><tr><th>Largeur de panneau</th><th>Place libre (eyebrow gardé)</th><th>Place libre (eyebrow devient glyphe)</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td>S 380</td><td class="n">147px</td><td class="n">233px</td><td>Médiane OK, 90e centile OK avec glyphe</td></tr>
+        <tr><td>M 480</td><td class="n">247px</td><td class="n">333px</td><td>Confortable</td></tr>
+        <tr><td>L 640</td><td class="n">407px</td><td class="n">493px</td><td>Large, place pour des méta en plus</td></tr>
+        <tr><td>XL 800</td><td class="n">567px</td><td class="n">653px</td><td>Place pour titre + KPI inline</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Les neuf propositions</h2>
+  <p class="sub">Chacune est autonome et implémentable. Les maquettes sont à l'échelle, en vrai HTML : ce que tu vois est ce que ça donnera. Les gains sont calculés depuis les mesures réelles. Certaines se combinent, je le dis à la fin.</p>
+
+  <div class="grid">
+
+    <!-- 1 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">PROPOSITION 01</div>
+        <div class="card-name">La barre-titre</div>
+        <div class="card-one">Ton idée, exécutée au propre. Le titre monte dans la barre, l'eyebrow devient un glyphe de type, la description part dans un ⓘ. Le corps commence direct sur le contenu.</div>
+      </div>
+      <div class="card-body">
+        <div class="mock">
+          <div class="mbar"><div class="glyph"></div><div class="btitle">Pivot table</div><div class="spacer"></div><div class="ctl">‹ › PIN ×</div></div>
+          <div class="mbody">
+            <div class="gained">+97px de contenu récupéré</div>
+            <div class="mrow"><span class="mno">01</span><span class="mtt">Lives in · Body (wide)</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">02</span><span class="mtt">Drill · Cell ouvre les records</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">03</span><span class="mtt">State · Derived (aggregates)</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">04</span><span class="mtt">Panel size · XL</span><span class="marr">→</span></div>
+          </div>
+          <div class="mfoot"><span class="pill">Live demo</span><span class="spacer"></span><span class="meta">⚙</span></div>
+        </div>
+        <div class="gauge"><span class="val">−97px</span><div class="track"><div class="fill" style="width:79%"></div></div><span class="val">28% → 11%</span></div>
+        <dl class="meta">
+          <dt>Éditable</dt><dd>Double-clic sur le titre de barre = renommage inline, là où le nœud t'appartient (records, vues, notes). Statique sur le contenu de domaine.</dd>
+          <dt>Débutant</dt><dd>Le ⓘ à côté du glyphe révèle la description en popover.</dd>
+          <dt>Coût</dt><dd class="cost"><b>La voix serif quitte les panneaux.</b> L'app perd sa signature editorial, elle ressemble davantage à Linear.</dd>
+        </dl>
+        <div class="tagrow"><span class="tag hot">Gain maximal</span><span class="tag">Tous types de panneaux</span></div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">PROPOSITION 02</div>
+        <div class="card-name">La loi de l'écho</div>
+        <div class="card-one">Un panneau ne répète jamais ce qui l'a ouvert. Si le parent est visible et que la ligne dit déjà le titre, le head disparaît. Les racines gardent leur head editorial complet.</div>
+      </div>
+      <div class="card-body">
+        <div class="mock">
+          <div class="mbar"><div class="eyeb">Data › block</div><div class="spacer"></div><div class="ctl">‹ › PIN ×</div></div>
+          <div class="mbody">
+            <div class="gained">head supprimé : le parent le dit déjà</div>
+            <div class="mrow"><span class="mno">01</span><span class="mtt">Lives in · Body (wide)</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">02</span><span class="mtt">Drill · Cell ouvre les records</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">03</span><span class="mtt">State · Derived (aggregates)</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">04</span><span class="mtt">Panel size · XL</span><span class="marr">→</span></div>
+          </div>
+          <div class="mfoot"><span class="pill">Live demo</span><span class="spacer"></span><span class="meta">⚙</span></div>
+        </div>
+        <div class="gauge"><span class="val">−97px</span><div class="track"><div class="fill" style="width:79%"></div></div><span class="val">sur 100% des drills</span></div>
+        <dl class="meta">
+          <dt>Éditable</dt><dd>Rien ne change : on renomme depuis la ligne parente, là où l'objet vit vraiment.</dd>
+          <dt>Débutant</dt><dd>Intact. Les racines, celles qui enseignent, gardent tout leur head.</dd>
+          <dt>Coût</dt><dd class="cost">Présence du head <b>variable</b> selon le contexte. Il faut une règle qui se sent, pas qui surprend.</dd>
+        </dl>
+        <div class="tagrow"><span class="tag safe">Zéro perte d'identité</span><span class="tag">Chirurgical</span><span class="tag safe">Risque faible</span></div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">PROPOSITION 03</div>
+        <div class="card-name">Le titre qui monte</div>
+        <div class="card-one">Le head est entier à l'arrivée, puis le titre rétrécit et se loge dans la barre dès que tu scrolles. Le motif des grands titres iOS, appliqué au panneau.</div>
+      </div>
+      <div class="card-body">
+        <div class="mock">
+          <div class="mbar"><div class="eyeb">Data ›</div><div class="btitle" style="font-size:10px">Pivot table</div><div class="spacer"></div><div class="ctl">‹ › PIN ×</div></div>
+          <div class="mbody">
+            <div class="mtitle sm" style="opacity:.28">Pivot table</div>
+            <div class="gained">↑ le titre s'envole dans la barre au scroll</div>
+            <div class="mrow"><span class="mno">02</span><span class="mtt">Drill · Cell ouvre les records</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">03</span><span class="mtt">State · Derived (aggregates)</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">04</span><span class="mtt">Panel size · XL</span><span class="marr">→</span></div>
+          </div>
+          <div class="mfoot"><span class="pill">Live demo</span><span class="spacer"></span><span class="meta">⚙</span></div>
+        </div>
+        <div class="gauge"><span class="val">−97px</span><div class="track"><div class="fill" style="width:79%"></div></div><span class="val">dès que tu travailles</span></div>
+        <dl class="meta">
+          <dt>Éditable</dt><dd>Sur le grand titre en haut de course, et sur la version barre par double-clic.</dd>
+          <dt>Débutant</dt><dd>Parfait : il voit le head complet à l'arrivée, il apprend, puis ça s'efface.</dd>
+          <dt>Coût</dt><dd class="cost">Le gain n'existe que sur les panneaux <b>qui scrollent</b>. Un panneau court garde son head.</dd>
+        </dl>
+        <div class="tagrow"><span class="tag">Motion</span><span class="tag safe">Garde le serif</span></div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">PROPOSITION 04</div>
+        <div class="card-name">Le head du seul panneau actif</div>
+        <div class="card-one">Un seul panneau porte son head : celui qui a le focus. Les autres se replient sur un titre de barre. Tu paies le head une fois, pas quatre.</div>
+      </div>
+      <div class="card-body">
+        <div class="mock">
+          <div class="mbar"><div class="glyph"></div><div class="btitle" style="font-size:10px">Acme Industries</div><div class="spacer"></div><div class="ctl">PIN ×</div></div>
+          <div class="mbody" style="min-height:52px">
+            <div class="mrow"><span class="mno">01</span><span class="mtt">Jo Lambert · Operations</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">02</span><span class="mtt">Max Verne · Procurement</span><span class="marr">→</span></div>
+          </div>
+          <div class="mbar" style="border-top:1px solid var(--line);border-bottom:none"><div class="glyph"></div><div class="btitle serif" style="font-size:13px">Jo Lambert</div><div class="spacer"></div><div class="ctl">‹ › PIN ×</div></div>
+          <div class="mbody" style="min-height:56px">
+            <div class="msub" style="margin-bottom:6px">Operations director · le panneau actif garde son head complet</div>
+            <div class="mrow"><span class="mno">01</span><span class="mtt">E-commerce replatform</span><span class="marr">→</span></div>
+          </div>
+          <div class="mfoot"><span class="pill">New opportunity</span><span class="spacer"></span><span class="meta">⚙</span></div>
+        </div>
+        <div class="gauge"><span class="val">−414px</span><div class="track"><div class="fill" style="width:88%"></div></div><span class="val">sur un fil de 4</span></div>
+        <dl class="meta">
+          <dt>Éditable</dt><dd>Sur le panneau actif, dans son head. Les autres se renomment en les activant.</dd>
+          <dt>Débutant</dt><dd>Il lit toujours le head de là où il est, c'est-à-dire là où il regarde.</dd>
+          <dt>Coût</dt><dd class="cost">Des heads qui apparaissent et disparaissent au fil du focus : à <b>calmer par la transition</b>, sinon ça saute.</dd>
+        </dl>
+        <div class="tagrow"><span class="tag hot">Meilleur gain sur pile</span><span class="tag safe">Garde le serif</span></div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">PROPOSITION 05</div>
+        <div class="card-name">La mort du sous-titre</div>
+        <div class="card-one">On ne touche pas au titre serif, on supprime la ligne de description. Elle part dans le ⓘ et dans l'index de recherche. Le titre se resserre de 27 à 24px.</div>
+      </div>
+      <div class="card-body">
+        <div class="mock">
+          <div class="mbar"><div class="eyeb">Data › block</div><div class="spacer"></div><div class="ctl">‹ › PIN ×</div></div>
+          <div class="mbody">
+            <div class="mtitle sm">Pivot table <span style="font-size:8px;color:var(--muted)">ⓘ</span></div>
+            <div class="gained">−58px : la description part dans le ⓘ</div>
+            <div class="mrow"><span class="mno">01</span><span class="mtt">Lives in · Body (wide)</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">02</span><span class="mtt">Drill · Cell ouvre les records</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">03</span><span class="mtt">State · Derived</span><span class="marr">→</span></div>
+          </div>
+          <div class="mfoot"><span class="pill">Live demo</span><span class="spacer"></span><span class="meta">⚙</span></div>
+        </div>
+        <div class="gauge"><span class="val">−58px</span><div class="track"><div class="fill" style="width:47%"></div></div><span class="val">28% → 21%</span></div>
+        <dl class="meta">
+          <dt>Éditable</dt><dd>Titre inline en place, comme aujourd'hui, sans rien déplacer.</dd>
+          <dt>Débutant</dt><dd>Le ⓘ reste, plus le tour de première visite.</dd>
+          <dt>Coût</dt><dd class="cost">La proposition la <b>moins ambitieuse</b>. Elle règle le symptôme, pas la redondance.</dd>
+        </dl>
+        <div class="tagrow"><span class="tag safe">Risque minimal</span><span class="tag safe">Une heure de travail</span></div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">PROPOSITION 06</div>
+        <div class="card-name">La barre dense</div>
+        <div class="card-one">La barre devient la bande d'identité ET de télémétrie : glyphe, titre, chiffres vivants (compte, somme, statut), contrôles. Le corps est 100% contenu.</div>
+      </div>
+      <div class="card-body">
+        <div class="mock">
+          <div class="mbar tall"><div class="glyph"></div><div class="btitle" style="font-size:10.5px">Customers</div><span class="meta">·</span><span class="meta">4 ROWS</span><span class="meta">·</span><span class="meta">MRR 4.9K</span><div class="spacer"></div><div class="ctl">‹ › PIN ×</div></div>
+          <div class="mbody">
+            <div class="gained">+97px, et les chiffres montent dans la barre</div>
+            <div class="mrow"><span class="mno">01</span><span class="mtt">Acme Industries · Scale</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">02</span><span class="mtt">Globex · Pro</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">03</span><span class="mtt">Initech · Free</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">04</span><span class="mtt">Umbra Analytics · Scale</span><span class="marr">→</span></div>
+          </div>
+          <div class="mfoot"><span class="meta">ALL · BY PLAN · PIPELINE</span><span class="spacer"></span><span class="meta">⚙</span></div>
+        </div>
+        <div class="gauge"><span class="val">−89px</span><div class="track"><div class="fill" style="width:73%"></div></div><span class="val">+ KPI gratuits</span></div>
+        <dl class="meta">
+          <dt>Éditable</dt><dd>Double-clic sur le titre de barre. Les méta sont dérivées, jamais saisies.</dd>
+          <dt>Débutant</dt><dd>Les chiffres remplacent la phrase : il comprend par la donnée, pas par le texte.</dd>
+          <dt>Coût</dt><dd class="cost">Barre <b>chargée en S 380</b> : les méta doivent tomber avant le titre.</dd>
+        </dl>
+        <div class="tagrow"><span class="tag hot">Le motif Linear</span><span class="tag">Densité pro</span></div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">PROPOSITION 07</div>
+        <div class="card-name">La première fois seulement</div>
+        <div class="card-one">Le head enseigne une fois par espace, puis se replie pour toujours. Un ⓘ le rappelle. L'app apprend au débutant et se tait pour toi.</div>
+      </div>
+      <div class="card-body">
+        <div class="mock">
+          <div class="mbar"><div class="eyeb">Blocks › doc</div><div class="btitle" style="font-size:10px">Data</div><div class="spacer"></div><div class="ctl">ⓘ ‹ › PIN ×</div></div>
+          <div class="mbody">
+            <div class="gained">vu une fois, replié pour toujours</div>
+            <div class="mrow"><span class="mno">01</span><span class="mtt">Pivot table</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">02</span><span class="mtt">Tree table</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">03</span><span class="mtt">Virtual list</span><span class="marr">→</span></div>
+            <div class="mrow"><span class="mno">04</span><span class="mtt">Timeline / feed</span><span class="marr">→</span></div>
+          </div>
+          <div class="mfoot"><span class="pill">Explain</span><span class="spacer"></span><span class="meta">⚙</span></div>
+        </div>
+        <div class="gauge"><span class="val">−97px</span><div class="track"><div class="fill" style="width:79%"></div></div><span class="val">dès la 2e visite</span></div>
+        <dl class="meta">
+          <dt>Éditable</dt><dd>Via le ⓘ déplié, ou dans la barre une fois replié.</dd>
+          <dt>Débutant</dt><dd>Expérience actuelle, intacte, au premier passage.</dd>
+          <dt>Coût</dt><dd class="cost">Deux interfaces pour deux publics : les <b>captures et la doc divergent</b> du réel.</dd>
+        </dl>
+        <div class="tagrow"><span class="tag">Progressif</span><span class="tag">État local</span></div>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">PROPOSITION 08</div>
+        <div class="card-name">La tranche verticale</div>
+        <div class="card-one">Le titre quitte le flux et devient une arête : un rail de 16px sur le bord gauche du panneau, mono vertical, couleur par type. Zéro pixel vertical.</div>
+      </div>
+      <div class="card-body">
+        <div class="mock">
+          <div class="mbar"><div class="spacer"></div><div class="ctl">‹ › PIN ×</div></div>
+          <div class="spine">
+            <div class="spine-rail"><span>Pivot table</span></div>
+            <div style="flex:1">
+              <div class="mbody" style="min-height:118px">
+                <div class="gained">−122px : le titre est sur l'arête</div>
+                <div class="mrow"><span class="mno">01</span><span class="mtt">Lives in · Body (wide)</span><span class="marr">→</span></div>
+                <div class="mrow"><span class="mno">02</span><span class="mtt">Drill · Cell ouvre les records</span><span class="marr">→</span></div>
+                <div class="mrow"><span class="mno">03</span><span class="mtt">State · Derived</span><span class="marr">→</span></div>
+                <div class="mrow"><span class="mno">04</span><span class="mtt">Panel size · XL</span><span class="marr">→</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="mfoot"><span class="pill">Live demo</span><span class="spacer"></span><span class="meta">⚙</span></div>
+        </div>
+        <div class="gauge"><span class="val">−122px</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="val">coûte 16px en largeur</span></div>
+        <dl class="meta">
+          <dt>Éditable</dt><dd>Peu naturel sur une arête : le renommage passerait par le ⌘K ou la ligne parente.</dd>
+          <dt>Débutant</dt><dd>Signature visuelle très forte, mais aucune pédagogie.</dd>
+          <dt>Coût</dt><dd class="cost">Texte pivoté : <b>lecture pénible, accessibilité faible</b>, et 16px de largeur perdus sur chaque panneau.</dd>
+        </dl>
+        <div class="tagrow"><span class="tag hot">Signature audacieuse</span><span class="tag hot">Risque élevé</span></div>
+      </div>
+    </div>
+
+    <!-- 9 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">PROPOSITION 09</div>
+        <div class="card-name">La densité comme réglage</div>
+        <div class="card-one">Trois modes livrés ensemble, mémorisés par appareil : Éditorial (aujourd'hui), Compact (titre en barre, pas de description) par défaut, Dense (barre 36px, tout en ligne).</div>
+      </div>
+      <div class="card-body">
+        <div class="mock">
+          <div class="mbar" style="height:22px"><div class="glyph" style="width:11px;height:11px"></div><div class="btitle" style="font-size:9.5px">Pivot table</div><div class="spacer"></div><div class="ctl">‹ › ×</div></div>
+          <div class="mbody" style="min-height:44px;padding:6px 8px">
+            <div class="mrow" style="padding:4px 0"><span class="mno">01</span><span class="mtt" style="font-size:9px">Lives in · Body (wide)</span><span class="marr">→</span></div>
+            <div class="mrow" style="padding:4px 0"><span class="mno">02</span><span class="mtt" style="font-size:9px">Drill · Cell ouvre les records</span><span class="marr">→</span></div>
+            <div class="mrow" style="padding:4px 0"><span class="mno">03</span><span class="mtt" style="font-size:9px">State · Derived</span><span class="marr">→</span></div>
+          </div>
+          <div class="mbar" style="height:20px;border-top:1px solid var(--line);border-bottom:none"><span class="meta">ÉDITORIAL</span><span class="meta" style="color:var(--accent)">COMPACT</span><span class="meta">DENSE</span><div class="spacer"></div><span class="meta">⚙</span></div>
+        </div>
+        <div class="gauge"><span class="val">0 à −140px</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="val">au choix</span></div>
+        <dl class="meta">
+          <dt>Éditable</dt><dd>Selon le mode : head en Éditorial, barre en Compact et Dense.</dd>
+          <dt>Débutant</dt><dd>On peut le démarrer en Éditorial et basculer quand il maîtrise.</dd>
+          <dt>Coût</dt><dd class="cost">Trois fois la surface de test. La gate de design devra <b>vérifier les trois modes</b>.</dd>
+        </dl>
+        <div class="tagrow"><span class="tag">Choix utilisateur</span><span class="tag">Convertit tous les goûts</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <h2>Ma recommandation</h2>
+  <p class="sub">Elles ne s'excluent pas. Trois d'entre elles forment un ensemble cohérent qui règle le problème à la racine sans sacrifier l'identité de Stax.</p>
+  <div class="reco">
+    <h3>Le combo 02 + 05 + 01, dans cet ordre</h3>
+    <ol>
+      <li><b>02 la loi de l'écho d'abord.</b> C'est la vraie cause. Un panneau ouvert depuis une ligne visible n'a rien à réimprimer. Gain immédiat de 97px sur 100% des drills, zéro perte d'identité, aucun risque de scanning puisque la ligne parente reste la source de vérité.</li>
+      <li><b>05 la mort du sous-titre ensuite.</b> Sur ce qui reste, c'est-à-dire les racines, la ligne de description devient un ⓘ. Les racines gardent leur grand titre serif : c'est là que la voix editorial a du sens, et c'est là que le débutant apprend.</li>
+      <li><b>01 la barre-titre en repli.</b> Quand le head disparaît (drill, scroll, focus perdu), le titre se replie dans la barre au lieu de s'évaporer : l'identité reste lisible en un coup d'oeil sur toute la pile, et devient éditable par double-clic.</li>
+    </ol>
+    <p style="margin: 14px 0 0; color: var(--ink-2);">Résultat mesuré sur le fil CRM de 4 panneaux : <b style="color:var(--ink)">552px de chrome → environ 180px</b>, le serif reste là où il porte du sens, et un débutant apprend toujours ce qu'est un espace. Les propositions 03, 04, 06, 07 sont des sur-couches qui s'ajoutent ensuite sans conflit. La 08 et la 09 sont des paris : la 08 change la silhouette du produit, la 09 triple la surface de vérification.</p>
+  </div>
+
+  <div class="ask">
+    <p><b>À toi de trancher.</b> Réponds avec les numéros que tu valides, par exemple :</p>
+    <p class="code">go 2 + 5 + 1</p>
+    <p style="color: var(--muted); font-size: 13.5px;">ou dis-moi ce que tu veux voir autrement, je remets une passe de propositions. Rien n'est codé tant que tu n'as pas validé.</p>
+  </div>
+
+  <footer>Stax · mesures prises sur l'app live le 24 juillet 2026 · MacBook 13 pouces 1440x789 et 1280x700 · 243 titres du graphe de contenu · 15 drills testés</footer>
+</div>

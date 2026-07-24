@@ -22,6 +22,7 @@ const BlockLive = lazy(() => import("./BlockLive").then((m) => ({ default: m.Blo
 import { ProfileBody, AvatarBubble, useProfile } from "./Profile";
 import { NotesRoot, TasksRoot, NoteEditor, TaskDetail, FolderPanel, notesApp, useNotesApp } from "./NotesApp";
 import { DataHome, DataTable, DataRow, dataApp, useDataApp, DtFootViews } from "./DataApp";
+import { headPlan, HEAD_LAYOUTS, DEFAULT_HEAD_LAYOUT, DEFAULT_DENSITY, type HeadLayout, type Density } from "./headLayouts";
 import { PlatformBody, PlatformFoot, pfApp, usePfApp } from "./PlatformApp";
 import { NotifBell } from "./Notifications";
 import { Flag } from "./Flags";
@@ -86,8 +87,10 @@ interface Prefs {
   titleSize: "S" | "M" | "L"; bodySize: "S" | "M" | "L"; monoSize: "S" | "M" | "L";
   accent: string; gap: "S" | "M" | "L"; pad: "S" | "M" | "L";
   crumb: boolean; dots: boolean; zoom: number; lang: string;
+  /** how every panel states its identity (the head-layout registry) */
+  headLayout: HeadLayout; density: Density;
 }
-const DEFAULT_PREFS: Prefs = { titleFont: "news", bodyFont: "inter", monoFont: "geist", titleSize: "M", bodySize: "M", monoSize: "M", accent: "default", gap: "M", pad: "M", crumb: true, dots: true, zoom: 100, lang: "en" };
+const DEFAULT_PREFS: Prefs = { titleFont: "news", bodyFont: "inter", monoFont: "geist", titleSize: "M", bodySize: "M", monoSize: "M", accent: "default", gap: "M", pad: "M", crumb: true, dots: true, zoom: 100, lang: "en", headLayout: DEFAULT_HEAD_LAYOUT, density: DEFAULT_DENSITY };
 const FZ_TITLE: Record<"S" | "M" | "L", string> = { S: "23px", M: "27px", L: "31px" };
 const FZ_BODY: Record<"S" | "M" | "L", string> = { S: "12.5px", M: "13.5px", L: "14.5px" };
 const FZ_MONO: Record<"S" | "M" | "L", string> = { S: "9px", M: "10px", L: "11px" };
@@ -354,6 +357,9 @@ function Shell() {
     r.setProperty("--fz-body", FZ_BODY[prefs.bodySize]);
     r.setProperty("--fz-mono", FZ_MONO[prefs.monoSize]);
     document.body.dataset.dots = prefs.dots ? "on" : "off";
+    // the density rhythm applies only when the layout that offers it is on
+    document.body.dataset.density = prefs.headLayout === "density" ? prefs.density : "cozy";
+    document.body.dataset.head = prefs.headLayout;
     // zoom + compensated frame height: at 80% the frame must be 125vh in zoomed
     // coordinates (= 100 real vh) or the bottom goes blank; at 120% it must shrink
     (document.body.style as CSSStyleDeclaration & { zoom: string }).zoom = prefs.zoom === 100 ? "" : prefs.zoom + "%";
@@ -1535,6 +1541,34 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
   const isCanvas = p.target.panelType === "canvas";
   const isRef = p.placement === "reference";
   const isRoot = p.role === "root";
+
+  /* ── the head layout: the panel renders its identity from a PLAN, never from
+     ad-hoc conditions. Ten treatments ship (headLayouts.ts); the app picks the
+     default, the user may override it per device. ────────────────────────── */
+  const { prefs: hPrefs } = usePrefs();
+  const layout = hPrefs.headLayout ?? DEFAULT_HEAD_LAYOUT;
+  const [scrolled, setScrolled] = useState(false);
+  const parentInst = p.parentInstanceId ? ws.state.panelsById[p.parentInstanceId] : null;
+  const parentNode = parentInst ? DOMAIN[parentInst.target.resourceKey] : null;
+  // ECHO: this panel was opened from a row of a parent that is STILL on screen,
+  // and that row already carries this title. Measured at 100% of drills.
+  const echoesParent = !!parentInst && !!parentNode?.children?.includes(p.target.resourceKey);
+  const seenKey = "frameword-head-seen";
+  const [seen] = useState(() => {
+    if (layout !== "first-run") return false;
+    try {
+      const set = new Set(JSON.parse(localStorage.getItem(seenKey) ?? "[]") as string[]);
+      const was = set.has(p.target.resourceKey);
+      if (!was) { set.add(p.target.resourceKey); localStorage.setItem(seenKey, JSON.stringify([...set].slice(-400))); }
+      return was;
+    } catch { return false; }
+  });
+  const plan = headPlan(layout, {
+    isRoot, isRef, focused: ws.state.focusedPanelId === id, echoesParent, scrolled, seen,
+    compact: !!compact, hasSubtitle: !!n.subtitle,
+  });
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   // a root is always retention:"retained": its pin state lives in `pinned`
   const retained = isRoot ? !!p.pinned : p.retention === "retained";
   // references default to S (peripheral) but the user's per-panel size
@@ -1592,7 +1626,10 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
         {compact && !isRoot && (
           <button className="bar-btn back" title="Back" onClick={() => { animateExit(id); ws.closePanel(id); }}>‹</button>
         )}
-        {(() => {
+        {plan.barGlyph && (
+          <span className="bar-glyph" title={n.panelType} aria-hidden="true"><SpaceIcon id={p.target.resourceKey} /></span>
+        )}
+        {plan.barEyebrow && (() => {
           if (n.eyebrow != null) return <span className="eyebrow">{n.eyebrow}</span>;
           const par = p.parentInstanceId ? ws.state.panelsById[p.parentInstanceId] : null;
           const pt = par ? titleOfKey(par.target.resourceKey) : null;
@@ -1605,6 +1642,37 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             </span>
           );
         })()}
+        {plan.barTitle && (() => {
+          const label = (n.title || titleOfKey(p.target.resourceKey)) as string;
+          // a title is EDITABLE where the node is the user's own: collections and
+          // folders rename in place. Domain content is authored, never renamed.
+          const rename = dc ? (v: string) => dataApp.patchCol(dc.id, { name: v })
+            : fd ? (v: string) => notesApp.renameFolder(fd.id, v) : null;
+          return renaming ? (
+            <input className="bar-title-edit" autoFocus defaultValue={label}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { const v = (e.target as HTMLInputElement).value.trim(); if (v) rename?.(v); setRenaming(false); }
+                if (e.key === "Escape") { e.stopPropagation(); setRenaming(false); }
+              }}
+              onBlur={(e) => { const v = e.target.value.trim(); if (v) rename?.(v); setRenaming(false); }} />
+          ) : (
+            <span className={"bar-title" + (rename ? " editable" : "")}
+              title={rename ? label + " — double-click to rename" : label}
+              onDoubleClick={rename ? (e) => { e.stopPropagation(); setRenaming(true); } : undefined}>{label}</span>
+          );
+        })()}
+        {plan.barMeta && (() => {
+          // LIVE numbers, derived and never authored: the row count, the first KPI
+          const bits: string[] = [];
+          if (dc) bits.push(dc.rows.length + (dc.rows.length === 1 ? " row" : " rows"));
+          else if (n.kpis?.length) bits.push(n.kpis[0].v + " " + n.kpis[0].l);
+          else if (DOMAIN[p.target.resourceKey]?.children?.length) bits.push(DOMAIN[p.target.resourceKey]!.children!.length + " items");
+          return bits.length ? <span className="bar-meta">{bits.join(" · ")}</span> : null;
+        })()}
+        {plan.info && n.subtitle && (
+          <button className="bar-info" title={n.subtitle} aria-label="About this panel"
+            onClick={(e) => { e.stopPropagation(); setInfoOpen((v) => !v); }}>ⓘ</button>
+        )}
         {isRef && <span className="badge-ref">Ref</span>}
         <div style={{ flex: 1 }} />
         {isRef ? (
@@ -1640,12 +1708,30 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
           onClick={() => { animateExit(id); ws.closePanel(id); }}>×</button>
       </div>
 
-      <div className="panel-body" style={isCanvas ? { padding: 0, overflow: "hidden" } : undefined}>
+      {plan.spine && !isCanvas && (
+        <div className="panel-spine" aria-hidden="true"><span>{n.title || titleOfKey(p.target.resourceKey)}</span></div>
+      )}
+      {infoOpen && n.subtitle && (
+        <>
+          <div className="pop-bg" onMouseDown={() => setInfoOpen(false)} />
+          <div className="head-info" role="note">{n.subtitle}</div>
+        </>
+      )}
+      <div className={"panel-body" + (plan.spine && !isCanvas ? " has-spine" : "")}
+        style={isCanvas ? { padding: 0, overflow: "hidden" } : undefined}
+        onScroll={layout === "scroll-collapse" ? (e) => {
+          const past = (e.currentTarget as HTMLElement).scrollTop > 36;
+          setScrolled((was) => (was === past ? was : past));
+        } : undefined}>
         {isCanvas && <Suspense fallback={<div className="leaf-note">Loading the canvas…</div>}><CanvasBoard panelId={id} /></Suspense>}
-        {!isCanvas && (n.title !== "" || isRef) && p.target.panelType !== "profile" && <h2 className={"panel-title" + (isRoot && !isRef ? " root" : "")} onClick={isRef ? () => deepLink(p.target.resourceKey, id) : undefined}
+        {!isCanvas && plan.bodyTitle && (n.title !== "" || isRef) && p.target.panelType !== "profile" && <h2 className={"panel-title" + (isRoot && !isRef && plan.titleScale === "root" ? " root" : "") + (plan.titleScale === "tight" ? " tight" : "")} onClick={isRef ? () => deepLink(p.target.resourceKey, id) : undefined}
           style={isRef ? { cursor: "pointer" } : undefined}
-          title={isRef ? "Reopen this thread" : undefined}>{n.title || titleOfKey(p.target.resourceKey)}</h2>}
-        {!isCanvas && n.subtitle && p.target.panelType !== "profile" && <p className="panel-sub">{n.subtitle}</p>}
+          title={isRef ? "Reopen this thread" : undefined}>{n.title || titleOfKey(p.target.resourceKey)}
+          {plan.info && n.subtitle && (
+            <button className="title-info" title={n.subtitle} aria-label="About this panel"
+              onClick={(e) => { e.stopPropagation(); setInfoOpen((v) => !v); }}>ⓘ</button>
+          )}</h2>}
+        {!isCanvas && plan.bodySub && n.subtitle && p.target.panelType !== "profile" && <p className="panel-sub">{n.subtitle}</p>}
 
         {n.kpis && (
           <div className="stats">
@@ -1932,6 +2018,39 @@ function SettingsBody() {
               if (val === "default" || /^#[0-9a-fA-F]{3,8}$/.test(val)) set({ accent: val === "default" ? "default" : val });
             }} />
         </div>
+      </div>
+      <div className="card">
+        <div className="lab">Panel head</div>
+        <p className="pop-sub" style={{ margin: "6px 0 10px", textTransform: "none", letterSpacing: 0 }}>
+          How every panel states its identity. Measured on this app: the body head cost 28% of a panel's height,
+          and every drill repeated the row that opened it. Ten treatments ship; the bar-led ones give the body back.
+        </p>
+        <div className="head-picker">
+          {HEAD_LAYOUTS.map((h) => (
+            <button key={h.id} className={"head-opt" + (prefs.headLayout === h.id ? " on" : "")}
+              onClick={() => set({ headLayout: h.id })}>
+              <span className="ho-top">
+                <span className="ho-name">{h.label}</span>
+                {h.proposal > 0 && <span className="ho-num">P{h.proposal}</span>}
+                {h.id === DEFAULT_HEAD_LAYOUT && <span className="ho-def">default</span>}
+              </span>
+              <span className="ho-blurb">{h.blurb}</span>
+              {h.reclaims > 0 && <span className="ho-gain">gives back {h.reclaims}px</span>}
+            </button>
+          ))}
+        </div>
+        {prefs.headLayout === "density" && (
+          <>
+            <div className="pop-sub" style={{ marginTop: 12 }}>Body rhythm</div>
+            <div className="wrow">
+              {(["cozy", "compact", "dense"] as const).map((d) => (
+                <button key={d} className={"wbtn" + (prefs.density === d ? " on" : "")} onClick={() => set({ density: d })}>
+                  {d[0].toUpperCase() + d.slice(1)}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
       <div className="card">
         <div className="lab">Layout</div>

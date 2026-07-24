@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.22.0
+- **U-037** (design) — The head layouts: ten identity treatments as a data registry, dense-bar by default (28% chrome to 13%)
+
 ## 0.21.0
 - **U-036** (ux) — The view deck (named saved views in the foot + board phase bands) + the field law L-FIELD + the nav-conversion table
 

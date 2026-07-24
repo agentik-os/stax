@@ -325,9 +325,42 @@ their entries — nothing blinks out.
 intents, the action registry) so agents DRIVE the workspace instead of faking
 clicks; the agent drawer's /commands speak it. Contract: agents.md M8.
 
+**THE HEAD LAYOUTS (how a panel states its identity):** measured on the live app,
+the bar (44) + body head (title 27/32px + description, 75 to 122px) + foot (44)
+spent 28% of a panel's height on a 13in laptop, 32% on a small screen; and 15
+drills out of 15 opened a panel whose title AND description repeated, verbatim,
+the row that had opened it, while that row stayed on screen beside it. In a
+Miller-column UI the parent never leaves, so a child's identity is already
+displayed: the head is not too big, it is redundant. The framework therefore
+ships TEN head treatments as a registry (`headLayouts.ts`), each a pure DATA
+plan the panel renders from (a new treatment is a row in the table, never a
+fork of the render):
+
+| id | reclaims | the treatment |
+|---|---|---|
+| **`dense-bar`** *(DEFAULT)* | 89px | The bar carries type glyph + title + LIVE numbers (row count, first KPI, child count); the body is nothing but content; the description moves to an ⓘ |
+| `echo` | 97px | A panel never repeats the row that opened it: when the parent is on screen and lists this key, the body head folds. Roots keep the full editorial head |
+| `no-subtitle` | 58px | The serif title stays and tightens (0.89x); only the description leaves |
+| `bar-title` | 97px | Title in the bar, eyebrow becomes the glyph, body starts on content |
+| `focus-only` | 97px | Only the FOCUSED panel wears its head; the others fold into their bar |
+| `scroll-collapse` | 97px | Whole head on arrival, the title flies into the bar past 36px of scroll |
+| `first-run` | 97px | The head teaches once per resourceKey (device-local, capped at 400), then folds; ⓘ brings it back |
+| `spine` | 122px | The title becomes a 26px vertical rail on the panel's left edge; the body pads to clear it; falls back to the bar title on the compact host |
+| `density` | 89px | `dense-bar` plus a body rhythm the user picks: cozy, compact, dense |
+| `editorial` | 0 | The original: eyebrow in the bar, serif title and description in the body |
+
+LAWS that bind every treatment: (1) a panel ALWAYS states its identity somewhere
+(bar title, body title, spine or eyebrow) — the gate and the e2e suite check it;
+(2) the foot stays the ONLY action zone, the bar stays navigation and identity;
+(3) the bar folds by PRIORITY under 640px — the live numbers go first, the
+eyebrow next, the title NEVER; (4) a bar title is EDITABLE (double-click, inline,
+Escape cancels) exactly where the node is the user's own (collections, folders,
+records) and static on authored content; (5) the live numbers are DERIVED, never
+authored. The app sets its default; the user may override per device in Settings.
+
 **Panels-only surfaces:** settings = a sys PANEL (appearance, fonts, accent, zoom,
-shortcuts) — never a page; profile = entity panel (fs-head name/role); language and
-theme are DEVICE-LOCAL prefs (localStorage), never navigation state.
+shortcuts, HEAD LAYOUT) — never a page; profile = entity panel (fs-head name/role);
+language and theme are DEVICE-LOCAL prefs (localStorage), never navigation state.
 
 **Backend continuity (the 80/20 law):** a migration NEVER touches the backend —
 Convex, Supabase, Prisma, REST and tRPC all survive intact; panels are a view

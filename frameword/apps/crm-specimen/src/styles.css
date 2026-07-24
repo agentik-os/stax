@@ -135,7 +135,7 @@ img.avatar { border: 1px solid var(--border); }
 .stage-empty b { color: var(--ink-2); }
 
 /* ── panel ─────────────────────────────────────────── */
-.panel { flex: none; max-width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; animation: panelIn 260ms var(--ease); box-shadow: -26px 0 50px -34px oklch(0 0 0 / 0.16), var(--shadow-2xs); }
+.panel { position: relative; flex: none; max-width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; animation: panelIn 260ms var(--ease); box-shadow: -26px 0 50px -34px oklch(0 0 0 / 0.16), var(--shadow-2xs); }
 /* dark loses the light theme's soft directional shadow: give it a denser one
    plus a one-step-lighter surface so the stack still reads as layers */
 .dark .panel, [data-theme="dark"] .panel { box-shadow: -26px 0 50px -30px oklch(0 0 0 / 0.6), var(--shadow-2xs); }
@@ -1368,3 +1368,52 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 .dtb-phase-head .lab { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); letter-spacing: 0.1em; text-transform: uppercase; color: var(--foreground); font-weight: 600; }
 .dtb-phase-head .ct { font-family: var(--font-mono); font-size: var(--fz-mono, 10px); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 .dtb-phase-cols { display: flex; min-width: 0; }
+
+/* ═══ THE HEAD LAYOUTS — the bar states the identity (headLayouts.ts) ═══
+   Measured: the body head cost 28% of a panel on a 13in laptop, and 100% of
+   drills repeated the parent row that stays visible beside them. The bar now
+   carries the glyph, the title and the live numbers; the body is content. */
+.bar-glyph { flex: none; width: 17px; height: 17px; display: grid; place-items: center; color: var(--muted-foreground); }
+.bar-glyph svg { width: 14px; height: 14px; }
+.bar-title { font-size: calc(var(--fz-body, 13.5px) * 1.03); font-weight: 600; letter-spacing: -0.005em; color: var(--foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+.bar-title.editable { cursor: text; }
+.bar-title.editable:hover { text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
+.bar-title-edit { font-size: calc(var(--fz-body, 13.5px) * 1.03); font-weight: 600; font-family: var(--font-sans); color: var(--foreground); background: transparent; border: none; border-bottom: 1px solid var(--accent); outline: none; padding: 0 0 1px; min-width: 60px; flex: 0 1 auto; }
+/* live numbers, derived and never authored: mono, quiet, first to fold */
+.bar-meta { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; flex: none; font-variant-numeric: tabular-nums; }
+.bar-meta::before { content: "·"; margin-right: 7px; color: var(--border); }
+.bar-info, .title-info { flex: none; border: none; background: transparent; color: var(--muted-foreground); font-size: 12px; line-height: 1; padding: 2px; cursor: pointer; }
+.title-info { margin-left: 8px; vertical-align: middle; font-size: 13px; }
+.bar-info:hover, .title-info:hover { color: var(--accent); }
+/* the description the body no longer prints, on demand */
+.head-info { position: absolute; top: 40px; left: 14px; right: 14px; z-index: 40; background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-lg); padding: 12px 14px; font-size: calc(var(--fz-body, 13.5px) * 0.95); color: var(--ink-2); line-height: 1.55; }
+/* RR: the bar folds by priority — meta first, then the eyebrow, never the title */
+@media (max-width: 640px) { .bar-meta { display: none; } }
+
+/* the vertical spine: the title leaves the flow and becomes an edge */
+.panel-spine { position: absolute; top: 44px; bottom: 0; left: 0; width: 26px; border-right: 1px solid var(--border); background: var(--card); display: flex; align-items: center; justify-content: center; z-index: 2; }
+.panel-spine span { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 80%; }
+.panel-body.has-spine { padding-left: 40px; }
+
+/* tightened body title, for the layouts that keep the serif but drop the line */
+.panel-title.tight { font-size: calc(var(--fz-title, 27px) * 0.89); margin-bottom: 12px; }
+
+/* P9 · the body rhythm, when the density layout is on */
+body[data-density="compact"] .drill { padding-top: 9px; padding-bottom: 9px; }
+body[data-density="compact"] .panel-body { padding-top: 14px; }
+body[data-density="dense"] .drill { padding-top: 6px; padding-bottom: 6px; }
+body[data-density="dense"] .drill .ss { display: none; }
+body[data-density="dense"] .panel-body { padding-top: 10px; }
+body[data-density="dense"] .panel-bar { height: 38px; }
+
+/* the head-layout picker: ten treatments, one is the app's default */
+.head-picker { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--border); }
+.head-opt { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; text-align: left; width: 100%; padding: 10px 0; border: none; border-bottom: 1px solid var(--border); background: transparent; cursor: pointer; transition: background 130ms var(--ease); }
+.head-opt:hover { background: var(--secondary); }
+.head-opt.on .ho-name { color: var(--accent); }
+.ho-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ho-name { font-size: calc(var(--fz-body, 13.5px) * 0.98); font-weight: 600; color: var(--foreground); }
+.ho-num, .ho-def, .ho-gain { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.92); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }
+.ho-def { color: var(--accent); }
+.ho-blurb { font-size: calc(var(--fz-body, 13.5px) * 0.9); color: var(--ink-2); line-height: 1.45; }
+.ho-gain { color: var(--muted-foreground); }

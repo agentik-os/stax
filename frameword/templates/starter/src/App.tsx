@@ -1,6 +1,10 @@
 /**
  * The starter shell: WorkspaceProvider + a horizontal stage of panels.
- * Panel anatomy: bar (eyebrow · pin · close) — body (title, subtitle, KPIs,
+ * Panel anatomy, DENSE-BAR head (the framework default, U-037): the bar states
+ * the identity (glyph, title, live numbers) and the body is content. Measured on
+ * the reference app: the old body head cost 28% of a panel's height, and every
+ * drill repeated the parent row that stays visible beside it.
+ * bar (title · numbers · pin · close) — body (KPIs,
  * drills) — foot (the ONLY action zone). See DESIGN-SPEC.md for the contract.
  */
 import {
@@ -32,7 +36,9 @@ function Panel({ id }: { id: string }) {
       style={{ width: panelWidth(REGISTRY, p, isRef ? "S" : undefined) }}
       onMouseDown={() => { if (!isRef && ws.state.focusedPanelId !== id) ws.focusPanel(id); }}>
       <div className="panel-bar">
-        <span className="eyebrow">{n.eyebrow ?? n.panelType}</span>
+        {/* the identity lives HERE: title first, derived numbers after */}
+        <span className="bar-title">{n.title}</span>
+        {kids.length > 0 && <span className="bar-meta">{kids.length} items</span>}
         <div style={{ flex: 1 }} />
         {!isRef && (
           <button className={"pin-btn" + (retained ? " on" : "")}
@@ -41,8 +47,9 @@ function Panel({ id }: { id: string }) {
         <button className="bar-btn" title="Close" onClick={() => ws.closePanel(id)}>×</button>
       </div>
       <div className="panel-body">
-        <h2 className="panel-title">{n.title}</h2>
-        {n.subtitle && <p className="panel-sub">{n.subtitle}</p>}
+        {/* a ROOT still teaches: the editorial head belongs where there is no
+            parent row to echo. Drills go straight to content. */}
+        {!p.parentInstanceId && n.subtitle && <p className="panel-sub">{n.subtitle}</p>}
         {n.kpis && (
           <div className="stats">
             {n.kpis.map((k) => (

@@ -57,6 +57,14 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .drill:hover .arr { color: var(--accent); transform: translateX(-10px); }
 .drill:active .arr { transform: translateX(-6px); }
 
+/* THE HEAD: the bar states the identity (dense-bar, the framework default).
+   The body head cost 28% of a panel and repeated the visible parent row. */
+.bar-title { font-size: calc(var(--fz-body, 13.5px) * 1.03); font-weight: 600; letter-spacing: -0.005em; color: var(--foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+.bar-meta { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; flex: none; font-variant-numeric: tabular-nums; }
+.bar-meta::before { content: "·"; margin-right: 7px; color: var(--border); }
+/* the bar folds by PRIORITY: numbers first, the title never */
+@media (max-width: 640px) { .bar-meta { display: none; } }
+
 /* the foot: the ONLY action zone — one accent primary, quiet secondaries */
 .panel-foot { flex: none; min-height: 44px; display: flex; align-items: center; gap: 7px; padding: 6px 14px; background: var(--secondary); border-top: 1px solid var(--border); }
 .foot-cta { height: 30px; padding: 0 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; background: var(--accent); border: 1px solid var(--accent); color: var(--accent-foreground); }

@@ -215,6 +215,12 @@
       "since": "0.21.0",
       "area": "ux",
       "title": "The view deck (named saved views in the foot + board phase bands) + the field law L-FIELD + the nav-conversion table"
+    },
+    {
+      "id": "U-037",
+      "since": "0.22.0",
+      "area": "design",
+      "title": "The head layouts: ten identity treatments as a data registry, dense-bar by default (28% chrome to 13%)"
     }
   ]
 }
