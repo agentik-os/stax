@@ -217,32 +217,80 @@ open the link, read the panel, copy the grammar. A migration should never improv
 
 | Legacy screen | Stax target (live reference) |
 |---|---|
-| API keys / tokens page (create, reveal once, roll, revoke) | `pfkeys`: a `.dt` of keys with masked secrets, a REVEAL-ONCE dialog on creation (the secret is never re-shown), roll and revoke as row actions, the row drills to the key's panel · [`/#/pf-console/section~sec:pf-console/pfkeys~pf:keys`](/#/pf-console/section~sec:pf-console/pfkeys~pf:keys) |
-| Team / members / seats page with invitations | `pfpeople`: ONE segmented collection (members + pending invitations), the invite composer in the FOOT, role as segments per row, owner-guarded destructive actions · [`/#/pf-console/section~sec:pf-console/pfpeople~pf:people`](/#/pf-console/section~sec:pf-console/pfpeople~pf:people) |
-| Projects / environments / workspaces switcher page | `pfprojects`: rows carrying geography, retention and spend; create in the foot, archive from the detail · [`/#/pf-console/section~sec:pf-console/pfprojects~pf:projects`](/#/pf-console/section~sec:pf-console/pfprojects~pf:projects) |
-| Billing page (plan, payment method, invoices) | `pfbilling`: credit balance + auto-recharge in the body, sub-pages as DRILLS (payment methods, billing history) — the hub pattern, never tabs · [`/#/pf-console/section~sec:pf-console/pfbilling~pf:billing`](/#/pf-console/section~sec:pf-console/pfbilling~pf:billing) |
-| Usage / metering / consumption charts | `pfusage`: a range switcher as foot segments over one dataset, mono tabular figures, the chart is a block not a page · [`/#/pf-console/section~sec:pf-console/pfusage~pf:usage`](/#/pf-console/section~sec:pf-console/pfusage~pf:usage) |
-| Rate limits / quotas / spend caps | `pflimits`: threshold rows with inline edit, the alert address as a field, never a modal · [`/#/pf-console/section~sec:pf-console/pflimits~pf:limits`](/#/pf-console/section~sec:pf-console/pflimits~pf:limits) |
-| Live log stream / event console | `pflogs`: append-only mono scrollback with level colours, a line drills to its error context · [`/#/pf-console/section~sec:pf-console/pflogs~pf:logs`](/#/pf-console/section~sec:pf-console/pflogs~pf:logs) |
-| Service status / health page | `pfhealth`: component rows with state dots (accent ramp, never green), incident history as drills · [`/#/pf-console/section~sec:pf-console/pfhealth~pf:health`](/#/pf-console/section~sec:pf-console/pfhealth~pf:health) |
-| Security / audit / access review | `pfsecurity`: posture rows with a state per control; the evidence drills out of the row · [`/#/pf-console/section~sec:pf-console/pfsecurity~pf:security`](/#/pf-console/section~sec:pf-console/pfsecurity~pf:security) |
-| Data controls / retention / privacy toggles | `pfcontrols`: switch rows with their consequence written beside them, saved on flip · [`/#/pf-console/section~sec:pf-console/pfcontrols~pf:controls`](/#/pf-console/section~sec:pf-console/pfcontrols~pf:controls) |
-| Asset / media library | `pfimages`: a density-switchable gallery, the item drills to its detail panel · [`/#/pf-studio/section~sec:pf-studio/pfimages~pf:images`](/#/pf-studio/section~sec:pf-studio/pfimages~pf:images) |
-| API playground / request builder | `pfprompt`: the config column becomes stacked sections, model and options are SEGMENTS (never native selects), the composer is anchored in the FOOT · [`/#/pf-studio/section~sec:pf-studio/pfprompt~pf:prompt`](/#/pf-studio/section~sec:pf-studio/pfprompt~pf:prompt) |
-| Embedded terminal / CLI | `pfterm`: mono scrollback in the body, the PROMPT in the foot, ArrowUp history, verbs drive the workspace through the bridge · [`/#/pf-studio/section~sec:pf-studio/pfterm~pf:terminal`](/#/pf-studio/section~sec:pf-studio/pfterm~pf:terminal) |
-| Support / assistant chat | `pfchat`: the thread IS the panel body, the composer is the foot, slash commands speak the bridge · [`/#/pf-studio/section~sec:pf-studio/pfchat~pf:chat`](/#/pf-studio/section~sec:pf-studio/pfchat~pf:chat) |
-| Realtime / streaming session surface | `pfrealtime`: the live session as a panel, its controls in the foot · [`/#/pf-studio/section~sec:pf-studio/pfrealtime~pf:realtime`](/#/pf-studio/section~sec:pf-studio/pfrealtime~pf:realtime) |
-| Getting-started hub / integration launcher | `pfhub`: paste-ready recipes as rows, each drilling into the prefilled composer · [`/#/pf-studio/section~sec:pf-studio/pfhub~pf:hub`](/#/pf-studio/section~sec:pf-studio/pfhub~pf:hub) |
-| Conversion funnel report | `report`: the funnel is a BLOCK in the body; a step drills the lost or passed cohort · [`/#/ana-overview/section~sec:ana-overview/report~ana:funnel`](/#/ana-overview/section~sec:ana-overview/report~ana:funnel) |
-| Traffic sources / attribution report | `report`: sources as rows with tabular figures; a source drills its detail · [`/#/ana-overview/section~sec:ana-overview/report~ana:sources`](/#/ana-overview/section~sec:ana-overview/report~ana:sources) |
-| Revenue by segment / MRR breakdown | `report`: one dataset, the segment drills; the numbers stay mono tabular · [`/#/ana-revenue/section~sec:ana-revenue/report~ana:mrr`](/#/ana-revenue/section~sec:ana-revenue/report~ana:mrr) |
-| Forecast / projection report | `report`: the projection block plus its assumptions as rows the reader can inspect · [`/#/ana-revenue/section~sec:ana-revenue/report~ana:forecast`](/#/ana-revenue/section~sec:ana-revenue/report~ana:forecast) |
+| API keys / tokens page (create, reveal once, roll, revoke) | `pfkeys`: a `.dt` of keys with masked secrets, a REVEAL-ONCE dialog on creation (the secret is never re-shown), roll and revoke as row actions, the row drills to the key's panel · [`/#/console/keys`](/#/console/keys) |
+| Team / members / seats page with invitations | `pfpeople`: ONE segmented collection (members + pending invitations), the invite composer in the FOOT, role as segments per row, owner-guarded destructive actions · [`/#/console/people`](/#/console/people) |
+| Projects / environments / workspaces switcher page | `pfprojects`: rows carrying geography, retention and spend; create in the foot, archive from the detail · [`/#/console/projects`](/#/console/projects) |
+| Billing page (plan, payment method, invoices) | `pfbilling`: credit balance + auto-recharge in the body, sub-pages as DRILLS (payment methods, billing history) — the hub pattern, never tabs · [`/#/console/billing`](/#/console/billing) |
+| Usage / metering / consumption charts | `pfusage`: a range switcher as foot segments over one dataset, mono tabular figures, the chart is a block not a page · [`/#/console/usage`](/#/console/usage) |
+| Rate limits / quotas / spend caps | `pflimits`: threshold rows with inline edit, the alert address as a field, never a modal · [`/#/console/limits`](/#/console/limits) |
+| Live log stream / event console | `pflogs`: append-only mono scrollback with level colours, a line drills to its error context · [`/#/console/logs`](/#/console/logs) |
+| Service status / health page | `pfhealth`: component rows with state dots (accent ramp, never green), incident history as drills · [`/#/console/health`](/#/console/health) |
+| Security / audit / access review | `pfsecurity`: posture rows with a state per control; the evidence drills out of the row · [`/#/console/security`](/#/console/security) |
+| Data controls / retention / privacy toggles | `pfcontrols`: switch rows with their consequence written beside them, saved on flip · [`/#/console/controls`](/#/console/controls) |
+| Asset / media library | `pfimages`: a density-switchable gallery, the item drills to its detail panel · [`/#/studio/images`](/#/studio/images) |
+| API playground / request builder | `pfprompt`: the config column becomes stacked sections, model and options are SEGMENTS (never native selects), the composer is anchored in the FOOT · [`/#/studio/prompt`](/#/studio/prompt) |
+| Embedded terminal / CLI | `pfterm`: mono scrollback in the body, the PROMPT in the foot, ArrowUp history, verbs drive the workspace through the bridge · [`/#/studio/terminal`](/#/studio/terminal) |
+| Support / assistant chat | `pfchat`: the thread IS the panel body, the composer is the foot, slash commands speak the bridge · [`/#/studio/chat`](/#/studio/chat) |
+| Realtime / streaming session surface | `pfrealtime`: the live session as a panel, its controls in the foot · [`/#/studio/realtime`](/#/studio/realtime) |
+| Getting-started hub / integration launcher | `pfhub`: paste-ready recipes as rows, each drilling into the prefilled composer · [`/#/studio/hub`](/#/studio/hub) |
+| Conversion funnel report | `report`: the funnel is a BLOCK in the body; a step drills the lost or passed cohort · [`/#/analytics/cfo`](/#/analytics/cfo) |
+| Traffic sources / attribution report | `report`: sources as rows with tabular figures; a source drills its detail · [`/#/console/usage`](/#/console/usage) |
+| Revenue by segment / MRR breakdown | `report`: one dataset, the segment drills; the numbers stay mono tabular · [`/#/analytics/treasury`](/#/analytics/treasury) |
+| Forecast / projection report | `report`: the projection block plus its assumptions as rows the reader can inspect · [`/#/analytics/cfo`](/#/analytics/cfo) |
 
 Reading the table: the LEFT column is what the source app calls the screen; the RIGHT column is the
 panel type plus the grammar that makes it Stax, and the link is a live panel in the specimen (all 20
 verified today). When a source screen is not listed, convert it with the primitive table above and the
 view grammar: a screen is a PANEL, its list is a view type, its actions are the foot, its detail is a drill.
 
+
+
+### The shape router: pick the layout from what the data IS
+
+The pattern table above answers "this screen exists, copy it". The shape router
+answers the harder question, the one that comes up on every domain surface a
+conversion touches: "nobody has built this, what should it look like?"
+
+The failure it prevents is specific and it has happened here. The data grammar
+can hold anything, so the path of least resistance is to point a `datatable` at
+the domain and call the grammar's flexibility a design decision. Nineteen
+identical grids is not a dashboard, and "the same engine, pointed at money" is
+a rationalization, not a rationale.
+
+Ask what the user's FIRST question is, then pick the shape that answers it.
+
+| the data is | shape | live |
+| --- | --- | --- |
+| a row set the user EDITS | `grid` | /#/analytics/c-crypto |
+| events in time | `stream` | /#/analytics/blotter |
+| entities compared by magnitude, each with a state | `ladder` | /#/analytics/treasury |
+| a computation descending to a result | `walk` | /#/analytics/cfo |
+| a quantity consumed over time, with a breakdown | `metered` | /#/console/usage |
+| consumption against a ceiling the user set | `quota` | /#/console/limits |
+| things that are up or down | `status-rows` | /#/console/health |
+| append-only lines carrying a level | `severity-log` | /#/console/logs |
+| a session the user drives by typing | `scrollback` | /#/studio/terminal |
+| a turn-taking conversation | `thread` | /#/studio/chat |
+| a configuration object with sections | `config-stack` | /#/studio/prompt |
+| mutually exclusive choices with consequences | `policy-choice` | /#/console/controls |
+| credentials | `secret-list` | /#/console/keys |
+| people with roles | `roster` | /#/console/people |
+| visual artifacts | `gallery` | /#/studio/images |
+| a launcher | `hub` | /#/studio/hub |
+| items moving through phases | `board` | /#/tasks |
+| one object's fields | `sheet` | /#/crm/acme |
+| a graph | `canvas` | /#/canvas/canvas |
+
+`stax-migrate shapes [query]` prints each one with the grammar to build, the
+capability it demonstrates, and the anti-pattern it prevents. Every reference is
+gated: `e2e/catalogs.spec.ts` asserts that all thirty nine catalog links open a
+real, populated panel, because four of them silently rotted once and nobody
+noticed for months.
+
+THE RULE: `grid` is one shape of nineteen, correct only when the user edits the
+rows. If the first question is "what happened", "how do these compare" or "where
+did we land", the answer is `stream`, `ladder` or `walk`. A surface matching no
+shape is a real finding worth writing down, not a licence to default to a table.
 
 ### Money surfaces: a panel, never a table in a trench coat
 

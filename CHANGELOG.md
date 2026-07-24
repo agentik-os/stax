@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.26.0
+- **U-041** (migration) — The shape router: 19 shapes keyed on what the data IS, wired into the mapping phase, plus e2e gates so no catalog reference and no CLI command can silently rot
+
 ## 0.25.0
 - **U-040** (engine) — Readable URLs: an injectable SlugCodec turns #/pf-analytics/section~sec:pf-analytics/anblotter~an:blotter into #/analytics/blotter, with three decode forms and self-normalising old links
 

@@ -992,6 +992,43 @@ function cmdPatterns(query, flags) {
   console.log(dim(`\n  ${hits.length} pattern(s) · open the reference and copy its grammar, never improvise a proven screen.`));
 }
 
+/**
+ * `shapes` — the SHAPE ROUTER. patterns maps a known SaaS SCREEN to a panel
+ * type; this maps the DATA ITSELF to the layout that answers the user's first
+ * question about it. It exists because the default failure of a conversion is
+ * to render every domain surface as a table: the grammar CAN hold anything, so
+ * nothing gets designed. Each entry names the anti-pattern it prevents.
+ */
+function cmdShapes(query, flags) {
+  const p = new URL("./shapes.json", import.meta.url);
+  let cat;
+  try { cat = JSON.parse(fs.readFileSync(p, "utf8")); }
+  catch { die("shapes.json missing from this install"); }
+  const q = String(query ?? "").toLowerCase().trim();
+  const hits = q
+    ? cat.shapes.filter((x) => (x.id + " " + x.dataIs + " " + x.shape + " " + x.proves).toLowerCase().includes(q))
+    : cat.shapes;
+  if (flags.json) { console.log(JSON.stringify({ query: q || null, count: hits.length, shapes: hits }, null, 1)); return; }
+  if (!hits.length) {
+    console.log(`no shape matches "${query}".`);
+    console.log(dim("  Describe what the data IS, not what the old screen was called:"));
+    console.log(dim("  events in time, entities by magnitude, a computation, a session, a config object, a graph."));
+    process.exitCode = 1;
+    return;
+  }
+  console.log(bold(mag("stax shapes")) + dim(q ? ` \u00b7 "${q}"` : " \u00b7 pick the shape from what the data IS, never from habit"));
+  for (const h of hits) {
+    console.log("\n  " + bold(h.id));
+    console.log("  " + dim("use when ") + h.dataIs);
+    console.log("  " + dim("build    ") + h.shape.replace(/`/g, ""));
+    console.log("  " + dim("proves   ") + h.proves);
+    console.log("  " + dim("NOT      ") + h.antiPattern);
+    console.log("  " + dim("live     ") + cyan(h.reference));
+  }
+  console.log(dim(`\n  ${hits.length} shape(s) \u00b7 open the reference, read its source, copy the grammar.`));
+  console.log(dim("  A table is one shape among nineteen, correct only when the user EDITS the rows."));
+}
+
 function cmdHelp() {
   console.log(`
 ${bold(mag("stax-migrate"))} — any legacy web app → the Stax panels-inside-panels grammar
@@ -1017,6 +1054,22 @@ ${bold("USAGE")}
   stax-migrate ${cyan("data")}   scan [dir] [--write]    PROGRAMMATIC backend extraction: Convex, Supabase,
                                         Prisma, REST routes, tRPC — tables, functions, rpc, realtime,
                                         every read/write call site, file:line evidence → data-matrix.csv
+  ${bold("THE GATES")} — run these, do not eyeball
+  stax-migrate ${cyan("verify")} --url <app> [--themes light,dark]
+                                        the DESIGN gate: drives the running app and asserts the
+                                        laws (interior margins, rhythm, the 44px foot, tokenized
+                                        fields, canvas luminance in dark). Exit 1 on any breach.
+  stax-migrate ${cyan("parity")} [dir]                       the FEATURE gate: the migrated app against the legacy
+                                        one, route by route, on the golden path
+  stax-migrate ${cyan("doctor")} [dir]                       adoption health: what is wired, what drifted, what is
+                                        still improvised
+  stax-migrate ${cyan("theme")}  --from <hex> [dir]          derive the whole token set from one brand colour
+
+  stax-migrate ${cyan("shapes")}   [query] [--json]      the SHAPE ROUTER: what the data IS (events in time,
+                                        entities by magnitude, a computation, a session, a config
+                                        object, a graph) → the layout that answers it, the anti-pattern
+                                        it prevents, and a LIVE panel to copy. Read this BEFORE
+                                        rendering any domain surface: a table is one shape of nineteen.
   stax-migrate ${cyan("data")}   check [dir] [--json]    the mechanical gate: every non-internal row bound,
                                         every writable row has its write_path, zero code-vs-matrix drift
                                         (--json on scan/check: machine-readable output for CI and agents)
@@ -1139,6 +1192,9 @@ async function main() {
         break;
       case "patterns":
         cmdPatterns(pos.join(" "), flags);
+        break;
+      case "shapes":
+        cmdShapes(pos.join(" "), flags);
         break;
       case "data": {
         const sub = ["scan", "check"].includes(pos[0]) ? pos[0] : "scan";

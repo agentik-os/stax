@@ -43,6 +43,71 @@ Apply these rules DETERMINISTICALLY — never invent a new pattern:
 | settings / preferences | `sys/<section>` — a sys panel drilled from the Space root, never a separate page |
 | table / data view | `data-panel/<entity>-table` — an XL data panel with a filter toolbar |
 
+## Before you write a mapping row, ASK THE TWO CATALOGS
+
+The table above resolves the NAVIGATION (where does this open). It says nothing
+about the SHAPE (what does it look like inside), and that gap is where a
+conversion goes wrong: the data grammar can hold anything, so a tired agent maps
+every domain surface to `data-panel/<entity>-table` and ships nineteen identical
+grids. The framework can already do better, and it can prove it, so ask it.
+
+### 1. Is this a screen the framework already PROVES?
+
+```
+node {{CLI}} patterns "<what the legacy screen is called>"
+```
+
+Twenty console and analytics screens are covered: API keys, team and seats,
+projects, billing, usage, rate limits, logs, service health, security review,
+data controls, media library, request builder, terminal, support chat, realtime,
+onboarding hub, funnel, attribution, revenue by segment, forecast. A hit gives
+you the panel type, the exact grammar, and a LIVE reference panel. Open the
+reference, read its source, copy it. Never improvise a screen the framework
+already ships.
+
+Exit 1 means no match, which is not a failure: continue to the shape router.
+
+### 2. What SHAPE does this data want?
+
+```
+node {{CLI}} shapes                       # the whole router
+node {{CLI}} shapes "events in time"      # or describe the data
+```
+
+Nineteen shapes, each keyed on what the data IS rather than what the old screen
+was called, each with a live reference and the anti-pattern it prevents:
+
+| the data is | the shape |
+|---|---|
+| a row set the user EDITS | `grid` |
+| events in time | `stream` |
+| entities compared by magnitude, each with a state | `ladder` |
+| a computation descending to a result | `walk` |
+| a quantity consumed over time, with a breakdown | `metered` |
+| consumption against a ceiling the user set | `quota` |
+| things that are up or down | `status-rows` |
+| append-only lines carrying a level | `severity-log` |
+| a session the user drives by typing | `scrollback` |
+| a turn-taking conversation | `thread` |
+| a configuration object with sections | `config-stack` |
+| mutually exclusive choices with consequences | `policy-choice` |
+| credentials | `secret-list` |
+| people with roles | `roster` |
+| visual artifacts | `gallery` |
+| a launcher | `hub` |
+| items moving through phases | `board` |
+| one object's fields | `sheet` |
+| a graph | `canvas` |
+
+THE RULE: `grid` is one shape of nineteen, correct ONLY when the user edits the
+rows. If the user's first question is "what happened", "how do these compare",
+or "where did we land", the answer is `stream`, `ladder` or `walk`, never a
+table. Write the chosen shape into the row's `evidence` column, like
+`shape: ladder (entities by magnitude)`, so phase 5 and the reviewer can check it.
+
+A surface that matches NO shape is a real finding: say so in the decision log
+rather than defaulting to a grid. Nineteen shapes is a catalog, not a ceiling.
+
 ## Size grammar (the `size` column: S, M, L, XL)
 
 - S  — confirm, or a 1-3 field form

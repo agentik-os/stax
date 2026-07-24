@@ -239,6 +239,12 @@
       "since": "0.25.0",
       "area": "engine",
       "title": "Readable URLs via an injectable SlugCodec \u2014 the space root is implied, the public surface wins a contested slug"
+    },
+    {
+      "id": "U-041",
+      "since": "0.26.0",
+      "area": "migration",
+      "title": "The shape router (19 shapes keyed on what the data IS) + a gate so the catalogs and the CLI surface cannot rot"
     }
   ]
 }

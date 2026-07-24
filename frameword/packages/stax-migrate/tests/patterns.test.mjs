@@ -20,7 +20,9 @@ test("the catalog carries every console and analytics screen, each with a live r
   assert.equal(cat.patterns.length, 20);
   for (const p of cat.patterns) {
     assert.ok(p.legacy.length > 8, p.legacy);
-    assert.match(p.reference, /^\/#\/[\w-]+\/section~[\w:-]+\/\w+~[\w:-]+$/, p.reference);
+    // the readable form: /#/<space>/<slug>[/<slug>], the space root implied
+    assert.match(p.reference, /^\/#\/[\w-]+(\/[\w.-]+)+$/, p.reference);
+    assert.ok(!p.reference.includes("~"), `${p.reference} still publishes the old type~key form`);
     assert.ok(p.grammar.includes(p.panelType), `${p.panelType} absent from its own grammar`);
   }
 });
@@ -37,7 +39,7 @@ test("a query finds its screen and prints the live reference", () => {
   const r = run("patterns", "api", "key");
   assert.equal(r.status, 0);
   assert.match(r.stdout, /API keys/);
-  assert.match(r.stdout, /pfkeys~pf:keys/);
+  assert.match(r.stdout, /\/#\/console\/keys/);
 });
 
 test("an unknown screen exits 1 and sends the agent to the view grammar", () => {

@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "shapes": [
+    {
+      "id": "grid",
+      "dataIs": "A row set the user EDITS: a position book, a contact list, an inventory. The rows are the answer, not the raw material.",
+      "shape": "`.dt` datatable: sortable columns, inline cell editing, saved views in the foot, column groups, row drills to a `datarow` panel.",
+      "reference": "/#/analytics/c-crypto",
+      "proves": "the framework ships a real spreadsheet, not a read-only listing",
+      "antiPattern": "Do NOT reach here first. A grid is correct only when the user edits rows. If the user's question is 'what happened' or 'where did we land', pick stream or walk."
+    },
+    {
+      "id": "stream",
+      "dataIs": "Events in time, newest or oldest first, each carrying a few typed facts: orders, deploys, webhook deliveries, audit entries, transactions.",
+      "shape": "One CSS-grid row per event with the discriminating field as a coloured 14px chip (side, verb, level), monospace tabular figures, and voided rows struck through at 45% opacity. Low-value columns drop at `@container` breakpoints.",
+      "reference": "/#/analytics/blotter",
+      "proves": "a dense event log stays readable at any panel width without a horizontal scrollbar",
+      "antiPattern": "Not a grid: the user reads a stream top to bottom, never sorts it by column."
+    },
+    {
+      "id": "ladder",
+      "dataIs": "Entities compared by MAGNITUDE, each carrying a state: accounts by balance, regions by revenue, services by cost, tenants by seat count.",
+      "shape": "One row per entity: a 7px state dot, the name, a proportional bar sized against the set's own maximum, the figure right-aligned tabular, and a signed tail for anything pending. The bar is a div, never a chart.",
+      "reference": "/#/analytics/treasury",
+      "proves": "comparison and state in one glance, with zero chart dependency",
+      "antiPattern": "Do not add a pie chart. The bar IS the comparison."
+    },
+    {
+      "id": "walk",
+      "dataIs": "A computation that DESCENDS to a result: a P&L to EBITDA, a funnel to conversion, a bill to a total, a score to a grade.",
+      "shape": "One row per term with sub-terms indented and totals ruled top and bottom. Two overlaid bars: the plan outlined with `--rule-3` (a filled ghost vanishes in dark), the actual filled. The delta colours from MEANING, not sign.",
+      "reference": "/#/analytics/cfo",
+      "proves": "a derived result shows its own arithmetic, so the number is auditable in place",
+      "antiPattern": "Never colour a delta from its raw sign. A cost under plan is favourable while its delta is negative: `good = isCost ? delta < 0 : delta > 0`."
+    },
+    {
+      "id": "metered",
+      "dataIs": "A quantity consumed over time with a breakdown: API spend, storage, seats, credits, bandwidth.",
+      "shape": "A range segmented control, three stat tiles, an inline `svg` bar series with `preserveAspectRatio=\"none\"` and the latest bar accented, then a by-dimension breakdown as proportional rows.",
+      "reference": "/#/console/usage",
+      "proves": "time series plus breakdown in one panel, still no chart library",
+      "antiPattern": "Do not import a charting package for eight bars."
+    },
+    {
+      "id": "quota",
+      "dataIs": "Consumption against a CEILING the user set: spend limits, rate limits, plan allowances.",
+      "shape": "One line per limit: the label, a track filled to the consumed fraction, the ceiling as an editable field, and the projected breach date when the trend crosses it.",
+      "reference": "/#/console/limits",
+      "proves": "a settable ceiling and its consumption are the same object, not a settings page plus a dashboard",
+      "antiPattern": "Do not split the limit into a settings screen and its usage into a chart screen."
+    },
+    {
+      "id": "status-rows",
+      "dataIs": "A fleet of things that are up or down: services, integrations, regions, workers, jobs.",
+      "shape": "One row per service: a state dot, the name, the current latency or figure, and a compact 30-slot uptime strip. Incidents drill to their own panel.",
+      "reference": "/#/console/health",
+      "proves": "a status page is a panel, and every incident is one click deeper without leaving it",
+      "antiPattern": "Do not put a modal on an incident. It drills right."
+    },
+    {
+      "id": "severity-log",
+      "dataIs": "Append-only lines carrying a level: application logs, job runs, delivery attempts, moderation events.",
+      "shape": "Monospace lines with the level as a `.pf-pill`, the message truncated with the full text on the row's panel, filters as foot segments, and the line drills to a detail panel with the payload.",
+      "reference": "/#/console/logs",
+      "proves": "a log viewer needs no separate detail page: the line opens right",
+      "antiPattern": "Do not expand rows in place. Expansion loses the list; a drill keeps both."
+    },
+    {
+      "id": "scrollback",
+      "dataIs": "A session the user drives by typing: a terminal, a REPL, a query console, an agent run.",
+      "shape": "A monospace scrollback pinned to the bottom, and the prompt IS THE FOOT. The panel has no other action zone, which is exactly the foot law paying off.",
+      "reference": "/#/studio/terminal",
+      "proves": "the foot is a composer, not just a button bar",
+      "antiPattern": "Do not put the input inside the body. The foot is the single action zone."
+    },
+    {
+      "id": "thread",
+      "dataIs": "A turn-taking conversation: a chat, a support ticket, a review thread, a comment stream.",
+      "shape": "Alternating message blocks with the role as the only chrome, attachments as chips, a typing indicator, and the composer in the foot with its attachment rail.",
+      "reference": "/#/studio/chat",
+      "proves": "a chat surface inherits the same panel skeleton as a table",
+      "antiPattern": "Do not build a floating chat widget. It is a panel like everything else."
+    },
+    {
+      "id": "config-stack",
+      "dataIs": "A configuration OBJECT with sections: a prompt spec, a webhook, a pipeline step, a form definition, a policy.",
+      "shape": "Stacked labelled sections, each a titled group of tokenized fields, with variables as removable chips and a live preview. The title IS the first field (no form card).",
+      "reference": "/#/studio/prompt",
+      "proves": "a settings surface needs no form card: the panel is the form",
+      "antiPattern": "Never wrap fields in a card with its own heading. That is the AxF5 violation."
+    },
+    {
+      "id": "policy-choice",
+      "dataIs": "Mutually exclusive choices with consequences: retention policy, visibility, plan tier, region.",
+      "shape": "Radio rows where the CONSEQUENCE is the body text, not a tooltip, plus a hint line stating what changes when the choice changes.",
+      "reference": "/#/console/controls",
+      "proves": "a policy screen states its own blast radius inline",
+      "antiPattern": "Do not hide the consequence behind an info icon."
+    },
+    {
+      "id": "secret-list",
+      "dataIs": "Credentials: API keys, tokens, signing secrets, certificates.",
+      "shape": "Masked rows with the prefix visible, a REVEAL-ONCE dialog at creation (the secret never reappears), roll and revoke as row actions, last-used and scope as columns.",
+      "reference": "/#/console/keys",
+      "proves": "the reveal-once contract is a first-class panel behaviour",
+      "antiPattern": "Never re-show a secret after creation, and never put it in a URL."
+    },
+    {
+      "id": "roster",
+      "dataIs": "People with roles: team members, permissions, invitations, assignees.",
+      "shape": "Avatar rows with the role as an inline editable select, pending invitations distinguished, and the owner guarded from demotion. The invite composer lives in the foot.",
+      "reference": "/#/console/people",
+      "proves": "the permission matrix and the invite flow are one panel",
+      "antiPattern": "Do not open an invite modal."
+    },
+    {
+      "id": "gallery",
+      "dataIs": "Visual artifacts: generated images, uploads, screenshots, thumbnails, brand assets.",
+      "shape": "A density-switchable grid of tiles, each drilling to its own panel with the prompt, the parameters and the actions. Lazy below the fold.",
+      "reference": "/#/studio/images",
+      "proves": "a media grid and its detail live side by side instead of a lightbox",
+      "antiPattern": "Do not use a lightbox. A lightbox is a modal wearing a costume."
+    },
+    {
+      "id": "hub",
+      "dataIs": "A launcher: an entry surface that routes to the real work, a home, a workspace picker.",
+      "shape": "Large cards, each naming a destination and its live count, opening the destination to the right rather than replacing the view.",
+      "reference": "/#/studio/hub",
+      "proves": "even a home screen keeps its parent on stage",
+      "antiPattern": "Do not make the hub a route that unmounts everything."
+    },
+    {
+      "id": "board",
+      "dataIs": "Items moving through PHASES: a pipeline, a kanban, a review queue, an editorial calendar.",
+      "shape": "Columns as phase bands driven by `colGroups`, drag between columns writing the phase field, and the card drilling to the item's panel.",
+      "reference": "/#/tasks",
+      "proves": "the board is a VIEW of the same collection as the table, not a second data model",
+      "antiPattern": "Never build a board on its own data. It is a view type on the collection."
+    },
+    {
+      "id": "sheet",
+      "dataIs": "One object's fields: a contact, an account, a deal, a document's metadata.",
+      "shape": "Label and value rows where the value is directly editable, related collections as drillable counts, and the activity trail below. The title is the object's name and is editable in the bar.",
+      "reference": "/#/crm/acme",
+      "proves": "an entity detail is a panel with a parent still visible, so context never breaks",
+      "antiPattern": "Do not open an entity in a modal or a new route."
+    },
+    {
+      "id": "canvas",
+      "dataIs": "A graph: an architecture, a flow, a dependency map, an org chart.",
+      "shape": "Nodes and edges on a pannable canvas, a node click drilling to its inspector panel, an edge click to the edge inspector.",
+      "reference": "/#/canvas/canvas",
+      "proves": "a spatial surface and a structured inspector coexist without a sidebar",
+      "antiPattern": "Do not put node properties in a floating overlay."
+    }
+  ]
+}

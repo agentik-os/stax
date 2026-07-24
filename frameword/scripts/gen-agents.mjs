@@ -34,7 +34,10 @@ for (const [, title, subtitle, lit] of nodes) {
   const code = eval(lit); // our own literal, from our own file
   md.push(`\n## ${title}\n\n*${subtitle}*\n\n\`\`\`text\n${code}\n\`\`\`\n`);
 }
-fs.writeFileSync(path.join(ROOT, "agents.md"), md.join(""));
+// PROMPTS.md is GENERATED from domain.ts. agents.md is NOT: it is the
+// hand-written contract an agent reads before touching the repo, and this
+// script used to overwrite it, silently discarding whatever was there.
+fs.writeFileSync(path.join(ROOT, "PROMPTS.md"), md.join(""));
 
 fs.writeFileSync(path.join(ROOT, "llms.txt"), `# Stax — panels-inside-panels UX framework
 
@@ -45,7 +48,8 @@ fs.writeFileSync(path.join(ROOT, "llms.txt"), `# Stax — panels-inside-panels U
 - [README](README.md): what Stax is, quickstart, migration engine
 - [PANEL-LOGIC.md](PANEL-LOGIC.md): the grammar — state, intents, laws
 - [DESIGN-SPEC.md](DESIGN-SPEC.md): the pixel contract (anatomy, tokens, conversions)
-- [agents.md](agents.md): six paste-ready master prompts (M1-M6) for coding agents
+- [agents.md](agents.md): the contract for an agent working on a Stax app (where panels live, how URLs address them, the design laws, the gates)
+- [PROMPTS.md](PROMPTS.md): ${nodes.length} paste-ready master prompts, generated from the in-app prompt pack
 - [stax-migrate](frameword/packages/stax-migrate/README.md): gated migration CLI — contracted integration levels, three matrices
 
 ## Code
@@ -56,4 +60,4 @@ fs.writeFileSync(path.join(ROOT, "llms.txt"), `# Stax — panels-inside-panels U
 ## Demo
 - Live: https://stax-agentik-oss-projects.vercel.app
 `);
-console.log(`agents.md (${nodes.length} prompts) + llms.txt written`);
+console.log(`PROMPTS.md (${nodes.length} prompts) + llms.txt written`);

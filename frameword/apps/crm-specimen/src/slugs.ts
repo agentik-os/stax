@@ -7,7 +7,7 @@
  * addressing onto the words a person would actually type:
  *
  *     #/analytics/blotter
- *     #/crm/acme/renewal
+ *     #/crm/acme/jo/refonte
  *     #/studio/terminal
  *
  * Rules, in order:
