@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.26.4
+- **fix** — The bar glyph is centred on the title cap band, not its line box: measured from the resolved font after the webfonts land, so it tracks the typography the operator picks in Settings
+
 ## 0.26.3
 - **fix** — The foot no longer clips its own popovers: an `overflow: hidden` added for the responsive fold erased panel settings, the view deck and foot search (paint-level guard, seen red before green)
 

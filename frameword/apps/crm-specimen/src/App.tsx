@@ -214,6 +214,38 @@ export function App() {
 }
 
 /* lucide icons for sidebar space items (sidebar-08 adaptation) */
+/**
+ * Optical alignment of a glyph against a title.
+ *
+ * Centring a 14px icon on the title's LINE BOX is geometrically perfect and
+ * visually wrong: the line box reserves descender room that a title of capitals
+ * and x-height letters never uses, so its centre sits above where the eye reads
+ * the middle of the word. Measured in the bar: the glyph lands 0.98px ABOVE the
+ * cap band in Inter 13.9 and 1.14px BELOW it in Newsreader 15.7, a 2.1px swing
+ * between a drilled panel and its own root, in opposite directions.
+ *
+ * A fixed nudge cannot fix a value that flips sign with the font, and the fonts
+ * are user-selectable in Settings, so the offset is MEASURED from the resolved
+ * font (canvas gives the true cap height via the ink of "H") and republished as
+ * a CSS variable every time the typography changes.
+ */
+function capShift(fontFamily: string, fontSize: number, lineHeight: number, weight: string | number): number {
+  try {
+    const cv = document.createElement("canvas").getContext("2d");
+    if (!cv) return 0;
+    cv.font = `${weight} ${fontSize}px ${fontFamily}`;
+    const H = cv.measureText("H");
+    if (!H.actualBoundingBoxAscent || !H.fontBoundingBoxAscent) return 0;
+    const halfLeading = (lineHeight - fontSize) / 2;
+    const baseline = halfLeading + H.fontBoundingBoxAscent;
+    const capCentre = baseline - H.actualBoundingBoxAscent / 2;
+    // positive means the glyph must move DOWN to meet the cap band
+    return +(capCentre - lineHeight / 2).toFixed(2);
+  } catch {
+    return 0;
+  }
+}
+
 function SpaceIcon({ id }: { id: string }) {
   const c = { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   switch (id) {
@@ -432,6 +464,22 @@ function Shell() {
     r.setProperty("--font-serif", TITLE_FONTS[prefs.titleFont]?.css ?? TITLE_FONTS.news.css);
     r.setProperty("--font-sans", BODY_FONTS[prefs.bodyFont]?.css ?? BODY_FONTS.inter.css);
     r.setProperty("--font-mono", MONO_FONTS[prefs.monoFont]?.css ?? MONO_FONTS.geist.css);
+    // Republish the optical offsets once the fonts have ACTUALLY LANDED. Measuring
+    // in a microtask reads the fallback face while the webfont is still loading,
+    // and a fallback's cap height is not the real one: that produced +0.99px for
+    // the serif where the truth was -1.14px, moving the glyph the wrong way.
+    const publishOptical = () => {
+      const cs = getComputedStyle(document.documentElement);
+      const body = parseFloat(cs.getPropertyValue("--fz-body")) || 13.5;
+      const sans = cs.getPropertyValue("--font-sans").trim() || "Inter";
+      const serif = cs.getPropertyValue("--font-serif").trim() || "serif";
+      const sansSize = body * 1.03, serifSize = body * 1.16;
+      r.setProperty("--cap-shift-sans", capShift(sans, sansSize, sansSize * 1.5, 600) + "px");
+      r.setProperty("--cap-shift-serif", capShift(serif, serifSize, serifSize * 1.5, 450) + "px");
+    };
+    const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
+    if (fonts?.ready) void fonts.ready.then(publishOptical);
+    else queueMicrotask(publishOptical);
     if (prefs.accent === "default") {
       ["--accent", "--accent-soft", "--accent-hover", "--ring", "--accent-foreground"].forEach((v) => r.removeProperty(v));
     } else {

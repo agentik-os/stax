@@ -1415,11 +1415,17 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
    Measured: the body head cost 28% of a panel on a 13in laptop, and 100% of
    drills repeated the parent row that stays visible beside them. The bar now
    carries the glyph, the title and the live numbers; the body is content. */
-.bar-glyph { flex: none; width: 17px; height: 17px; display: grid; place-items: center; color: var(--muted-foreground); }
+/* The glyph is centred OPTICALLY, on the title's cap band, not on its line box.
+   The offset is measured from the resolved font at runtime (see capShift in
+   App.tsx) because it flips sign between the sans and the serif, and because the
+   operator can change both fonts in Settings. Default 0: a browser without
+   canvas text metrics gets the old, merely geometric centring. */
+.bar-glyph { flex: none; width: 17px; height: 17px; display: grid; place-items: center; color: var(--muted-foreground); transform: translateY(var(--cap-shift-sans, 0px)); }
 .bar-glyph svg { width: 14px; height: 14px; }
 .bar-title { font-size: calc(var(--fz-body, 13.5px) * 1.03); font-weight: 600; letter-spacing: -0.005em; color: var(--foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
 /* RANK (spec: the thread shows a visible hierarchy of rank). A ROOT wears the
    serif display voice at a small optical size; a drilled panel stays sans. */
+.panel-bar:has(.bar-title.root) .bar-glyph { transform: translateY(var(--cap-shift-serif, 0px)); }
 .bar-title.root { font-family: var(--font-serif); font-weight: 450; font-size: calc(var(--fz-body, 13.5px) * 1.16); letter-spacing: -0.01em; }
 .bar-title.editable { cursor: text; }
 .bar-title.editable:hover { text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
