@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.26.1
+- **U-041** (migration, extended) — The shape router reaches every conversion entry point: M9 PHASE 0.75 replaces the legacy shape vocabulary, and the starter ships slugs.ts so a scaffolded app has readable URLs from the first commit
+
 ## 0.26.0
 - **U-041** (migration) — The shape router: 19 shapes keyed on what the data IS, wired into the mapping phase, plus e2e gates so no catalog reference and no CLI command can silently rot
 

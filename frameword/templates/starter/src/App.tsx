@@ -14,6 +14,7 @@ import {
   type PanelRegistry,
 } from "@frameword/panels-react";
 import { DOMAIN } from "./domain";
+import { slugCodec } from "./slugs";
 
 const REGISTRY: PanelRegistry = {
   section: { size: "L" },
@@ -112,7 +113,7 @@ function AutoOpen() {
 
 export function App() {
   return (
-    <WorkspaceProvider registry={REGISTRY} urlSync="push" storageKey="__APP_NAME__-ws">
+    <WorkspaceProvider registry={REGISTRY} urlSync="push" storageKey="__APP_NAME__-ws" slugCodec={slugCodec}>
       <AutoOpen />
       <Shell />
     </WorkspaceProvider>
