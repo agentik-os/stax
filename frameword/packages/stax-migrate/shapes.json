@@ -192,6 +192,22 @@
       "reference": "/#/moonbase/rhythm",
       "proves": "a schedule read as a shape rather than a list, so imbalance is seen rather than computed",
       "antiPattern": "Do not render a recurring schedule as a sorted list of instances. The whole value is the distribution."
+    },
+    {
+      "id": "entry",
+      "dataIs": "The front door: a sign in surface, a workspace picker, an invitation acceptance, any screen that ROUTES a person into the product.",
+      "shape": "The SAME panel component as everything behind it, at the registry M width: bar 44 with the product mark, body 18/18/16 carrying an eyebrow, a name, one paragraph and the sign in method, foot 7/14 with exactly ONE primary and a quiet link to the sibling entrance. Several entrances differ ONLY in the eyebrow, the copy, the method and the refusal set.",
+      "reference": "/#/moonbase/entry",
+      "proves": "the panel grammar reaches the front door, so a product has one component from sign in to the deepest drill",
+      "antiPattern": "A landing page ROUTES AND BRANDS, it never authorises. Capabilities are the only gate and visibility config can only hide. Do not build a second identity instance per entrance: one human would then hold two subjects and the whole identity argument dies quietly."
+    },
+    {
+      "id": "refusal",
+      "dataIs": "A denied state: no session, a session with no record, a suspended account, a session with no surface, or a legitimate ambiguity the product must not resolve for the user.",
+      "shape": "One row per refusal, each opening to what it ENFORCES, what it LEAKS and the TRAP that makes it tempting to build wrong, plus the exact sentence shown and the exit action. The sentence is the artefact: it is quoted, not paraphrased.",
+      "reference": "/#/moonbase/refusal",
+      "proves": "denial is a designed state with a contract, not an afterthought behind a 403",
+      "antiPattern": "A denied element renders its empty expression or NOTHING. Never a hidden but present control, never a greyed control whose tooltip names the capability it wants, never a masked value, never a count that includes rows the reader cannot see. Never disclose whether an account exists, and never name the missing membership: that answer describes your business."
     }
   ]
 }

@@ -1420,16 +1420,23 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
    App.tsx) because it flips sign between the sans and the serif, and because the
    operator can change both fonts in Settings. Default 0: a browser without
    canvas text metrics gets the old, merely geometric centring. */
-.bar-glyph { flex: none; width: 17px; height: 17px; display: grid; place-items: center; color: var(--muted-foreground); transform: translateY(var(--cap-shift-sans, 0px)); }
+.bar-glyph { flex: none; width: 17px; height: 17px; display: grid; place-items: center; color: var(--muted-foreground); transform: translateY(var(--cap-shift-mono, 0px)); }
 .bar-glyph svg { width: 14px; height: 14px; }
-.bar-title { font-size: calc(var(--fz-body, 13.5px) * 1.03); font-weight: 600; letter-spacing: -0.005em; color: var(--foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+/* The bar title is MONO. A panel's name is an identifier, not prose: mono makes
+   it read as a handle, sits on the same rail as the meta and the eyebrow, and
+   stops the bar mixing three type families in 44 pixels. Mono runs wide, so the
+   size drops to 0.92 of the body and the tracking opens slightly to keep the
+   letterforms from crowding. Rank is carried by WEIGHT and TRACKING, not by
+   swapping to a serif: a root is heavier and more open, a drill is lighter and
+   tighter, and both stay in the same voice. */
+.bar-title { font-family: var(--font-mono); font-size: calc(var(--fz-body, 13.5px) * 0.92); font-weight: 500; letter-spacing: 0.005em; color: var(--foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
 /* RANK (spec: the thread shows a visible hierarchy of rank). A ROOT wears the
    serif display voice at a small optical size; a drilled panel stays sans. */
-.panel-bar:has(.bar-title.root) .bar-glyph { transform: translateY(var(--cap-shift-serif, 0px)); }
-.bar-title.root { font-family: var(--font-serif); font-weight: 450; font-size: calc(var(--fz-body, 13.5px) * 1.16); letter-spacing: -0.01em; }
+.panel-bar:has(.bar-title.root) .bar-glyph { transform: translateY(var(--cap-shift-mono-root, 0px)); }
+.bar-title.root { font-weight: 600; font-size: calc(var(--fz-body, 13.5px) * 0.98); letter-spacing: 0.045em; text-transform: uppercase; }
 .bar-title.editable { cursor: text; }
 .bar-title.editable:hover { text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
-.bar-title-edit { font-size: calc(var(--fz-body, 13.5px) * 1.03); font-weight: 600; font-family: var(--font-sans); color: var(--foreground); background: transparent; border: none; border-bottom: 1px solid var(--accent); outline: none; padding: 0 0 1px; min-width: 60px; flex: 0 1 auto; }
+.bar-title-edit { font-size: calc(var(--fz-body, 13.5px) * 0.92); font-weight: 500; letter-spacing: 0.005em; font-family: var(--font-mono); color: var(--foreground); background: transparent; border: none; border-bottom: 1px solid var(--accent); outline: none; padding: 0 0 1px; min-width: 60px; flex: 0 1 auto; }
 /* live numbers, derived and never authored: mono, quiet, first to fold */
 .bar-meta { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; flex: none; font-variant-numeric: tabular-nums; }
 .bar-meta::before { content: "·"; margin-right: 7px; color: var(--border); }
@@ -1693,3 +1700,35 @@ body[data-density="dense"] .panel-bar { height: 38px; }
 .mb-slot .wh { color: var(--muted-foreground); font-size: calc(var(--fz-mono, 10px) * 1.0); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @container (max-width: 700px) { .mb-week { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @container (max-width: 400px) { .mb-week { grid-template-columns: 1fr; } }
+
+/* ── Entry and refusal: the front door is a panel, and denial is a state ──
+   The door renders at its REAL registry width inside the demo panel, so the
+   claim "it is the same component at M 480" can be checked with a ruler. */
+.en-frame { display: flex; justify-content: center; padding: 6px 0 2px; }
+.en-door { width: 480px; max-width: 100%; border: 1px solid var(--border); border-radius: 14px; background: var(--card); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-2xs); }
+.en-bar { height: 44px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: calc(var(--fz-body, 13.5px) * 0.92); font-weight: 500; letter-spacing: 0.005em; }
+.en-mark { width: 15px; height: 15px; border-radius: 4px; background: var(--foreground); flex: none; }
+.en-body { padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 7px; }
+.en-eyebrow { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); }
+.en-title { font-family: var(--font-mono); font-size: calc(var(--fz-body, 13.5px) * 1.5); font-weight: 600; letter-spacing: 0.02em; }
+.en-copy { color: var(--muted-foreground); margin: 0; font-size: calc(var(--fz-body, 13px) * 0.95); max-width: 46ch; }
+.en-method { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.02); color: var(--muted-foreground); border-top: 1px solid var(--rule-1); padding-top: 8px; margin-top: 3px; }
+.en-foot { min-height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-top: 1px solid var(--border); background: var(--secondary); }
+.en-alt { margin-left: auto; color: var(--muted-foreground); font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.02); background: none; border: none; padding: 0; }
+.en-alt:hover { color: var(--foreground); }
+
+/* the refusal set: each one opens to its enforcement, its leak and its trap */
+.en-ref { border-bottom: 1px solid var(--rule-1); }
+.en-ref:last-child { border-bottom: 0; }
+.en-ref > .hd { display: grid; align-items: baseline; gap: 10px; grid-template-columns: minmax(120px, auto) 1fr 14px; width: 100%; padding: 9px 0; background: none; border: none; text-align: left; }
+.en-ref > .hd:hover .tg { color: var(--foreground); }
+.en-ref .st { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.0); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }
+.en-ref .tg { font-size: calc(var(--fz-body, 13px) * 0.94); color: var(--ink-2); }
+.en-ref .ch { color: var(--muted-foreground); font-family: var(--font-mono); }
+.en-ref.on .tg { color: var(--foreground); }
+.en-ref .bd { padding: 0 0 12px; display: flex; flex-direction: column; gap: 2px; }
+.en-ref .what { margin: 0 0 8px; color: var(--muted-foreground); font-size: calc(var(--fz-body, 13px) * 0.92); max-width: 68ch; }
+.en-ref .says { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 9px 11px; border-radius: 9px; background: var(--secondary); margin-bottom: 9px; }
+.en-ref .says .q { font-size: calc(var(--fz-body, 13px) * 0.94); }
+.en-ref .says .ex { margin-left: auto; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.02); color: var(--accent); }
+@container (max-width: 560px) { .en-ref > .hd { grid-template-columns: 1fr 14px; } .en-ref .st { grid-column: 1 / -1; } }

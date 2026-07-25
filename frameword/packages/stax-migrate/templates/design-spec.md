@@ -292,6 +292,38 @@ rows. If the first question is "what happened", "how do these compare" or "where
 did we land", the answer is `stream`, `ladder` or `walk`. A surface matching no
 shape is a real finding worth writing down, not a licence to default to a table.
 
+### The front door, and the state a product is judged on
+
+Stax could describe every surface behind the login and nothing in front of it,
+which left the most security sensitive screens in a product to be improvised.
+
+**An entry is a panel.** A landing page routes and brands; it never authorises.
+Capabilities are the only gate, and visibility config can only hide. So an entry
+renders as the same component as everything behind it, at the registry M width,
+bar 44, body 18/18/16, foot with exactly one primary. Three entrances differ only
+in the eyebrow, the copy, the sign in method and the refusal set. Nothing else
+differs, and that is the argument: one product, one identity, one session.
+
+**A refusal is a designed state.** A denied element renders its empty expression,
+or renders nothing. Never a hidden but present control. Never a greyed control
+whose tooltip names the capability it wants. Never a masked value. Never a count
+that includes rows the reader cannot see.
+
+Every refusal states three things beyond its copy: what ENFORCES it (server side,
+before the shell mounts, never a client check), what it LEAKS (usually a public
+rule, never an address), and the TRAP that makes the wrong version tempting.
+
+Two copy laws that no grep will catch:
+
+- **Never disclose whether an account exists.** "No account with that address" is
+  an account oracle, and it is the single most common leak in a sign in flow.
+- **Never name the missing membership or capability.** It reads helpful and it
+  describes what your business is doing. Say what the person does NEXT instead.
+
+There is no degraded read only workspace for a suspended account. Suspended is
+not a smaller set of grants, it is none. Live: /#/moonbase/entry and
+/#/moonbase/refusal.
+
 ### Five more shapes, from a real conversion manifest
 
 A manifest can declare a panel's width, head layout, foot primary and backend

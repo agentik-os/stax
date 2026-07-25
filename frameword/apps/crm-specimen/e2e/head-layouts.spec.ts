@@ -202,11 +202,31 @@ test("RANK: a root's bar title is visibly senior to a drilled panel's", async ({
   await page.goto(link({ spaceId: "crm", path: [{ t: "space", k: "space:crm" }, { t: "account", k: "acc:acme" }] }));
   await page.waitForSelector(".bar-title");
   await page.waitForTimeout(400);
-  const sizes = await page.evaluate(() => [...document.querySelectorAll(".panel .bar-title")].map((t) => {
-    const cs = getComputedStyle(t);
-    return { size: parseFloat(cs.fontSize), serif: /Newsreader|serif|Iowan|Georgia/i.test(cs.fontFamily) };
+  // Assert the LAW, not the mechanism. Rank used to be carried by swapping the
+  // root to a serif; the titles are mono now, and rank is carried by size,
+  // weight, tracking and case instead. A test that pins the mechanism fails on
+  // a legitimate design change and says nothing about whether rank survived.
+  const t = await page.evaluate(() => [...document.querySelectorAll(".panel .bar-title")].map((el) => {
+    const cs = getComputedStyle(el);
+    return {
+      size: parseFloat(cs.fontSize),
+      weight: parseInt(cs.fontWeight, 10),
+      track: parseFloat(cs.letterSpacing) || 0,
+      upper: cs.textTransform === "uppercase",
+      family: cs.fontFamily.split(",")[0].replace(/"/g, ""),
+    };
   }));
-  expect(sizes.length).toBeGreaterThan(1);
-  expect(sizes[0].size).toBeGreaterThan(sizes[1].size); // the root is bigger
-  expect(sizes[0].serif).toBe(true);                    // and wears the display voice
+  expect(t.length).toBeGreaterThan(1);
+  const [root, drill] = t;
+  const signals = [
+    root.size > drill.size,
+    root.weight > drill.weight,
+    root.track > drill.track,
+    root.upper !== drill.upper,
+    root.family !== drill.family,
+  ].filter(Boolean).length;
+  // one signal is an accident, two is a decision: rank must be legible without
+  // the reader comparing the two panels side by side
+  expect(signals, `root and drill differ on only ${signals} of five rank signals`).toBeGreaterThanOrEqual(2);
+  expect(root.size).toBeGreaterThanOrEqual(drill.size);
 });

@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.28.0
+- **U-043** (design) — Mono panel titles, rank carried by weight and tracking rather than a serif swap, and two new shapes: entry (the front door is a panel) and refusal (a denied element renders its empty expression, never a greyed control naming its capability)
+
 ## 0.27.0
 - **U-042** (design) — A Moonbase space built from a real 97 screen conversion manifest, adding five shapes the catalog lacked (scorecard, match, allocation, gate, cadence) and the laws they carry: a judgement shows its arithmetic, a machine proposal carries its reasoning, a split is computed, a decision leads with its verdict, a schedule is a shape
 

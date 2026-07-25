@@ -26,6 +26,7 @@ import { headPlan, HEAD_LAYOUTS, DEFAULT_HEAD_LAYOUT, DEFAULT_DENSITY, type Head
 import { PlatformBody, PlatformFoot, pfApp, usePfApp } from "./PlatformApp";
 import { slugCodec } from "./slugs";
 import { MoonbaseBody, MoonbaseFoot } from "./MoonbaseApp";
+import { EntryPanelBody, EntryFoot } from "./EntryApp";
 import { BlotterBody, TreasuryBody, CfoBody, AnalyticsFoot } from "./AnalyticsApp";
 import { NotifBell } from "./Notifications";
 import { Flag } from "./Flags";
@@ -63,6 +64,8 @@ const REGISTRY: PanelRegistry = {
   mbcall: { size: "L" },
   mbgate: { size: "S" },
   mbweek: { size: "L" },
+  enentry: { size: "L" },
+  enrefusal: { size: "XL" },
   anblotter: { size: "XL" },
   antreasury: { size: "L" },
   ancfo: { size: "L" },
@@ -479,6 +482,12 @@ function Shell() {
       const body = parseFloat(cs.getPropertyValue("--fz-body")) || 13.5;
       const sans = cs.getPropertyValue("--font-sans").trim() || "Inter";
       const serif = cs.getPropertyValue("--font-serif").trim() || "serif";
+      const mono = cs.getPropertyValue("--font-mono").trim() || "monospace";
+      // the bar title is mono at 0.92 body, its root variant at 0.98 and heavier
+      const tSize = body * 0.92, rSize = body * 0.98;
+      r.setProperty("--cap-shift-mono", capShift(mono, tSize, tSize * 1.5, 500) + "px");
+      r.setProperty("--cap-shift-mono-root", capShift(mono, rSize, rSize * 1.5, 600) + "px");
+      // kept for any surface still pairing a glyph with sans or serif text
       const sansSize = body * 1.03, serifSize = body * 1.16;
       r.setProperty("--cap-shift-sans", capShift(sans, sansSize, sansSize * 1.5, 600) + "px");
       r.setProperty("--cap-shift-serif", capShift(serif, serifSize, serifSize * 1.5, 450) + "px");
@@ -1904,6 +1913,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             {p.target.panelType === "tasks" && <TasksRoot panelId={id} searchQ={q} me={prof.name} />}
             {p.target.panelType === "note" && <NoteEditor noteKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "notefolder" && <FolderPanel folderKey={p.target.resourceKey} panelId={id} searchQ={q} />}
+            {p.target.panelType.startsWith("en") && <EntryPanelBody kind={p.target.panelType} />}
             {p.target.panelType.startsWith("mb") && <MoonbaseBody kind={p.target.panelType} />}
             {p.target.panelType === "anblotter" && <BlotterBody />}
             {p.target.panelType === "antreasury" && <TreasuryBody />}
@@ -2034,6 +2044,8 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             </button>
           ))}
           </>
+        ) : p.target.panelType.startsWith("en") ? (
+          <EntryFoot kind={p.target.panelType} />
         ) : p.target.panelType.startsWith("mb") ? (
           <MoonbaseFoot kind={p.target.panelType} />
         ) : p.target.panelType.startsWith("an") ? (

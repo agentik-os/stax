@@ -1013,7 +1013,7 @@ DOMAIN["sec:moonbase"] = {
   panelType: "section", title: "The fund.", eyebrow: "Moonbase · 00",
   subtitle: "Five surfaces from a real conversion manifest, each answering a different question with a different shape.",
   kpis: [{ v: "5", l: "shapes" }, { v: "97", l: "screens mapped" }, { v: "0", l: "tables" }],
-  children: ["mb:scorecard", "mb:reconcile", "mb:call", "mb:killcheck", "mb:rhythm"],
+  children: ["mb:scorecard", "mb:reconcile", "mb:call", "mb:killcheck", "mb:rhythm", "en:entry", "en:refusal"],
   blocks: [{ kind: "row", label: "WHY THESE FIVE", text: "A conversion manifest can declare a panel's width, head layout, foot primary and Convex binding and still say nothing about what the panel looks like inside. The manifest these come from rendered 1675 identical key/value rows across 213 panels. These five ask what the user's first question is, then build the shape that answers it: a weighted rubric, a two sided pairing, one total split by an ownership key, an ordered gate, and a week." }],
 };
 DOMAIN["mb:scorecard"] = { panelType: "mbscore", title: "Deal scorecard", eyebrow: "Moonbase · diligence", subtitle: "Weighted criteria in bands, scored on a discrete rail, rolling to a derived verdict. AI scores or your own." };
@@ -1021,3 +1021,7 @@ DOMAIN["mb:reconcile"] = { panelType: "mbmatch", title: "Reconcile candidates", 
 DOMAIN["mb:call"] = { panelType: "mbcall", title: "Capital call", eyebrow: "Moonbase · investor relations", subtitle: "One total split by commitment share, each investor carrying the state of the previous call." };
 DOMAIN["mb:killcheck"] = { panelType: "mbgate", title: "Kill check", eyebrow: "Moonbase · screening", subtitle: "The verdict first, then the ordered gates that produced it. One blocking failure kills the deal." };
 DOMAIN["mb:rhythm"] = { panelType: "mbweek", title: "Weekly rhythm", eyebrow: "Moonbase · operating", subtitle: "The week as a shape, so its weight is visible without counting. Read only: the cadence is set elsewhere." };
+
+/* ═══ ENTRY · the front door, and the state a product is judged on ═══ */
+DOMAIN["en:entry"] = { panelType: "enentry", title: "Three entries, one identity", eyebrow: "Entry · doors", subtitle: "A landing page routes and brands. It never authorises. Same panel component, same M 480, three doors." };
+DOMAIN["en:refusal"] = { panelType: "enrefusal", title: "The refusal set", eyebrow: "Entry · denial", subtitle: "A denied element renders its empty expression, or nothing. Each refusal carries what it enforces, what it leaks, and the trap." };
