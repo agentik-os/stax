@@ -3,3 +3,6 @@ dist/
 .vite/
 *.local
 .DS_Store
+
+# temporary probe specs written by workflow agents; never committed
+frameword/apps/crm-specimen/e2e/zz-*.spec.ts
