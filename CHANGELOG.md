@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.27.0
+- **U-042** (design) — A Moonbase space built from a real 97 screen conversion manifest, adding five shapes the catalog lacked (scorecard, match, allocation, gate, cadence) and the laws they carry: a judgement shows its arithmetic, a machine proposal carries its reasoning, a split is computed, a decision leads with its verdict, a schedule is a shape
+
 ## 0.26.4
 - **fix** — The bar glyph is centred on the title cap band, not its line box: measured from the resolved font after the webfonts land, so it tracks the typography the operator picks in Settings
 

@@ -25,6 +25,7 @@ import { DataHome, DataTable, DataRow, dataApp, useDataApp, DtFootViews } from "
 import { headPlan, HEAD_LAYOUTS, DEFAULT_HEAD_LAYOUT, DEFAULT_DENSITY, type HeadLayout, type Density } from "./headLayouts";
 import { PlatformBody, PlatformFoot, pfApp, usePfApp } from "./PlatformApp";
 import { slugCodec } from "./slugs";
+import { MoonbaseBody, MoonbaseFoot } from "./MoonbaseApp";
 import { BlotterBody, TreasuryBody, CfoBody, AnalyticsFoot } from "./AnalyticsApp";
 import { NotifBell } from "./Notifications";
 import { Flag } from "./Flags";
@@ -57,6 +58,11 @@ const REGISTRY: PanelRegistry = {
   legacy: { size: "XL" },
   pfchat: { size: "L" },
   datatable: { size: "XL" },
+  mbscore: { size: "XL" },
+  mbmatch: { size: "L" },
+  mbcall: { size: "L" },
+  mbgate: { size: "S" },
+  mbweek: { size: "L" },
   anblotter: { size: "XL" },
   antreasury: { size: "L" },
   ancfo: { size: "L" },
@@ -1898,6 +1904,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             {p.target.panelType === "tasks" && <TasksRoot panelId={id} searchQ={q} me={prof.name} />}
             {p.target.panelType === "note" && <NoteEditor noteKey={p.target.resourceKey} panelId={id} />}
             {p.target.panelType === "notefolder" && <FolderPanel folderKey={p.target.resourceKey} panelId={id} searchQ={q} />}
+            {p.target.panelType.startsWith("mb") && <MoonbaseBody kind={p.target.panelType} />}
             {p.target.panelType === "anblotter" && <BlotterBody />}
             {p.target.panelType === "antreasury" && <TreasuryBody />}
             {p.target.panelType === "ancfo" && <CfoBody />}
@@ -2027,6 +2034,8 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
             </button>
           ))}
           </>
+        ) : p.target.panelType.startsWith("mb") ? (
+          <MoonbaseFoot kind={p.target.panelType} />
         ) : p.target.panelType.startsWith("an") ? (
           <AnalyticsFoot kind={p.target.panelType} />
         ) : p.target.panelType.startsWith("pf") ? (

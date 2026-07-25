@@ -292,6 +292,43 @@ rows. If the first question is "what happened", "how do these compare" or "where
 did we land", the answer is `stream`, `ladder` or `walk`. A surface matching no
 shape is a real finding worth writing down, not a licence to default to a table.
 
+### Five more shapes, from a real conversion manifest
+
+A manifest can declare a panel's width, head layout, foot primary and backend
+binding and still say nothing about what the panel looks like inside. One real
+manifest of 97 screens rendered 1675 identical key/value rows across 213 panels:
+every contract honoured, and every panel the same. A manifest is not yet a
+design.
+
+These five came out of that manifest, each chosen because its data wanted a
+shape the catalog did not have.
+
+| the data is | shape | live |
+| --- | --- | --- |
+| weighted criteria rolling to a decision | `scorecard` | /#/moonbase/scorecard |
+| two sets that should pair up but do not yet | `match` | /#/moonbase/reconcile |
+| one total split by an ownership key | `allocation` | /#/moonbase/call |
+| ordered checks where one failure stops the thing | `gate` | /#/moonbase/killcheck |
+| recurring commitments in a period | `cadence` | /#/moonbase/rhythm |
+
+The laws they add:
+
+- **A judgement shows its arithmetic.** The scorecard's total and verdict are
+  derived from the criteria, so the score can be argued with. A stored total
+  drifts from its rows on the first edit and then nobody knows which is true.
+- **A machine proposal carries its reasoning.** The match shape shows a
+  confidence whose visual weight scales with its value AND the sentence that
+  produced it, then lets the human decide per row. A confidence without a reason
+  is a number nobody can audit.
+- **A split is computed, never typed.** Allocation derives each share from the
+  ownership key, so the parts always sum to the total.
+- **A decision leads with its verdict.** The gate states the outcome and the
+  reason first, then the checks that produced it, and distinguishes a blocking
+  failure from an unanswered question. A flat checklist treats a fatal item and
+  a cosmetic one alike.
+- **A schedule is a shape, not a list.** Cadence renders the period as a grid so
+  imbalance is seen rather than counted.
+
 ### Money surfaces: a panel, never a table in a trench coat
 
 The data grammar can express anything, and that is exactly the trap. Because a

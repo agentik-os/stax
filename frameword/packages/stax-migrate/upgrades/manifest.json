@@ -245,6 +245,12 @@
       "since": "0.26.0",
       "area": "migration",
       "title": "The shape router (19 shapes keyed on what the data IS) + a gate so the catalogs and the CLI surface cannot rot"
+    },
+    {
+      "id": "U-042",
+      "since": "0.27.0",
+      "area": "design",
+      "title": "Five shapes from a real conversion manifest: scorecard, match, allocation, gate, cadence"
     }
   ]
 }

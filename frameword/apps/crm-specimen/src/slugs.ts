@@ -56,7 +56,7 @@ const qualified = (key: string) => key.replace(":", "-");
 /** Namespaces ranked by how public the surface is. A contested bare slug goes
  *  to the highest-ranked claimant: the thing a person means when they type it.
  *  Anything unlisted ranks last, alphabetically stable via the key order. */
-const NS_RANK = ["sec", "pf", "an", "dtc", "sys", "gl", "ov", "crm", "imp", "law", "depth"];
+const NS_RANK = ["sec", "pf", "an", "mb", "dtc", "sys", "gl", "ov", "crm", "blk", "imp", "law", "depth"];
 const rankOf = (key: string) => {
   const i = NS_RANK.indexOf(key.split(":")[0]);
   return i < 0 ? NS_RANK.length : i;

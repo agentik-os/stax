@@ -94,6 +94,7 @@ export const DASHBOARDS: Dashboard[] = [
         { spaceId: "crm-tour", rootKey: "sec:crm-tour", label: "How it works" },
         { spaceId: "crm", rootKey: "space:crm", label: "Accounts" },
         { spaceId: "reports", rootKey: "space:reports", label: "Reports" },
+        { spaceId: "moonbase", rootKey: "sec:moonbase", label: "The fund" },
       ],
     }],
   },
@@ -1001,3 +1002,22 @@ export function spaceOf(resourceKey: string): { spaceId: string; rootKey: string
   const s = SPACES.find((x) => x.rootKey === rootKey);
   return s ? { spaceId: s.spaceId, rootKey: s.rootKey } : null;
 }
+
+/* ═══ MOONBASE · an investment firm's operating surfaces ═══
+   Five panels lifted from a real 97 screen conversion manifest. Each was
+   chosen because its data wants a shape Stax could not previously show, and
+   each honours the width, head layout and foot contract its manifest row
+   declared. The manifest rendered 1675 identical key/value rows; these five
+   are the argument that a manifest is not yet a design. */
+DOMAIN["sec:moonbase"] = {
+  panelType: "section", title: "The fund.", eyebrow: "Moonbase · 00",
+  subtitle: "Five surfaces from a real conversion manifest, each answering a different question with a different shape.",
+  kpis: [{ v: "5", l: "shapes" }, { v: "97", l: "screens mapped" }, { v: "0", l: "tables" }],
+  children: ["mb:scorecard", "mb:reconcile", "mb:call", "mb:killcheck", "mb:rhythm"],
+  blocks: [{ kind: "row", label: "WHY THESE FIVE", text: "A conversion manifest can declare a panel's width, head layout, foot primary and Convex binding and still say nothing about what the panel looks like inside. The manifest these come from rendered 1675 identical key/value rows across 213 panels. These five ask what the user's first question is, then build the shape that answers it: a weighted rubric, a two sided pairing, one total split by an ownership key, an ordered gate, and a week." }],
+};
+DOMAIN["mb:scorecard"] = { panelType: "mbscore", title: "Deal scorecard", eyebrow: "Moonbase · diligence", subtitle: "Weighted criteria in bands, scored on a discrete rail, rolling to a derived verdict. AI scores or your own." };
+DOMAIN["mb:reconcile"] = { panelType: "mbmatch", title: "Reconcile candidates", eyebrow: "Moonbase · accounting", subtitle: "An invoice on the left, a bank line on the right, a proposed pairing between them carrying its confidence." };
+DOMAIN["mb:call"] = { panelType: "mbcall", title: "Capital call", eyebrow: "Moonbase · investor relations", subtitle: "One total split by commitment share, each investor carrying the state of the previous call." };
+DOMAIN["mb:killcheck"] = { panelType: "mbgate", title: "Kill check", eyebrow: "Moonbase · screening", subtitle: "The verdict first, then the ordered gates that produced it. One blocking failure kills the deal." };
+DOMAIN["mb:rhythm"] = { panelType: "mbweek", title: "Weekly rhythm", eyebrow: "Moonbase · operating", subtitle: "The week as a shape, so its weight is visible without counting. Read only: the cadence is set elsewhere." };

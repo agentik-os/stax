@@ -152,6 +152,46 @@
       "reference": "/#/canvas",
       "proves": "a spatial surface and a structured inspector coexist without a sidebar",
       "antiPattern": "Do not put node properties in a floating overlay."
+    },
+    {
+      "id": "scorecard",
+      "dataIs": "Weighted criteria that roll to a decision: a diligence rubric, a vendor evaluation, a risk score, a grading sheet.",
+      "shape": "Criteria grouped into bands, each row carrying its weight, a DISCRETE dot rail for the score (not a slider: the scale is ordinal), and the evidence sentence beside it. The total and the verdict band are DERIVED from the rows, never stored next to them. A segmented control switches between an automated pass and the human's own.",
+      "reference": "/#/moonbase/scorecard",
+      "proves": "a judgement surface where the arithmetic is visible, so the score can be argued with",
+      "antiPattern": "Do not store the total. A stored total drifts from its criteria on the first edit, and then nobody knows which is true."
+    },
+    {
+      "id": "match",
+      "dataIs": "Two sets that should pair up but do not yet: invoices against bank lines, orders against shipments, records against a merge candidate, duplicates.",
+      "shape": "Two columns facing each other with the proposed pairing between them, carrying a CONFIDENCE whose visual weight scales with its value, the reason for the proposal stated in words below, and accept/reject per pair. The discrepancy is shown on the value itself, not hidden in a tooltip.",
+      "reference": "/#/moonbase/reconcile",
+      "proves": "a human-in-the-loop decision surface: the machine proposes with its reasoning exposed, the human disposes per row",
+      "antiPattern": "Do not auto-apply high confidence matches silently, and do not show a confidence without the reason that produced it."
+    },
+    {
+      "id": "allocation",
+      "dataIs": "One total split by an ownership key: a capital call by commitment, a cost by cost centre, a bonus pool by headcount, a quota by territory.",
+      "shape": "One row per participant: a state dot for their standing on the PREVIOUS round, the name, their share as a percentage, a bar proportional to their slice, and the amount. The individual amounts are computed from the share, so they always sum to the total.",
+      "reference": "/#/moonbase/call",
+      "proves": "a derived split that cannot fail to reconcile, with each participant's history carried on the same line",
+      "antiPattern": "Do not let a user type individual amounts beside a total. Compute them, or the two disagree."
+    },
+    {
+      "id": "gate",
+      "dataIs": "An ordered set of checks where one failure stops the thing: a kill check, a deploy gate, a compliance screen, a pre-flight, an eligibility test.",
+      "shape": "The VERDICT FIRST, in a band coloured by outcome and stating the reason in one line, then the gates that produced it. Each gate shows its mark, whether it is blocking, and its evidence. A blocking failure is visually distinct from an unanswered question.",
+      "reference": "/#/moonbase/killcheck",
+      "proves": "a decision surface that leads with the answer instead of making the reader reconstruct it from a list",
+      "antiPattern": "Do not render a gate as a plain checklist. A checklist with one fatal item and one cosmetic item treats them alike."
+    },
+    {
+      "id": "cadence",
+      "dataIs": "Recurring commitments in a period: a meeting rhythm, an on-call rota, a publishing calendar, a maintenance window schedule.",
+      "shape": "The period as a GRID of its units, each holding its commitments as small blocks with the time, what and who, and a left border keyed to the kind. An empty unit says so. The shape makes the week's WEIGHT visible without counting.",
+      "reference": "/#/moonbase/rhythm",
+      "proves": "a schedule read as a shape rather than a list, so imbalance is seen rather than computed",
+      "antiPattern": "Do not render a recurring schedule as a sorted list of instances. The whole value is the distribution."
     }
   ]
 }

@@ -1572,3 +1572,124 @@ body[data-density="dense"] .panel-bar { height: 38px; }
     color-mix(in oklab, var(--destructive) 38%, var(--secondary)) 0 4px,
     color-mix(in oklab, var(--destructive) 16%, var(--secondary)) 4px 8px);
 }
+
+/* ── Moonbase: five shapes an investment firm needs and Stax could not show ──
+   Each answers a different question, so none of them is a table with a domain
+   name on it. Every colour resolves through a token; the sign and the state are
+   the only things allowed to carry hue. */
+
+/* SCORECARD: weighted criteria in bands, scored on a discrete dot rail */
+.mb-band { margin: 0 0 10px; }
+.mb-band:last-child { margin-bottom: 0; }
+.mb-bandlab { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); margin: 8px 0 3px; }
+.mb-crit {
+  display: grid; align-items: center; gap: 10px;
+  grid-template-columns: minmax(120px, 1.1fr) auto auto 1.6fr;
+  padding: 5px 0; border-bottom: 1px solid var(--rule-1);
+  font-size: calc(var(--fz-body, 13px) * 0.92);
+}
+.mb-crit:last-child { border-bottom: 0; }
+.mb-crit .w { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.02); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.mb-crit .dots { display: inline-flex; gap: 3px; }
+.mb-crit .dot { width: 11px; height: 11px; border-radius: 3px; background: var(--secondary); border: 1px solid var(--rule-2); padding: 0; }
+.mb-crit .dot.on { background: color-mix(in oklab, var(--accent) 62%, var(--secondary)); border-color: transparent; }
+.mb-crit .dot:disabled { cursor: default; }
+.mb-crit .note { color: var(--muted-foreground); font-size: calc(var(--fz-mono, 10px) * 1.05); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@container (max-width: 620px) { .mb-crit .note { display: none; } .mb-crit { grid-template-columns: 1fr auto auto; } }
+
+/* MATCH: two sides, a pairing, a confidence that reads as a weight */
+.mb-match {
+  display: grid; align-items: center; gap: 8px 12px;
+  grid-template-columns: 1fr auto 1fr auto;
+  grid-template-areas: "left link right acts" "why why why acts";
+  padding: 9px 0; border-bottom: 1px solid var(--rule-1);
+  font-size: calc(var(--fz-body, 13px) * 0.92);
+}
+.mb-match:last-child { border-bottom: 0; }
+.mb-match.accepted { opacity: 0.5; }
+.mb-match.rejected { opacity: 0.4; }
+.mb-match .side { grid-area: left; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.mb-match .side.right { grid-area: right; text-align: right; }
+.mb-match .ref { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.02); color: var(--muted-foreground); }
+.mb-match .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-match .amt { font-variant-numeric: tabular-nums; font-weight: 500; }
+.mb-match .amt.off { color: var(--amber); }
+.mb-match .link { grid-area: link; display: grid; place-items: center; gap: 2px; }
+.mb-match .conf {
+  font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.98); font-variant-numeric: tabular-nums;
+  padding: 1px 5px; border-radius: 999px;
+  background: color-mix(in oklab, var(--accent) calc(var(--c) * 26%), var(--secondary));
+  color: color-mix(in oklab, var(--accent) calc(var(--c) * 88%), var(--muted-foreground));
+}
+.mb-match .hair { display: block; width: 34px; height: 1px; background: var(--rule-2); }
+.mb-match .why { grid-area: why; color: var(--muted-foreground); font-size: calc(var(--fz-mono, 10px) * 1.05); }
+.mb-match .acts { grid-area: acts; display: flex; gap: 6px; }
+@container (max-width: 560px) {
+  .mb-match { grid-template-columns: 1fr auto; grid-template-areas: "left link" "right link" "why acts"; }
+  .mb-match .side.right { text-align: left; }
+}
+
+/* ALLOCATION: one total split by an ownership key, state as a dot */
+.mb-alloc {
+  display: grid; align-items: center; gap: 10px;
+  grid-template-columns: 7px minmax(110px, 1fr) auto 1.4fr auto;
+  padding: 7px 0; border-bottom: 1px solid var(--rule-1);
+  font-size: calc(var(--fz-body, 13px) * 0.92);
+}
+.mb-alloc:last-child { border-bottom: 0; }
+.mb-alloc .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+.mb-alloc .dot.pending { background: var(--amber); }
+.mb-alloc .dot.late { background: var(--destructive); }
+.mb-alloc .sh { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.02); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.mb-alloc .bar { height: 5px; border-radius: 3px; background: var(--secondary); overflow: hidden; min-width: 30px; }
+.mb-alloc .bar > span { display: block; height: 100%; border-radius: 3px; background: color-mix(in oklab, var(--accent) 55%, var(--secondary)); }
+.mb-alloc .amt { font-variant-numeric: tabular-nums; text-align: right; min-width: 84px; }
+@container (max-width: 560px) { .mb-alloc .bar { display: none; } .mb-alloc { grid-template-columns: 7px 1fr auto auto; } }
+
+/* GATE: the verdict first, then what produced it */
+.mb-verdict {
+  display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+  padding: 9px 11px; border-radius: 10px; margin-bottom: 4px;
+  background: var(--secondary);
+}
+.mb-verdict .w { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.18); letter-spacing: 0.1em; text-transform: uppercase; }
+.mb-verdict .r { color: var(--muted-foreground); font-size: calc(var(--fz-body, 13px) * 0.9); }
+.mb-verdict.stop { background: color-mix(in oklab, var(--destructive) 12%, transparent); }
+.mb-verdict.stop .w { color: var(--destructive); }
+.mb-verdict.hold { background: color-mix(in oklab, var(--amber) 14%, transparent); }
+.mb-verdict.hold .w { color: var(--amber); }
+.mb-verdict.go { background: var(--success-soft); }
+.mb-verdict.go .w { color: var(--success); }
+.mb-gate {
+  display: grid; align-items: baseline; gap: 4px 10px;
+  grid-template-columns: 14px 1fr; grid-template-areas: "mk nm" ". dt";
+  padding: 7px 0; border-bottom: 1px solid var(--rule-1);
+  font-size: calc(var(--fz-body, 13px) * 0.92);
+}
+.mb-gate:last-child { border-bottom: 0; }
+.mb-gate .mk { grid-area: mk; font-family: var(--font-mono); color: var(--muted-foreground); }
+.mb-gate.pass .mk { color: var(--success); }
+.mb-gate.fail .mk { color: var(--destructive); }
+.mb-gate.fail .nm { color: var(--destructive); }
+.mb-gate .nm { grid-area: nm; display: flex; align-items: center; gap: 7px; }
+.mb-gate .bl { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.9); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); border: 1px solid var(--rule-2); border-radius: 999px; padding: 0 5px; }
+.mb-gate .dt { grid-area: dt; color: var(--muted-foreground); font-size: calc(var(--fz-mono, 10px) * 1.05); }
+
+/* CADENCE: the week as a shape, so its weight is visible without counting */
+.mb-week { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.mb-day { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.mb-day .dl { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.02); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); }
+.mb-slot {
+  display: flex; flex-direction: column; gap: 1px; min-width: 0;
+  padding: 6px 8px; border-radius: 8px; background: var(--secondary);
+  border-left: 2px solid var(--rule-3);
+  font-size: calc(var(--fz-body, 13px) * 0.86);
+}
+.mb-slot.review { border-left-color: var(--accent); }
+.mb-slot.external { border-left-color: var(--amber); }
+.mb-slot.empty { color: var(--muted-foreground); background: transparent; border-left-color: var(--rule-1); font-style: italic; }
+.mb-slot .at { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.98); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.mb-slot .wt { overflow: hidden; text-overflow: ellipsis; }
+.mb-slot .wh { color: var(--muted-foreground); font-size: calc(var(--fz-mono, 10px) * 1.0); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@container (max-width: 700px) { .mb-week { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 400px) { .mb-week { grid-template-columns: 1fr; } }
