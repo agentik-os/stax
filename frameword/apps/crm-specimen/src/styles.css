@@ -227,7 +227,14 @@ img.avatar { border: 1px solid var(--border); }
 .leaf-note { border: none; border-top: 1px solid var(--border); border-radius: 0; padding: 13px 0 0; font-size: 13px; line-height: 1.6; color: var(--ink-2); text-wrap: pretty; }
 
 /* foot — the single action zone */
-.panel-foot { flex: none; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 14px; position: relative; flex-wrap: nowrap; container-type: inline-size; overflow: hidden; }
+/* NO overflow:hidden here. The foot is the positioning context for every popover
+   it opens (panel settings, the view deck, foot search), and those sit ABOVE it by
+   design (bottom: 100%), so clipping the foot erases them entirely: measured at
+   pop bottom 696 against foot top 703, with elementFromPoint returning .panel-body.
+   CSS cannot clip one axis (a non-visible overflow on either axis forces the other
+   to auto), so the horizontal spill is handled where it actually originates: the
+   note truncates, the segment deck scrolls, and the children carry min-width: 0. */
+.panel-foot { flex: none; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 14px; position: relative; flex-wrap: nowrap; container-type: inline-size; }
 
 /* THE FOOT FOLDS, IT NEVER WRAPS (measured: 4 rows at a 900px panel, the foot
    grew from 44px to 117px). The control deck is ONE line at every width, and it
@@ -253,7 +260,7 @@ img.avatar { border: 1px solid var(--border); }
 .foot-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .foot-cta.ghost { border: 1px solid var(--border); background: transparent; color: var(--ink-2); }
 .foot-cta.accent { border: 1px solid transparent; background: var(--accent-soft); color: var(--accent); }
-.foot-note { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }
+.foot-note { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .foot-gear { width: 28px; height: 28px; border-radius: 8px; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center; flex: none; margin-left: auto; }
 .foot-gear:hover { background: var(--secondary); color: var(--foreground); }
 .panel-pop { position: absolute; bottom: 100%; right: 14px; margin-bottom: 8px; width: 230px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); padding: 12px; z-index: 12; animation: riseIn 160ms var(--ease); }
