@@ -250,9 +250,16 @@ img.avatar { border: 1px solid var(--border); }
   .panel-foot .foot-actions .d-btn:not(.primary) .lbl { display: none; }
   .panel-foot .foot-actions .d-btn:not(.primary) { padding-left: 8px; padding-right: 8px; }
 }
-@container (max-width: 380px) { .panel-foot > .foot-search-toggle { display: none; } }
 /* whatever survives must still fit: the deck scrolls rather than pushing */
-.panel-foot .foot-seg { min-width: 0; overflow-x: auto; scrollbar-width: none; }
+/* The deck must be able to YIELD. Its base rule carries flex: none, so
+   flex-shrink was 0 and min-width: 0 could do nothing: the deck held 293px at
+   every width while the foot overran by exactly (content minus container).
+   Restoring shrink is what makes the promise in the comment above true. */
+.panel-foot .foot-seg { flex: 0 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+/* A deck that yields by SCROLLING must not squeeze its own tabs on the way:
+   once the deck could shrink, its labels wrapped instead, which is the same
+   defect one level in. The tabs hold their width and the deck slides. */
+.panel-foot .foot-seg > * { flex: none; white-space: nowrap; }
 /* below the S 380 floor the deck itself yields rather than pushing the foot */
 @container (max-width: 340px) { .panel-foot .foot-seg { display: none; } }
 .panel-foot .foot-seg::-webkit-scrollbar { display: none; }
@@ -777,12 +784,25 @@ input[type="color"].swatch-custom::-webkit-color-swatch { border: none; border-r
 /* canvas card eyebrow sigil */
 .cv-eyebrow .sig { color: var(--accent); }
 
-.foot-actions { display: flex; gap: 7px; align-items: center; flex-wrap: nowrap; min-width: 0; }
+/* The actions NEVER shrink. Actions and the view deck both defaulted to
+   flex-shrink 1, so they split the pressure: at 700px the actions were handed
+   262px for 357px of content and clipped 95px of it, while the deck sat at its
+   full 293px doing nothing. The deck is the element that knows how to yield
+   (overflow-x: auto, per the ladder comment above), so it absorbs the squeeze
+   and the actions keep their labels. When the actions alone outgrow the foot,
+   the container rungs shed their words, which is what the ladder is for. */
+.foot-actions { display: flex; gap: 7px; align-items: center; flex-wrap: nowrap; flex: none; }
 /* unified foot buttons — same size, accent family, always an icon */
 .panel-foot .foot-cta, .panel-foot .d-btn {
   height: 30px; padding: 0 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--font-sans); font-size: calc(var(--fz-body, 13.5px) - 1.5px); font-weight: 500;
   letter-spacing: 0; text-transform: none; line-height: 1; box-shadow: none;
+  /* A foot label NEVER breaks. Without this a squeezed row shrinks each button
+     to its longest word and the label wraps, and line-height:1 then fits two
+     12px lines inside the 30px box: the foot still measures 44.00, its scroll
+     box still reports zero overflow, and the children still share one centre.
+     Every assertion the foot law specifies passes while three baselines paint. */
+  white-space: nowrap; flex: none;
 }
 /* ONE primary per foot (accent filled); everything else is QUIET */
 .panel-foot .foot-cta { background: var(--accent); border: 1px solid var(--accent); color: var(--accent-foreground); }

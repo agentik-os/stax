@@ -2067,7 +2067,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
                 <button key={a.id}
                   className={a.kind === "primary" ? "foot-cta" : a.kind === "destructive" ? "d-btn destructive sm" : a.kind === "ai" ? "d-btn ai sm" : "d-btn outline sm"}
                   onClick={a.run}>
-                  {a.kind === "ai" ? <span className="sig">✶</span> : a.icon} {a.label}
+                  {a.kind === "ai" ? <span className="sig">✶</span> : a.icon} <span className="lbl">{a.label}</span>
                 </button>
               ))}
             </div>

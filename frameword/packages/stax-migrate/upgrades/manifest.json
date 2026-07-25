@@ -257,6 +257,12 @@
       "since": "0.28.0",
       "area": "design",
       "title": "Mono panel titles with rank by weight and tracking, plus the entry and refusal shapes: the front door is a panel and denial is a designed state"
+    },
+    {
+      "id": "U-044",
+      "since": "0.29.0",
+      "area": "design",
+      "title": "The foot law, measured correctly: line boxes by vertical position, descendant overflow, and a hit test on every control"
     }
   ]
 }

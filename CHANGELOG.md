@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.29.0
+- **U-044** (design) — Five foot defects the law could not see: wrapped labels, a 95px overrun painting over the view deck, a deck that could never yield, tabs squeezed once it could, and a shed rung aimed at a class nobody rendered. New assertions measure line boxes by vertical position, walk descendant overflow, and hit test every control
+
 ## 0.28.0
 - **U-043** (design) — Mono panel titles, rank carried by weight and tracking rather than a serif swap, and two new shapes: entry (the front door is a panel) and refusal (a denied element renders its empty expression, never a greyed control naming its capability)
 
