@@ -48,6 +48,16 @@ export interface DomainNode {
 }
 
 export interface SpaceDef { spaceId: string; rootKey: string; label: string }
+
+/** Spaces that are not in a dashboard's sidebar: they hang off the topbar and the
+ *  avatar menu. They are still real spaces with a real root, so anything keyed on
+ *  "the root of space X" (the URL codec, the bridge) has to read them from HERE
+ *  rather than re-deriving the map, or #/tasks quietly opens whatever was last
+ *  on stage instead of the task board. */
+export const PERSONAL_SPACES: Record<string, string> = {
+  data: "sec:data", notes: "sec:notes", tasks: "sec:tasks", canvas: "sec:canvas",
+  profile: "sys:profile", settings: "sys:settings", devtools: "sys:devtools",
+};
 export interface SpaceGroup { label: string; spaces: SpaceDef[] }
 export interface Dashboard { id: string; label: string; glyph: string; groups: SpaceGroup[] }
 

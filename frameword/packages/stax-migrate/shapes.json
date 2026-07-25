@@ -149,7 +149,7 @@
       "id": "canvas",
       "dataIs": "A graph: an architecture, a flow, a dependency map, an org chart.",
       "shape": "Nodes and edges on a pannable canvas, a node click drilling to its inspector panel, an edge click to the edge inspector.",
-      "reference": "/#/canvas/canvas",
+      "reference": "/#/canvas",
       "proves": "a spatial surface and a structured inspector coexist without a sidebar",
       "antiPattern": "Do not put node properties in a floating overlay."
     }

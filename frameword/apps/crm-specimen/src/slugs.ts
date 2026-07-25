@@ -28,7 +28,7 @@
  * and the legacy percent-encoded JSON.
  */
 import type { SlugCodec } from "@frameword/panels-core";
-import { DOMAIN, SPACES } from "./domain";
+import { DOMAIN, SPACES, PERSONAL_SPACES } from "./domain";
 
 /* ── spaces ───────────────────────────────────────────────────────────── */
 
@@ -100,8 +100,14 @@ function buildIndex() {
 
 const INDEX = buildIndex();
 
-/** the root resource key of each space, so it can be dropped from the URL */
-const ROOT_OF = new Map<string, string>(SPACES.map((s) => [s.spaceId, s.rootKey]));
+/** The root resource key of each space, so it can be dropped from the URL.
+ *  Personal spaces (notes, tasks, data, canvas) live outside SPACES because no
+ *  sidebar lists them, but they are real spaces: leaving them out made #/tasks
+ *  resolve to no root and open whatever happened to be on stage. */
+const ROOT_OF = new Map<string, string>([
+  ...SPACES.map((s) => [s.spaceId, s.rootKey] as [string, string]),
+  ...Object.entries(PERSONAL_SPACES),
+]);
 
 export const slugCodec: SlugCodec = {
   slug(target, _spaceId) {

@@ -8,7 +8,7 @@ import {
   type PanelRegistry,
   type PanelSize,
 } from "@frameword/panels-react";
-import { DOMAIN, SPACES, DASHBOARDS, dashboardOfSpace, chainOf, spaceOf } from "./domain";
+import { DOMAIN, SPACES, DASHBOARDS, dashboardOfSpace, chainOf, spaceOf, PERSONAL_SPACES } from "./domain";
 const ComponentDemo = lazy(() => import("./ComponentDemo").then((m) => ({ default: m.ComponentDemo })));
 import { BlockDemo } from "./BlockDemo";
 import { K, mk } from "./keys";
@@ -231,7 +231,98 @@ function SpaceIcon({ id }: { id: string }) {
     case "pf-tour": return (<svg {...c}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6" /><line x1="9" y1="3" x2="9" y2="18" /><line x1="15" y1="6" x2="15" y2="21" /></svg>);
     case "pf-console": return (<svg {...c}><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>);
     case "pf-studio": return (<svg {...c}><path d="M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M18.4 18.4l-2.1-2.1M12 18v3M7.7 16.3l-2.1 2.1M6 12H3M7.7 7.7 5.6 5.6" /><circle cx="12" cy="12" r="3.2" /></svg>);
+    case "blocks": return (<svg {...c}><rect x="3" y="3" width="7.5" height="7.5" rx="1.5" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" /><path d="M13.5 17.2h7.5M17.2 13.5v7.5" /></svg>);
+    case "tasks": return (<svg {...c}><path d="M4 6.5 6 8.5 9.5 5" /><path d="M4 13 6 15l3.5-3.5" /><path d="M13 6.5h7M13 13h7M4 19.5h16" /></svg>);
+    case "notes": return (<svg {...c}><path d="M5 3.5h9l5 5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" /><path d="M14 3.5v5h5" /><path d="M8 13h7M8 16.5h4" /></svg>);
+    case "data": return (<svg {...c}><ellipse cx="12" cy="5.5" rx="8" ry="3" /><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13" /><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></svg>);
+    case "canvas": return (<svg {...c}><circle cx="5.5" cy="6" r="2.4" /><circle cx="18.5" cy="6" r="2.4" /><circle cx="12" cy="18" r="2.4" /><path d="M7.6 7.4 10.6 16M16.4 7.4 13.4 16M8 6h8" /></svg>);
+    case "ana-poss": return (<svg {...c}><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5v9M7.5 12h9" /></svg>);
+    case "crm-tour": return (<svg {...c}><path d="M4 4v16M4 5h12l-2 3 2 3H4" /></svg>);
     default: return (<svg {...c}><circle cx="12" cy="12" r="9" /></svg>);
+  }
+}
+
+/**
+ * The bar glyph states the panel's KIND. It is the one identity token the
+ * dense-bar head adds, and for a long time it added nothing: the bar called
+ * SpaceIcon with a resourceKey ("an:blotter") while SpaceIcon switches on a
+ * spaceId ("pf-analytics"), so every panel in the app fell through to the same
+ * featureless circle. Measured before the fix: 1 distinct glyph across 10
+ * panels. That single miswiring is the largest mechanical cause of "every
+ * panel looks the same".
+ *
+ * Keyed on panelType and grouped by SHAPE (see `stax-migrate shapes`), so two
+ * panels sharing a shape share a glyph on purpose and everything else differs.
+ * Stroke only, viewBox 24, currentColor, per the icon law.
+ */
+function TypeGlyph({ type, resourceKey }: { type: string; resourceKey?: string }) {
+  const c = { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  switch (type) {
+    /* stream: events in time */
+    case "anblotter": return (<svg {...c}><path d="M3 6h7M14 6h7M3 12h11M18 12h3M3 18h5M12 18h9" /></svg>);
+    /* ladder: entities by magnitude */
+    case "antreasury": return (<svg {...c}><path d="M3 6h14M3 12h9M3 18h17" /><circle cx="21" cy="6" r="1.4" /><circle cx="16" cy="12" r="1.4" /></svg>);
+    /* walk: a computation descending to a result */
+    case "ancfo": return (<svg {...c}><path d="M4 4v6h6" /><path d="M10 10v5h6" /><path d="M16 15v5h4" /></svg>);
+    /* grid: an editable row set */
+    case "datatable": case "datahome": return (<svg {...c}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M9 9v11M15 9v11" /></svg>);
+    case "datarow": return (<svg {...c}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18" /><rect x="3" y="9" width="18" height="5" fill="currentColor" stroke="none" opacity="0.28" /></svg>);
+    /* scrollback: a session driven by typing */
+    case "pfterm": return (<svg {...c}><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>);
+    /* thread: a conversation */
+    case "pfchat": return (<svg {...c}><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" /></svg>);
+    /* config-stack: a configuration object */
+    case "pfprompt": return (<svg {...c}><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h13M21 17h-1" /><circle cx="16" cy="7" r="1.6" /><circle cx="10" cy="12" r="1.6" /><circle cx="19" cy="17" r="1.6" /></svg>);
+    /* secret-list */
+    case "pfkeys": return (<svg {...c}><circle cx="8" cy="12" r="4" /><path d="M12 12h9M18 12v3M21 12v2" /></svg>);
+    /* metered + quota */
+    case "pfusage": return (<svg {...c}><path d="M4 20V10M9.5 20V4M15 20v-7M20.5 20V8" /></svg>);
+    case "pflimits": return (<svg {...c}><path d="M3.5 17a9 9 0 1 1 17 0" /><path d="M12 17l4.5-5" /></svg>);
+    case "pfbilling": return (<svg {...c}><rect x="2.5" y="5" width="19" height="14" rx="2" /><path d="M2.5 10h19" /></svg>);
+    /* status-rows + severity-log */
+    case "pfhealth": return (<svg {...c}><path d="M2.5 12h4l2.5-6 4 12 2.5-6h6" /></svg>);
+    case "pflogs": return (<svg {...c}><path d="M7 5h14M7 12h14M7 19h10" /><circle cx="3.5" cy="5" r="1.3" /><circle cx="3.5" cy="12" r="1.3" /><circle cx="3.5" cy="19" r="1.3" /></svg>);
+    /* roster */
+    case "pfpeople": return (<svg {...c}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /></svg>);
+    /* gallery */
+    case "pfimages": return (<svg {...c}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.6" /><path d="m3 17 5-5 4 4 3-3 6 6" /></svg>);
+    /* hub + launchers */
+    case "pfhub": case "pfprojects": return (<svg {...c}><rect x="3" y="3" width="7.5" height="7.5" rx="1.6" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" /><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" /></svg>);
+    /* policy-choice + posture */
+    case "pfcontrols": return (<svg {...c}><circle cx="7" cy="8" r="2.6" /><circle cx="17" cy="16" r="2.6" /><path d="M10 8h11M3 16h11" /></svg>);
+    case "pfsecurity": return (<svg {...c}><path d="M12 2.5 4.5 6v6c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6Z" /></svg>);
+    case "pfrealtime": return (<svg {...c}><circle cx="12" cy="12" r="2.6" /><path d="M6.7 6.7a7.5 7.5 0 0 0 0 10.6M17.3 17.3a7.5 7.5 0 0 0 0-10.6" /></svg>);
+    /* board + work */
+    case "tasks": return (<svg {...c}><rect x="3" y="4" width="6" height="16" rx="1.6" /><rect x="11" y="4" width="6" height="10" rx="1.6" /><path d="M19 4h2v16h-2" /></svg>);
+    case "task": return (<svg {...c}><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" /><path d="m8 12 3 3 5-6" /></svg>);
+    case "notes": case "notefolder": return (<svg {...c}><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></svg>);
+    case "note": return (<svg {...c}><path d="M5 3.5h9l5 5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" /><path d="M14 3.5v5h5" /></svg>);
+    /* sheet: one object's fields */
+    case "account": return (<svg {...c}><path d="M4 21V6l7-3v18" /><path d="M11 10h8v11" /><path d="M8 9v.01M8 13v.01M15 14v.01M15 17v.01" /></svg>);
+    case "contact": return (<svg {...c}><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></svg>);
+    case "opportunity": return (<svg {...c}><path d="M3 17.5 9 11l4 4 8-8.5" /><polyline points="15 6.5 21 6.5 21 12.5" /></svg>);
+    case "activity": return (<svg {...c}><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5.2l3.4 2" /></svg>);
+    /* graph */
+    case "canvas": return (<svg {...c}><circle cx="5.5" cy="6" r="2.4" /><circle cx="18.5" cy="6" r="2.4" /><circle cx="12" cy="18" r="2.4" /><path d="M7.6 7.4 10.6 16M16.4 7.4 13.4 16M8 6h8" /></svg>);
+    case "canvasedge": return (<svg {...c}><circle cx="5" cy="12" r="2.2" /><circle cx="19" cy="12" r="2.2" /><path d="M7.4 12h9.2" /><path d="m14.5 9.5 2.5 2.5-2.5 2.5" /></svg>);
+    /* prose and doctrine: the reading surfaces, each still its own mark */
+    case "doc": return (<svg {...c}><path d="M4 5h16M4 10h16M4 15h11M4 20h7" /></svg>);
+    case "law": return (<svg {...c}><path d="M12 3.5v17M5 8h14" /><path d="M5 8 2.5 14h5ZM19 8l-2.5 6h5Z" /></svg>);
+    case "improvement": return (<svg {...c}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>);
+    case "prompt": return (<svg {...c}><path d="M4 6h16v10a2 2 0 0 1-2 2H9l-5 4Z" /><path d="M8 10h8M8 13.5h5" /></svg>);
+    case "report": return (<svg {...c}><rect x="4" y="2.5" width="16" height="19" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>);
+    case "component": case "block": case "blocklive": return (<svg {...c}><path d="M5.5 8.5 9 12l-3.5 3.5L2 12ZM12 2l3.5 3.5L12 9 8.5 5.5ZM18.5 8.5 22 12l-3.5 3.5L15 12ZM12 15l3.5 3.5L12 22l-3.5-3.5Z" /></svg>);
+    case "devtools": return (<svg {...c}><path d="m8 17-5-5 5-5M16 7l5 5-5 5M13.5 4l-3 16" /></svg>);
+    case "legacy": return (<svg {...c}><rect x="2.5" y="4" width="19" height="15" rx="2" strokeDasharray="3 2.5" /><path d="M8 21h8" /></svg>);
+    case "profile": return (<svg {...c}><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></svg>);
+    case "settings": return (<svg {...c}><circle cx="12" cy="12" r="3.2" /><path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6M18.4 18.4l-1.6-1.6M7.2 7.2 5.6 5.6" /></svg>);
+    /* a space root keeps the SPACE mark: it IS the space. SpaceIcon switches on
+       a spaceId, so strip the namespace off the key (sec:blocks -> blocks) or it
+       falls through to the placeholder, which is the bug this component fixes. */
+    case "section": case "space": default: {
+      const spaceish = (resourceKey ?? "").replace(/^(sec|space):/, "");
+      return <SpaceIcon id={spaceish} />;
+    }
   }
 }
 
@@ -538,7 +629,7 @@ function Shell() {
   const bridgeRef = useRef<{ ws: typeof ws; deepLink: typeof deepLink } | null>(null);
   useEffect(() => { bridgeRef.current = { ws, deepLink }; });
   useEffect(() => {
-    const PERSONAL: Record<string, string> = { data: "sec:data", notes: "sec:notes", tasks: "sec:tasks", canvas: "sec:canvas", profile: "sys:profile", settings: "sys:settings", devtools: "sys:devtools" };
+    const PERSONAL = PERSONAL_SPACES;
     (window as unknown as { stax?: unknown }).stax = {
       getState: () => bridgeRef.current!.ws.state,
       path: () => bridgeRef.current!.ws.path.map((pid) => bridgeRef.current!.ws.state.panelsById[pid]?.target.resourceKey),
@@ -1629,7 +1720,7 @@ function Panel({ id, deepLink, compact, collapsed, onExpand }: { id: string; dee
           <button className="bar-btn back" title="Back" onClick={() => { animateExit(id); ws.closePanel(id); }}>‹</button>
         )}
         {plan.barGlyph && (
-          <span className="bar-glyph" title={n.panelType} aria-hidden="true"><SpaceIcon id={p.target.resourceKey} /></span>
+          <span className="bar-glyph" title={n.panelType} aria-hidden="true"><TypeGlyph type={p.target.panelType} resourceKey={p.target.resourceKey} /></span>
         )}
         {plan.barEyebrow && (() => {
           if (n.eyebrow != null) return <span className="eyebrow">{n.eyebrow}</span>;

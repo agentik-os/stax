@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.26.2
+- **U-041** (design, extended) — The bar glyph was one shared circle on every panel (SpaceIcon fed a resourceKey, never a spaceId): a shape-grouped TypeGlyph takes it from 1 distinct glyph to 10, the catalog gate now asserts the URL round-trips rather than just that a panel rendered, and notes/tasks/data/canvas get working URLs
+
 ## 0.26.1
 - **U-041** (migration, extended) — The shape router reaches every conversion entry point: M9 PHASE 0.75 replaces the legacy shape vocabulary, and the starter ships slugs.ts so a scaffolded app has readable URLs from the first commit
 

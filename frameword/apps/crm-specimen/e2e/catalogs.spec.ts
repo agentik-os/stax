@@ -49,6 +49,7 @@ test("every catalog reference opens a real, populated panel", async ({ page }) =
         title: leaf.querySelector(".bar-title")?.textContent ?? null,
         // a placeholder node renders a title and nothing else: count real children
         filled: body ? body.querySelectorAll("*").length : 0,
+        hash: location.hash,
       };
     });
     // "Node" with an empty body is what the domain renders for an undefined key.
@@ -56,6 +57,12 @@ test("every catalog reference opens a real, populated panel", async ({ page }) =
     // legitimately shallow (1 and 2 children), so the emptiness IS the signal.
     if (!state.title || state.title === "Node" || state.filled === 0)
       dead.push(`${r.from} · ${r.id} · ${r.ref} · title=${state.title} children=${state.filled}`);
+    // AND the URL must actually address what it claims. A populated panel is not
+    // proof: /#/tasks rendered a healthy "Blocks." panel because `tasks` is not a
+    // space the codec knew, so the reference passed while pointing at the wrong
+    // surface entirely. The hash surviving the round trip is the real check.
+    else if (state.hash !== r.ref.replace(/^\/#/, "#"))
+      dead.push(`${r.from} · ${r.id} · typed ${r.ref} but landed on ${state.hash} (${state.title})`);
   }
   expect(dead, `dead catalog references:\n${dead.join("\n")}`).toEqual([]);
 });
