@@ -13,8 +13,9 @@ as tokens. Change the accent in Settings and the whole system follows.
 
 ## See it live
 
-The URL hash IS the workspace, and since 0.25.0 it reads like a path you could
-have guessed. Every link below opens the panels it names, on the live demo:
+The URL hash IS the workspace, and it reads like a path you could have guessed.
+Every link below opens the panels it names, on the live demo, and a committed
+test drives all of them so a dead one cannot ship:
 
 | Link | What it opens |
 |---|---|
@@ -23,8 +24,13 @@ have guessed. Every link below opens the panels it names, on the live demo:
 | [`#/console/keys`](https://stax-agentik-oss-projects.vercel.app/#/console/keys) | API keys: masked secrets, reveal once on creation, roll and revoke as row actions |
 | [`#/crm/acme/jo/refonte`](https://stax-agentik-oss-projects.vercel.app/#/crm/acme/jo/refonte) | Four panels deep in one URL: accounts, account, contact, opportunity |
 | [`#/studio/terminal`](https://stax-agentik-oss-projects.vercel.app/#/studio/terminal) | A terminal as a panel: mono scrollback in the body, the prompt in the foot |
-| [`#/canvas/canvas`](https://stax-agentik-oss-projects.vercel.app/#/canvas/canvas) | A Figma-class whiteboard as a panel; nodes drill to inspectors |
-| [`#/data/data`](https://stax-agentik-oss-projects.vercel.app/#/data/data) | Airtable-class tables where every row opens as a Notion-class page |
+| [`#/canvas`](https://stax-agentik-oss-projects.vercel.app/#/canvas) | A Figma-class whiteboard as a panel; nodes drill to inspectors |
+| [`#/data`](https://stax-agentik-oss-projects.vercel.app/#/data) | Airtable-class tables where every row opens as a Notion-class page |
+| [`#/moonbase/scorecard`](https://stax-agentik-oss-projects.vercel.app/#/moonbase/scorecard) | A weighted rubric: criteria in bands on a discrete rail, total and verdict derived |
+| [`#/moonbase/reconcile`](https://stax-agentik-oss-projects.vercel.app/#/moonbase/reconcile) | Two sides that should pair: a confidence whose weight scales, and the reason for it |
+| [`#/moonbase/killcheck`](https://stax-agentik-oss-projects.vercel.app/#/moonbase/killcheck) | The verdict first, then the gates that produced it. One blocking failure kills it |
+| [`#/moonbase/entry`](https://stax-agentik-oss-projects.vercel.app/#/moonbase/entry) | The front door is a panel: three entrances, one identity, one component |
+| [`#/moonbase/refusal`](https://stax-agentik-oss-projects.vercel.app/#/moonbase/refusal) | Denial as a designed state, each refusal with what it enforces, leaks and traps |
 
 Old links never rot. The previous `type~key` form and the original
 percent-encoded JSON both still decode, and they upgrade themselves: open one and
@@ -153,6 +159,37 @@ lines, and state comes from tokens so the comparison survives dark mode. No char
 library: bars are divs. Live at `#/analytics/blotter`, `#/analytics/treasury`,
 `#/analytics/cfo`.
 
+## Pick the shape from what the data IS
+
+The grammar can express anything, so the failure mode is to point a table at
+every domain and call the flexibility a decision. `stax-migrate shapes` is the
+router that prevents it: 26 shapes keyed on what the data IS rather than what
+the legacy screen was called, each with the grammar to build, the capability it
+demonstrates, the anti-pattern it prevents, and a live panel to copy.
+
+```sh
+node $CLI shapes                     # the whole router
+node $CLI shapes "events in time"    # or describe the data
+```
+
+| the data is | shape |
+|---|---|
+| a row set the user EDITS | `grid` |
+| events in time | `stream` |
+| entities compared by magnitude, each with a state | `ladder` |
+| a computation descending to a result | `walk` |
+| weighted criteria rolling to a decision | `scorecard` |
+| two sets that should pair up but do not yet | `match` |
+| one total split by an ownership key | `allocation` |
+| ordered checks where one failure stops the thing | `gate` |
+| a session the user drives by typing | `scrollback` |
+| the front door, and the state a product is judged on | `entry`, `refusal` |
+
+Fifteen more in the catalog. The rule the whole thing exists for: `grid` is ONE
+shape of twenty six, correct only when the user edits the rows. If the first
+question is "what happened", "how do these compare" or "where did we land", the
+answer is `stream`, `ladder` or `walk`, never a table.
+
 ## Drive it from an agent
 
 The workspace is an API. `window.stax` exposes the serializable state and every
@@ -186,7 +223,30 @@ node $CLI init <your-legacy-app> --level full
 node $CLI run  <your-legacy-app> --agent claude        # drive ONE phase (or codex)
 node $CLI status   <your-legacy-app>                   # three coverage matrices
 node $CLI contract <your-legacy-app>                   # the honesty check, exit 1 on breach
+node $CLI proof    <your-legacy-app>                   # the layout proof (see below)
 ```
+
+### The layout proof: how a conversion argues with itself
+
+`stax-migrate proof` renders every matrix row as a panel at the size that row
+declares, under the source it was transcribed from, and publishes its own
+coverage. Seven disciplines, enforced by the generator rather than asked for in
+prose:
+
+- **Every render carries its row.** No citation, and it draws as furniture.
+- **The unknown is DRAWN as unknown**, and its caption says what would settle
+  it. An empty cell is never skipped and never filled with a plausible guess.
+- **A disputed value is never silently picked.** Two matrices describing one
+  surface differently are both shown, and the disagreement is counted.
+- **A placeholder is dashed**, so measured never looks like invented.
+- **Every substitution is declared**: what, what for, why.
+- **The counts are published.** A proof that does not count itself is a brochure.
+- **The invariant is proven by repetition**, once per manifest.
+
+Run it at phase 4 and again at phase 8. The first count is large and that is the
+correct output: it IS the work list. The second must be lower, because a count
+that never falls is a conversion that filled its status column and learned
+nothing.
 
 Nine phases run recon, the feature and data matrices, the UI inventory, the
 mapping passes, the scaffold, the migration batches, an adversarial coverage
