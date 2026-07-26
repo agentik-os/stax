@@ -1063,6 +1063,61 @@ async function cmdProof(target, flags) {
   if (flags.json) console.log(JSON.stringify({ out, unknowns, disagreements: Number(disagreements) }, null, 1));
 }
 
+/**
+ * `audit` — the mechanical half of a Stax audit, in three modes.
+ *
+ * It runs the real gates, captures what they actually printed, writes the
+ * evidence to .stax-audit/<mode>-evidence.json, and prints the forensic brief
+ * the skill then executes. The split matters: a protocol that only reasons
+ * produces performative phases, and the evidence file is what a phase cannot
+ * fake. A probe that could not run is recorded SKIPPED with its reason, never
+ * as a pass, because a blocked surface is an abort and not a green light.
+ */
+async function cmdAudit(mode, target, flags) {
+  const { runAudit, MODES } = await import(new URL("./audit.mjs", import.meta.url));
+  if (!mode || !MODES[mode]) {
+    console.log(bold(mag("stax audit")) + dim(" \u00b7 three moments, three questions"));
+    for (const [k, v] of Object.entries(MODES))
+      console.log("\n  " + bold(k) + "\n  " + dim("asks  ") + v.asks + "\n  " + dim("hinge ") + v.hinge);
+    console.log(dim("\n  stax-migrate audit <mode> [dir] [--url <live>] [--legacy-url <old>] [--json]"));
+    process.exitCode = mode ? 1 : 0;
+    return;
+  }
+  const { evidence, jsonPath, spec, skipped } = runAudit(mode, target, {
+    url: flags.url, legacyUrl: flags["legacy-url"],
+  });
+  const r = evidence.reading;
+
+  if (flags.json) { console.log(JSON.stringify(evidence, null, 1)); return; }
+
+  console.log(bold(mag(`stax audit \u00b7 ${mode}`)) + dim(" \u00b7 " + evidence.target));
+  console.log(dim("  asks  ") + spec.asks);
+  console.log("");
+  const line = (k, v, bad) => console.log("  " + dim(k.padEnd(16)) + (bad ? red(String(v)) : String(v)));
+  if (r.designGate !== "absent") line("design gate", r.designGate, r.designGate === "fail");
+  if (r.dataGate !== "absent") line("data gate", r.dataGate, r.dataGate === "fail");
+  if (r.contractGate !== "absent") line("contract", r.contractGate, r.contractGate === "breach");
+  if (r.e2e !== "absent") line("e2e", r.e2e, r.e2e === "fail");
+  if (r.unknowns !== null) line("unknowns", r.unknowns + " drawn, never hidden");
+  if (r.disagreements !== null) line("disagreements", r.disagreements, r.disagreements > 0);
+  if (r.shapes !== null) line("shapes", r.shapes + " in the catalog");
+  const m = evidence.matrixRows;
+  if (m.feature !== null) line("matrix rows", `${m.feature} feature \u00b7 ${m.element} element \u00b7 ${m.data} data`);
+
+  if (skipped.length) {
+    console.log("\n  " + bold("NOT RUN, and not run is neither a pass nor a fail:"));
+    for (const s of skipped) console.log("  " + dim("  " + s.id.padEnd(14)) + s.skipped);
+  }
+
+  console.log(dim("\n  evidence  ") + jsonPath);
+  console.log(dim("  Now run the forensic half against it:"));
+  console.log("    " + cyan(`/staxaudit ${mode}`) + dim("   (or read skills/staxaudit/SKILL.md)"));
+  console.log(dim(`\n  HINGE for this mode: `) + spec.hinge);
+  console.log(dim("  " + spec.hingeHow));
+  if (r.designGate === "fail" || r.dataGate === "fail" || r.contractGate === "breach" || r.e2e === "fail")
+    process.exitCode = 1;
+}
+
 function cmdHelp() {
   console.log(`
 ${bold(mag("stax-migrate"))} — any legacy web app → the Stax panels-inside-panels grammar
@@ -1088,6 +1143,17 @@ ${bold("USAGE")}
   stax-migrate ${cyan("data")}   scan [dir] [--write]    PROGRAMMATIC backend extraction: Convex, Supabase,
                                         Prisma, REST routes, tRPC — tables, functions, rpc, realtime,
                                         every read/write call site, file:line evidence → data-matrix.csv
+  stax-migrate ${cyan("audit")}  <transfer|stax|cohesion> [dir] [--url <live>] [--legacy-url <old>]
+                                        THE STAX AUDIT, three moments and three questions.
+                                        transfer  BEFORE: is the legacy app ready to move, and what
+                                                  would be lost if we moved it today?
+                                        stax      DURING: does this Stax app obey its own laws, on
+                                                  every surface, in both themes?
+                                        cohesion  AFTER and continuously: do the matrices and the
+                                                  running product still describe the same thing?
+                                        Runs the real gates, captures what they printed, and writes
+                                        .stax-audit/<mode>-evidence.json for the forensic half.
+
   ${bold("THE GATES")} — run these, do not eyeball
   stax-migrate ${cyan("verify")} --url <app> [--themes light,dark]
                                         the DESIGN gate: drives the running app and asserts the
@@ -1240,6 +1306,12 @@ async function main() {
       case "proof":
         await cmdProof(resolveTarget(pos[0]), flags);
         break;
+      case "audit": {
+        const known = ["transfer", "stax", "cohesion"];
+        const m = known.includes(pos[0]) ? pos[0] : null;
+        await cmdAudit(m ?? pos[0], resolveTarget(m ? pos[1] : pos[0]), flags);
+        break;
+      }
       case "data": {
         const sub = ["scan", "check"].includes(pos[0]) ? pos[0] : "scan";
         const dirArg = ["scan", "check"].includes(pos[0]) ? pos[1] : pos[0];

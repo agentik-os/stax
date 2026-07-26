@@ -6,3 +6,6 @@ dist/
 
 # temporary probe specs written by workflow agents; never committed
 frameword/apps/crm-specimen/e2e/zz-*.spec.ts
+
+# audit evidence is a working artefact, regenerated on every run
+.stax-audit/

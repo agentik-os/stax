@@ -269,6 +269,12 @@
       "since": "0.30.0",
       "area": "migration",
       "title": "The layout proof: seven evidence disciplines generated from the matrices, unknowns drawn rather than hidden"
+    },
+    {
+      "id": "U-046",
+      "since": "0.31.0",
+      "area": "migration",
+      "title": "The Stax audit in three modes, split into a mechanical half that captures real gate output and a forensic half that cannot fake a phase"
     }
   ]
 }
