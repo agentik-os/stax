@@ -263,6 +263,12 @@
       "since": "0.29.0",
       "area": "design",
       "title": "The foot law, measured correctly: line boxes by vertical position, descendant overflow, and a hit test on every control"
+    },
+    {
+      "id": "U-045",
+      "since": "0.30.0",
+      "area": "migration",
+      "title": "The layout proof: seven evidence disciplines generated from the matrices, unknowns drawn rather than hidden"
     }
   ]
 }

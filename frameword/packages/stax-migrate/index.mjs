@@ -1029,6 +1029,40 @@ function cmdShapes(query, flags) {
   console.log(dim("  A table is one shape among nineteen, correct only when the user EDITS the rows."));
 }
 
+/**
+ * `proof` — generate the LAYOUT PROOF from the matrices.
+ *
+ * A conversion produces matrices and an app, and nobody ever puts the two
+ * beside each other at the size the row declared. This does, and it enforces
+ * seven disciplines lifted from a real hand-written proof of a 97 screen
+ * migration: every render carries its row, the unknown is drawn as unknown and
+ * says what would settle it, a disputed value is never silently picked, a
+ * placeholder is visibly not a quotation, every substitution is declared, the
+ * counts are published, and the invariant is proven by repetition.
+ */
+async function cmdProof(target, flags) {
+  requireWorkspace(target);
+  const { buildProof } = await import(new URL("./proof.mjs", import.meta.url));
+  const html = buildProof(target, { accent: flags.accent });
+  const out = flags.out ? path.resolve(flags.out) : wsPath(target, "layout-proof.html");
+  fs.writeFileSync(out, html);
+
+  // the counts belong on the terminal too: a proof nobody reads still reports
+  const n = (f) => {
+    const p = wsPath(target, f);
+    if (!fs.existsSync(p)) return 0;
+    return Math.max(0, fs.readFileSync(p, "utf8").split(/\r?\n/).filter((l) => l.trim()).length - 1);
+  };
+  const unknowns = (html.match(/class="unk"/g) || []).length;
+  const disagreements = (html.match(/<h2>Disagreements between matrices \((\d+)\)/) || [, "0"])[1];
+  console.log(bold(mag("stax proof")) + dim(" \u00b7 " + out));
+  console.log("  " + dim("rows        ") + (n("feature-matrix.csv") + n("element-matrix.csv") + n("data-matrix.csv")));
+  console.log("  " + dim("unknowns    ") + unknowns + dim("  drawn, never hidden"));
+  console.log("  " + dim("disagree    ") + disagreements);
+  console.log(dim("\n  Open it. A row with no citation renders as furniture, and it is meant to look wrong."));
+  if (flags.json) console.log(JSON.stringify({ out, unknowns, disagreements: Number(disagreements) }, null, 1));
+}
+
 function cmdHelp() {
   console.log(`
 ${bold(mag("stax-migrate"))} — any legacy web app → the Stax panels-inside-panels grammar
@@ -1065,6 +1099,13 @@ ${bold("USAGE")}
                                         still improvised
   stax-migrate ${cyan("theme")}  --from <hex> [dir]          derive the whole token set from one brand colour
 
+  stax-migrate ${cyan("proof")}  [dir] [--accent <hex>] [--out <file>]
+                                        THE LAYOUT PROOF: renders every matrix row as a panel at
+                                        the size that row declares, under the source it was
+                                        transcribed from. An empty cell is drawn as [unknown] and
+                                        says what would settle it; a row with no citation renders
+                                        as furniture; matrix disagreements are listed, never
+                                        silently resolved; the counts are published on the page.
   stax-migrate ${cyan("shapes")}   [query] [--json]      the SHAPE ROUTER: what the data IS (events in time,
                                         entities by magnitude, a computation, a session, a config
                                         object, a graph) → the layout that answers it, the anti-pattern
@@ -1195,6 +1236,9 @@ async function main() {
         break;
       case "shapes":
         cmdShapes(pos.join(" "), flags);
+        break;
+      case "proof":
+        await cmdProof(resolveTarget(pos[0]), flags);
         break;
       case "data": {
         const sub = ["scan", "check"].includes(pos[0]) ? pos[0] : "scan";

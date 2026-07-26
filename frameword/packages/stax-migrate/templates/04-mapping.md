@@ -108,6 +108,27 @@ table. Write the chosen shape into the row's `evidence` column, like
 A surface that matches NO shape is a real finding: say so in the decision log
 rather than defaulting to a grid. Nineteen shapes is a catalog, not a ceiling.
 
+## Before you close this phase, GENERATE THE PROOF
+
+```
+node {{CLI}} proof {{TARGET}}
+```
+
+It renders every row you just wrote as a panel at the size that row declares,
+under the source it was transcribed from, and it publishes five counts.
+
+Read the unknown count. On a first pass it is large, and that is the correct
+output: it IS your work list, and each unknown names what would settle it. What
+you must not do is make it smaller by guessing. An invented `size` looks exactly
+like a measured one in a CSV and nothing downstream can tell them apart, which
+is why the proof draws what it read and dashes what it did not.
+
+Read the disagreement count. A data row binding to a panel no feature row
+declares, or a writable row bound to an out-of-scope surface, is a contradiction
+you are about to build. The proof lists both readings and refuses to prefer one.
+
+A row whose render carries NO citation is furniture. Fix the row or delete it.
+
 ## Size grammar (the `size` column: S, M, L, XL)
 
 - S  — confirm, or a 1-3 field form

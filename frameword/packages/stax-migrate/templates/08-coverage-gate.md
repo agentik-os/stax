@@ -89,3 +89,16 @@ THIS ENTIRE phase from scratch — a partial re-check is not a pass.
 
 End with: gaps (ids), design findings (ids), flipped rows (ids), console
 errors (count), verdict GATE GREEN or GATE RED. Never advance the phase yourself.
+
+## The proof, a second time
+
+```
+node {{CLI}} proof {{TARGET}} --json
+```
+
+Compare its unknown count against the one from phase 4. It must have FALLEN. A
+count that never falls is a conversion that filled its status column and learned
+nothing about the product. Paste both numbers into the phase report.
+
+Disagreements must be ZERO here. At phase 4 a contradiction between matrices is
+a finding; at phase 8 it is a contradiction you shipped.

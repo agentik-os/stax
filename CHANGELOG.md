@@ -4,6 +4,9 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.30.0
+- **U-045** (migration) — : renders every matrix row as a panel at its declared size under its citation, draws unknowns as unknown with what would settle them, reports matrix disagreements instead of resolving them, and publishes its own coverage. Generated at phase 4 as the work list and at phase 8 as the proof the count fell
+
 ## 0.29.0
 - **U-044** (design) — Five foot defects the law could not see: wrapped labels, a 95px overrun painting over the view deck, a deck that could never yield, tabs squeezed once it could, and a shed rung aimed at a class nobody rendered. New assertions measure line boxes by vertical position, walk descendant overflow, and hit test every control
 

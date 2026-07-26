@@ -245,6 +245,49 @@ view grammar: a screen is a PANEL, its list is a view type, its actions are the 
 
 
 
+### The evidence disciplines: how a conversion proves itself
+
+A conversion produces matrices and a running app, and the gap between them is
+where a migration quietly goes wrong. The matrices say a screen is mapped, the
+app renders something, and nobody ever puts the two beside each other at the
+size the row declared.
+
+`stax-migrate proof` generates the document that does. Seven disciplines, taken
+from a real hand-written proof of a 97 screen migration, and each one is
+enforced by the generator rather than requested in prose.
+
+1. **Every render carries its row.** Under each panel is the file and line it
+   was transcribed from. A render with no citation renders as furniture, and it
+   is meant to look wrong.
+2. **The unknown is drawn as unknown.** An empty cell is neither skipped nor
+   filled with a plausible guess: it renders as a dashed chip and the caption
+   says WHAT WOULD SETTLE IT. Hiding unknowns is the one dishonest thing a proof
+   can do, and an agent's instinct is always to hide them.
+3. **A disputed value is never silently picked.** When two matrices name the
+   same surface and describe it differently, both readings are shown with their
+   sources and the disagreement is counted. Preferring one quietly is how a
+   migration inherits a contradiction.
+4. **A placeholder is not a quotation.** Anything the document supplies rather
+   than reads is drawn dashed, so nobody mistakes what was measured for what was
+   invented to make the page legible at all.
+5. **Declare every substitution.** If a font, a colour or a dataset is standing
+   in for the real one, the page says which and why, in a table, not a footnote.
+6. **Publish the counts.** The document's own coverage is a number on it: rows
+   documented, rows rendered, rows with no size, unknowns drawn, disagreements
+   found. A proof that does not count itself is a brochure.
+7. **Prove the invariant by repetition.** Render the same chrome once per space
+   manifest rather than asserting that it is the same chrome.
+
+The adaptable part is that none of this is domain knowledge. Everything comes
+from the three matrices the conversion already had to fill, so the proof is as
+deep as the matrices are honest, and its unknown count is exactly the measure of
+how honest they are.
+
+Run it at phase 4 and again at phase 8. The first run is usually mostly
+unknowns, and that is the correct output: it is the work list. The second should
+show the count falling, and a count that never falls is a conversion that
+learned nothing.
+
 ### The shape router: pick the layout from what the data IS
 
 The pattern table above answers "this screen exists, copy it". The shape router
