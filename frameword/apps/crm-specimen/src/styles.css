@@ -1752,3 +1752,10 @@ body[data-density="dense"] .panel-bar { height: 38px; }
 .en-ref .says .q { font-size: calc(var(--fz-body, 13px) * 0.94); }
 .en-ref .says .ex { margin-left: auto; font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.02); color: var(--accent); }
 @container (max-width: 560px) { .en-ref > .hd { grid-template-columns: 1fr 14px; } .en-ref .st { grid-column: 1 / -1; } }
+
+/* A hover-revealed row action must also appear on FOCUS, or removing tabIndex
+   makes it reachable and invisible, which is worse than unreachable. The canvas
+   connection row already does exactly this; the grid never inherited it. */
+.dt tbody tr:focus-within .dt-open,
+.dt tbody tr:focus-within .dt-openchip,
+.dt tbody tr:focus-within .dt-selbox { opacity: 1; visibility: visible; }

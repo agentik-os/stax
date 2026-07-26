@@ -91,3 +91,23 @@ auditable, not promotional.
 
 Then stop. The operator runs `stax-migrate done {{TARGET}}` — REPORT.md is its
 exit gate — and the migration is complete.
+
+## The conformance audit, before you call it accepted
+
+```
+node {{CLI}} audit stax {{TARGET}} --url <live>
+```
+
+The design gate checks four laws. Most of what makes a Stax app a Stax app is
+not among them, so run the forensic half too: `/staxaudit stax`, which loads
+`STAX-LENS.md` and audits THE MECHANIC before anything visual.
+
+The mechanic is what a generic acceptance pass cannot see. Drill three deep and
+assert the first panel is still mounted, still scrolled where you left it, and
+still holding its own state. Close the middle of a chain of four and count what
+remains. Pin a reference, switch space twice, and check it survived. Serialise
+`WorkspaceState`, reload, and diff the restored object rather than eyeballing
+the screen. A modal, a detail route or a tab bar switching between entities is
+each a finding by itself, and the report names the file.
+
+An app that renders beautifully and breaks the mechanic is not a Stax app.

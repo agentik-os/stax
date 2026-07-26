@@ -737,15 +737,15 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
   const BodyRow = ({ r }: { r: Row }) => (
     <tr className={selRows.has(r.id) ? "dt-selrow" : undefined}>
       <td className="dt-opentd">
-        <input type="checkbox" tabIndex={-1} className={"dt-selbox" + (selRows.size > 0 ? " show" : "")}
+        <input type="checkbox" className={"dt-selbox" + (selRows.size > 0 ? " show" : "")}
           checked={selRows.has(r.id)}
           onClick={(e) => toggleRow(r.id, !selRows.has(r.id), (e as React.MouseEvent).shiftKey)}
           onChange={() => { /* handled on click for shift detection */ }} />
-        <button className="dt-open" tabIndex={-1} title="Open as a page" onClick={() => openRow(r.id)}>
+        <button className="dt-open" title="Open as a page" onClick={() => openRow(r.id)}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
         </button>
         <span className="dp-wrap">
-          <button className="dt-open" tabIndex={-1} title="Row actions" onClick={(e) => openMenu("r:" + r.id, e, 130, 160)}>⋯</button>
+          <button className="dt-open" title="Row actions" onClick={(e) => openMenu("r:" + r.id, e, 130, 160)}>⋯</button>
           {menu === "r:" + r.id && (
             <div className="dp-pop dt-selfly" style={pos}>
               <button className="tp-slot" onClick={() => { dataApp.insertRowAfter(c.id, r.id); setMenu(null); }}>Insert row below</button>
@@ -760,7 +760,7 @@ export function DataTable({ colKey, panelId, searchQ = "" }: { colKey: string; p
         <td key={f.id} className={fi === 0 ? "dt-titletd" : undefined}>
           <Cell colId={c.id} row={r} field={f} wrap={view.wrap} />
           {fi === 0 && (
-          <button className="dt-openchip" tabIndex={-1} title="Quick peek"
+          <button className="dt-openchip" title="Quick peek"
             onClick={(e) => { e.stopPropagation(); setSheet(r.id); }}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
             Open

@@ -67,6 +67,76 @@ product, and it burns the reader's attention:
 - "Add breadcrumbs." The crumbbar exists and is free.
 - "Deep link support." The hash IS the workspace and round-trips.
 
+## 3bis. THE MECHANIC. Audit this before anything visual.
+
+Everything above is design. This is the framework. A Stax app that renders
+beautifully and breaks the mechanic is not a Stax app, and no generic protocol
+will notice because no generic protocol knows the mechanic exists.
+
+**One move: anything with depth opens a panel to the RIGHT, and the source
+STAYS on stage.** Not a route change, not a modal, not a replaced view. That one
+sentence generates every check below.
+
+### The chain
+
+- **The parent stays mounted.** Drill three deep, then assert the first panel is
+  still in the DOM, still scrolled where you left it, and still holding its own
+  state (a filter, a selected row, a half-typed field). A parent that remounts
+  has lost the mechanic and nobody will see it in a screenshot.
+- **Closing a panel closes its descendants**, and only its descendants. Close
+  the middle of a chain of four and count what remains: two, not one, not three.
+- **Back is closing the rightmost panel**, not leaving the app. With
+  `urlSync="push"`, browser Back must rewind the workspace and never exit.
+- **A wizard is a chained drill.** Step N opens step N+1 to the right, the
+  earlier steps stay visible, and the step's primary lives in ITS foot. A wizard
+  that replaces its own panel is a page wearing a panel's clothes.
+
+### The state
+
+- **`WorkspaceState` is the whole UI.** `panelsById`, `contextLeafId`,
+  `referenceRailOrder`. Serialise it, reload, restore: the workspace must come
+  back identical. Run the round trip and diff the object, do not eyeball it.
+- **The URL hash IS the context path**, and it round-trips byte for byte. A
+  state the URL cannot express is a state that cannot be shared, which is the
+  feature people adopt Stax for.
+- **One space is active at a time.** Switching spaces must not leave a stale
+  panel from the previous one on stage.
+
+### The reference rail
+
+- **A pinned reference survives navigation AND a space switch.** Pin something,
+  drill elsewhere, switch space twice, and assert `referenceRailOrder` is
+  unchanged and the reference still renders live data rather than a snapshot.
+- A reference detaches from its parent: closing the parent must NOT close it.
+
+### Sizing and identity
+
+- **Width comes from the registry, never from a component.** Grep for a hardcoded
+  panel width in app code: each hit is a panel that will disagree with its own
+  registry entry the first time the ladder moves.
+- **The panel type decides the size**, so two panels of one type at different
+  widths is a defect even when both look fine.
+
+### The forbidden constructs, and each is a finding by itself
+
+A modal. A tab bar switching between entities. A detail ROUTE. A floating action
+button. A drawer that is not the drawer. A "back" button drawn in the body. Each
+one means a surface escaped the grammar, and the report should name the file.
+
+### How to probe the chain, concretely
+
+```js
+// after drilling three deep
+const n = document.querySelectorAll(".panel").length;              // 3, not 1
+const first = document.querySelector(".panel");                    // still there
+first.scrollTop;                                                    // preserved
+window.stax?.getState?.();                                          // the bridge, if exposed
+```
+
+The app exposes `window.stax` in the reference implementation. If the target
+does too, read the state directly rather than inferring it from the DOM: an
+inferred state is a guess and this is the one place a guess is expensive.
+
 ## 4. Ask these instead. This is what actually breaks here.
 
 ### The foot, and measure it correctly

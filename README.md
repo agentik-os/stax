@@ -226,6 +226,26 @@ node $CLI contract <your-legacy-app>                   # the honesty check, exit
 node $CLI proof    <your-legacy-app>                   # the layout proof (see below)
 ```
 
+### Audit it, in three modes
+
+```sh
+node $CLI audit transfer <legacy> --legacy-url <old>   # BEFORE: ready to move? what is lost?
+node $CLI audit stax     <app> --url <live>            # DURING: does it obey its own laws?
+node $CLI audit cohesion <app> --url <live>            # AFTER: do matrices and product agree?
+```
+
+The mechanical half runs the real gates and records, per probe, the exact
+command, its exit code and its captured output. The forensic half is the
+`staxaudit` skill, which reads a file it cannot fake. A protocol that only
+reasons produces phases nobody ran.
+
+`unreachable` is an ABORT and never a score: an app that was not running has no
+verdict, and reporting it as a failure slanders the app while hiding that nobody
+looked. Generic audits (`/uiuxaudit`, `/a11yaudit`, `/flowaudit` and six more)
+load `skills/staxaudit/STAX-LENS.md` when they detect a Stax target, so they
+stop reporting the framework's own contracts as defects and start auditing the
+mechanic instead.
+
 ### The layout proof: how a conversion argues with itself
 
 `stax-migrate proof` renders every matrix row as a panel at the size that row

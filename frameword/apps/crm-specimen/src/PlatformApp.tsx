@@ -255,7 +255,12 @@ function KeysTable({ panelId }: { panelId: string }) {
   const [menu, setMenu] = useState<{ id: string; pos: React.CSSProperties } | null>(null);
   const rows = s.keys.filter((k) =>
     (flt === "All" || (flt === "Active") === (k.status === "active")) &&
-    (!q.trim() || (k.name + " " + k.secret).toLowerCase().includes(q.trim().toLowerCase())));
+    // Search the MASK, never the secret. Matching k.secret made the row count an
+    // oracle: "sk-stax-prod-9f2" returned 1 key and "sk-stax-prod-zzz" returned
+    // 0, so a character at a time recovers the whole value from the seven
+    // characters the mask already prints. A masked value that a filter can
+    // confirm is not masked.
+    (!q.trim() || (k.name + " " + mask(k.secret)).toLowerCase().includes(q.trim().toLowerCase())));
   return (
     <div>
       <div className="pf-toolbar">

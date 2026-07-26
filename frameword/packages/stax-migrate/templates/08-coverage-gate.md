@@ -102,3 +102,22 @@ nothing about the product. Paste both numbers into the phase report.
 
 Disagreements must be ZERO here. At phase 4 a contradiction between matrices is
 a finding; at phase 8 it is a contradiction you shipped.
+
+## The cohesion audit, and it is a gate not a suggestion
+
+```
+node {{CLI}} audit cohesion {{TARGET}} --url <live>
+```
+
+It runs the real gates, records every command and its captured output into
+`.stax-audit/cohesion-evidence.json`, and asks the one question this phase
+exists for: do the matrices and the running product still describe the same
+thing? Then run the forensic half, `/staxaudit cohesion`, against that file.
+
+Four readings, and three of them are NOT verdicts. `pass` is one. `fail` is one
+and you score it. `unreachable` means nobody could look, which is an ABORT: start
+the app and re-run rather than averaging it away. `not applicable` carries its
+reason and is not a red.
+
+This phase does not pass while `disagreements > 0`. At phase 4 a contradiction
+between matrices is a finding; here it is a contradiction you are about to ship.

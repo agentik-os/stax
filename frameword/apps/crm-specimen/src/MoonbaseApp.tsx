@@ -152,7 +152,12 @@ export function MatchBody() {
   const [only, setOnly] = useState(true);
   const [done, setDone] = useState<Record<string, "accepted" | "rejected">>({});
   const rows = only ? CANDIDATES.filter((c) => c.confidence >= 0.7) : CANDIDATES;
-  const open = CANDIDATES.filter((c) => !done[c.id]);
+  // The count describes what the reader can SEE. Counting CANDIDATES here
+  // printed "4 open" beside three rendered rows and a total 22,000 higher than
+  // they sum to, which is the exact leak /moonbase/refusal prohibits three
+  // routes away: never a count that includes rows the reader cannot see.
+  const open = rows.filter((c) => !done[c.id]);
+  const hidden = CANDIDATES.length - rows.length;
 
   return (
     <>
@@ -161,7 +166,10 @@ export function MatchBody() {
           <button className={"aseg" + (only ? " on" : "")} onClick={() => setOnly(true)}>Top matches</button>
           <button className={"aseg" + (!only ? " on" : "")} onClick={() => setOnly(false)}>All</button>
         </div>
-        <span className="foot-note" style={{ marginLeft: "auto" }}>{open.length} open · {eur(open.reduce((s, c) => s + c.amount, 0))}</span>
+        <span className="foot-note" style={{ marginLeft: "auto" }}>
+          {open.length} open · {eur(open.reduce((s, c) => s + c.amount, 0))}
+          {hidden > 0 && ` · ${hidden} below the threshold`}
+        </span>
       </div>
 
       <div className="section">
@@ -318,7 +326,7 @@ export function MoonbaseFoot({ kind }: { kind: string }) {
         <>
           <button className="foot-cta">Accept match</button>
           <button className="d-btn">Mark unmatched</button>
-          <span className="foot-note">{CANDIDATES.length} candidates · {eur(CANDIDATES.reduce((s, c) => s + c.amount, 0))}</span>
+          <span className="foot-note">{CANDIDATES.length} candidates · {eur(CANDIDATES.reduce((s, c) => s + c.amount, 0))} · the toolbar counts what is shown</span>
         </>
       );
     case "mbcall":
