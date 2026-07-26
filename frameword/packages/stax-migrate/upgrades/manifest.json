@@ -275,6 +275,12 @@
       "since": "0.31.0",
       "area": "migration",
       "title": "The Stax audit in three modes, split into a mechanical half that captures real gate output and a forensic half that cannot fake a phase"
+    },
+    {
+      "id": "U-047",
+      "since": "0.32.0",
+      "area": "migration",
+      "title": "The Stax lens: one conditional reference that teaches any generic audit what to stop asking and what to ask instead"
     }
   ]
 }

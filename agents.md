@@ -239,6 +239,15 @@ And the four report rows (funnel, sources, mrr, forecast) point at the retired
 `ana-overview` and `ana-revenue` spaces: they open empty placeholder panels. Use
 the grammar in those rows, not the link.
 
+## Auditing Stax conformance
+
+`node $CLI audit <transfer|stax|cohesion> [dir] --url <live>` runs the real
+gates and writes `.stax-audit/<mode>-evidence.json`. The forensic half is the
+`staxaudit` skill. `unreachable` is an ABORT and not a score; `not applicable`
+is not a failure. An audit cannot assert more than it ran: if PASS phases
+outnumber captured commands, confidence caps at medium.
+
+
 ## The gates
 
 Run these, in this order, and show the output. A green build with a red console

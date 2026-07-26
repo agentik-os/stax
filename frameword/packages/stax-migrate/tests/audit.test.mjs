@@ -101,3 +101,18 @@ test("the skill exists at the path the CLI points readers to", () => {
   expect(s).toContain("PHASE 0");
   expect(s).toContain("before-after");
 });
+
+test("the Stax lens exists and tells a generic audit what to STOP asking", () => {
+  const lens = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../skills/staxaudit/STAX-LENS.md");
+  expect(existsSync(lens), "skills/staxaudit/STAX-LENS.md is missing").toBe(true);
+  const s = readFileSync(lens, "utf8");
+  // the detector, or an audit cannot know the lens applies
+  expect(s).toContain("@frameword/panels-core");
+  // the four readings, because collapsing them is how a report loses its reader
+  for (const r of ["unreachable", "not applicable"]) expect(s).toContain(r);
+  // the three blind assertions, spelled out: this is the part a generic audit cannot know
+  expect(s).toContain("line boxes by distinct vertical position");
+  expect(s).toContain("elementFromPoint");
+  // what to stop asking, which is half the value
+  expect(s).toContain("There are no modals");
+});
