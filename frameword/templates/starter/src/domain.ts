@@ -10,6 +10,16 @@ export interface NodeDef {
   composer?: string;
 }
 
+export interface SpaceDef { spaceId: string; rootKey: string; label: string }
+
+/** Every space this app publishes, and the node each one opens on. Anything
+ *  keyed on "the root of space X" (the URL codec in slugs.ts) reads it from
+ *  HERE rather than re-deriving the map, or #/home quietly opens whatever was
+ *  last on stage instead of the home section. Add a space: add a row. */
+export const SPACES: SpaceDef[] = [
+  { spaceId: "home", rootKey: "sec:home", label: "Home" },
+];
+
 export const DOMAIN: Record<string, NodeDef> = {
   "sec:home": {
     panelType: "section", title: "Welcome.", eyebrow: "Home · 01",
