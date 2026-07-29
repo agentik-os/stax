@@ -7,6 +7,32 @@
 
 Status: discovery draft, 2026-07-19. No application implementation is implied by this document.
 
+---
+
+## STATUS 2026-07-29: what shipped, what stayed a draft
+
+**Read this before the package plan below.** This file is a historical design document,
+kept for its reasoning. Its packaging plan was never built as written, and
+`docs/archive/BRIEF-REVIEW.md` cites it as "canonique v2", so it has been mistaken for a
+description of the codebase. It is not one.
+
+- **Shipped:** `@frameword/panels-core`, `@frameword/panels-react`, `create-stax-app`, `stax-migrate`.
+- **Never built (draft only):** `@frameword/panels-next`, `@frameword/ui`,
+  `@frameword/panels-convex`, `create-frameword-workspace`, `examples/lifeos`.
+
+**Vite is the shipped default.** `templates/starter` is Vite 7 + React 19, `apps/crm-specimen`
+is Vite 6 + React 18, CI builds with bun and vite, and the deploy target is a static SPA.
+
+**Next.js is a supported guest host, not the foundation.** Stax mounts inside a Next.js app as
+a client component: panel state lives in the location fragment, which the App Router never
+needs to see, so a panel open costs zero navigation and zero network. What does NOT exist, in
+any form: a Next.js routing adapter package, a Next.js starter, and server prefetching of the
+panels in a deep link (the fragment is never sent to a server, so a server cannot read it).
+
+Everything below is the original 2026-07-19 draft, left unedited on purpose.
+
+---
+
 Decision labels used here:
 
 - **Direction:** the product thesis and separation of concerns to keep.
@@ -46,7 +72,7 @@ Frameword is:
 - accessible React primitives;
 - a responsive presentation contract;
 - a shadcn registry of open-code UI components;
-- a first-party Next.js routing adapter;
+- a first-party Next.js routing adapter; *(never built: Stax runs in a Next.js host as a client component instead, see STATUS)*
 - an optional Convex persistence adapter;
 - a starter application and conformance suite.
 
@@ -278,6 +304,11 @@ Use container queries for embedded dashboard surfaces. Horizontal scrolling may 
 - A horizontal rail is not automatically an ARIA tree. Apply tree semantics only when the contained data and keyboard behavior actually implement that pattern.
 
 ## Recommended package architecture — future delivery target
+
+> *Never delivered, see STATUS at the top: only `panels-core` and `panels-react` exist under
+> these names. `@frameword/panels-next`, `@frameword/ui`, `@frameword/panels-convex`,
+> `create-frameword-workspace` and `examples/lifeos` were never built. What shipped instead is
+> `create-stax-app` and `stax-migrate`, on a Vite + React default.*
 
 ```text
 @frameword/panels-core

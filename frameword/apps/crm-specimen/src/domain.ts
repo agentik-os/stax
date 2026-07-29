@@ -293,7 +293,7 @@ export const DOMAIN: Record<string, DomainNode> = {
     panelType: "improvement", title: "URL-synced stacks", subtitle: "A link is a teleport.", meta: "live",
     blocks: [
       { kind: "card", label: "Live: this app", text: "Every open, pin, close and crumb click re-encodes the ContextPath into location.hash (encodeLocation). Paste the URL into a new tab: reconcileLocation rebuilds the exact stack, revealing existing panels instead of duplicating. On boot, the URL wins over the localStorage snapshot." },
-      { kind: "card", label: "In a Next.js host", text: "The encoded path maps to a catch-all segment, so the server can prefetch data for every panel in the link before first paint." },
+      { kind: "card", label: "In a Next.js host", text: "Stax mounts as a client component and drives its own fragment, so opening a panel costs the App Router nothing: the host keeps its routes, the rail keeps its state, zero network per open." },
     ],
   },
   "imp:keys": {
@@ -426,7 +426,7 @@ export const DOMAIN: Record<string, DomainNode> = {
   },
   "pr:p1": {
     panelType: "prompt", title: "P1: Build the framework", subtitle: "Clean-room, from the logic doc.", meta: "build",
-    blocks: [{ kind: "code", code: "Build the panel framework from PANEL-LOGIC.md:\n1. packages/core: pure reducer + laws test-kit\n2. packages/react: provider, registry, two hosts\n3. registry: shell/drill/panel/palette/drawer\n4. starter: Next.js + Convex, agent seam wired" }],
+    blocks: [{ kind: "code", code: "Build the panel framework from PANEL-LOGIC.md:\n1. packages/core: pure reducer + laws test-kit\n2. packages/react: provider, registry, two hosts\n3. registry: shell/drill/panel/palette/drawer\n4. starter: Vite + React, agent seam wired" }],
   },
   "pr:p2": {
     panelType: "prompt", title: "P2: Adopt in a new app", subtitle: "The paste-ready brief.", meta: "adopt",
