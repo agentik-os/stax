@@ -1309,7 +1309,10 @@ async function main() {
       case "audit": {
         const known = ["transfer", "stax", "cohesion"];
         const m = known.includes(pos[0]) ? pos[0] : null;
-        await cmdAudit(m ?? pos[0], resolveTarget(m ? pos[1] : pos[0]), flags);
+        // an unknown mode is NOT a directory: resolving it first reported
+        // "target directory not found: …/sécurité", which names the wrong
+        // problem. cmdAudit lists the three modes and exits 1 on its own.
+        await cmdAudit(m ?? pos[0], m ? resolveTarget(pos[1]) : null, flags);
         break;
       }
       case "data": {

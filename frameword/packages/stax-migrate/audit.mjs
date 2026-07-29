@@ -54,6 +54,14 @@ function probe(id, question, cmd, args, opts = {}) {
     // which is that the thing under audit was not running.
     if (/ERR_CONNECTION_REFUSED|ECONNREFUSED|ERR_NAME_NOT_RESOLVED|net::ERR/.test(out))
       skipped = `the target was not reachable at the URL given. Start it, then re-run: an unreachable app is an ABORT, never a score.`;
+    // Matching an error STRING only catches the refusals a browser happens to
+    // word that way. The gates already answer the question properly: `verify`
+    // and `parity` exit 1 for "it ran and the app broke a law" and 2 for "it
+    // never ran" — no browser, no report, nothing observed. A probe that knows
+    // that contract passes it here, so every could-not-run reason lands as an
+    // abort instead of only the one refusal we thought to grep for.
+    if (!skipped && opts.abortExit != null && code === opts.abortExit)
+      skipped = `${opts.abortWhy || "the probe could not run"}: ${firstLine(out)}. Nothing was observed, so this is an ABORT, never a score.`;
   }
   return {
     id,
@@ -66,6 +74,12 @@ function probe(id, question, cmd, args, opts = {}) {
     output: out.length > 6000 ? out.slice(0, 3000) + "\n…\n" + out.slice(-3000) : out,
   };
 }
+
+/** The reason a gate gave for not running, kept short enough to read in the
+ *  console listing but never invented: it is the tool's own first words. */
+const firstLine = (out) =>
+  (out || "").split(/\r?\n/).map((l) => l.trim()).find(Boolean)?.slice(0, 200) ||
+  "the gate produced no report";
 
 const has = (dir, ...p) => fs.existsSync(path.join(dir, ...p));
 const readCsvCount = (dir, f) => {
@@ -100,7 +114,8 @@ function staxProbes(dir, flags) {
   const P = [];
   if (flags.url) {
     P.push(probe("design-gate", "Does the live app honour the design laws in BOTH themes?",
-      "node", [CLI, "verify", "--url", flags.url, "--themes", "light,dark"]));
+      "node", [CLI, "verify", "--url", flags.url, "--themes", "light,dark"],
+      { abortExit: 2, abortWhy: "the design gate never reached the app" }));
   } else {
     P.push({ id: "design-gate", question: "Does the live app honour the design laws?",
       command: `${CLI} verify --url <url>`, exit: 0, ms: 0,
@@ -144,7 +159,8 @@ function cohesionProbes(dir, flags) {
     "node", [CLI, "data", "check", dir, "--json"]));
   if (flags.url)
     P.push(probe("design-gate", "Does the built product still obey the laws its spec declares?",
-      "node", [CLI, "verify", "--url", flags.url, "--themes", "light,dark"]));
+      "node", [CLI, "verify", "--url", flags.url, "--themes", "light,dark"],
+      { abortExit: 2, abortWhy: "the design gate never reached the app" }));
   if (flags.url && has(dir, "stax-migration", "parity.csv"))
     P.push(probe("parity", "Is every capability the contract lists still reachable?",
       "node", [CLI, "parity", dir, "--url", flags.url]));
@@ -162,7 +178,13 @@ function readOut(P) {
   return {
     unknowns: num("proof", /"unknowns":\s*(\d+)/),
     disagreements: num("proof", /"disagreements":\s*(\d+)/),
-    designGate: byId["design-gate"]?.skipped ? "unreachable" : byId["design-gate"]?.exit === 0 ? "pass" : "fail",
+    // `fail` means the gate RAN and broke. A mode that never scheduled a design
+    // gate at all (cohesion without --url) has no verdict to give, so it reads
+    // absent like every other gate does — scoring it red made the audit exit 1
+    // over a probe nobody ever asked for.
+    designGate: !byId["design-gate"] ? "absent"
+      : byId["design-gate"].skipped ? "unreachable"
+      : byId["design-gate"].exit === 0 ? "pass" : "fail",
     dataGate: byId["data-check"] ? (byId["data-check"].exit === 0 ? "pass" : "fail") : "absent",
     contractGate: byId["contract"] ? (byId["contract"].exit === 0 ? "pass" : "breach") : "absent",
     e2e: byId["e2e"]?.skipped ? "unreachable" : byId["e2e"] ? (byId["e2e"].exit === 0 ? "pass" : "fail") : "absent",
