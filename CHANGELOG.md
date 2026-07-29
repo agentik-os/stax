@@ -4,6 +4,11 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.33.1
+- **fix** — The shipped starter did not build: `slugs.ts` imported `SPACES` to build its space to root map, `domain.ts` never exported it, and a real scaffold died in rollup. `templates/*` sits outside the bun workspace, so CI could not see it
+- **fix** — An unreachable design gate is an ABORT, not a fail: a target nobody could reach was scored as an app that broke its laws. Probes now carry the contract (exit 1 ran and broke a law, exit 2 never ran) and record the tool's own first words as the reason
+- **docs** — Vite is the default and Next.js is a guest host, not the foundation. The specimen shipped a card promising a server prefetch of every panel in a deep link, which the fragment makes impossible; `CONCEPT-BRIEF.md` now names what shipped against what stayed a draft
+
 ## 0.30.0
 - **U-045** (migration) — `stax-migrate proof`: renders every matrix row as a panel at its declared size under its citation, draws unknowns as unknown with what would settle them, reports matrix disagreements instead of resolving them, and publishes its own coverage. Generated at phase 4 as the work list and at phase 8 as the proof the count fell
 
