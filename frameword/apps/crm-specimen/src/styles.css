@@ -260,6 +260,19 @@ img.avatar { border: 1px solid var(--border); }
    once the deck could shrink, its labels wrapped instead, which is the same
    defect one level in. The tabs hold their width and the deck slides. */
 .panel-foot .foot-seg > * { flex: none; white-space: nowrap; }
+/* A SLIDE CLIPS WHATEVER SITS AT THE FAR END, and the far end is a control.
+   Measured at #/analytics/c-crypto with a 798px panel: the deck held 301px of
+   content in a 284px scrollport, so the create-view button spanned x 1367 to
+   1390 against a clip edge at 1376. Nothing painted over it; it was simply
+   scrolled out of its own scrollport, 8px of it visible, and elementFromPoint
+   at its own centre returned .panel-foot. A control painted 8px wide is not a
+   control. The 560px rung above already spares this button from being SHED
+   (:not(:last-child)); sliding has to spare it too. So the TABS slide and the
+   create affordance stays pinned to the visible edge: always whole, always
+   hittable, at any scroll position. */
+.panel-foot .foot-seg > button:not([role="tab"]) {
+  position: sticky; right: 0; z-index: 1; background: var(--secondary);
+}
 /* below the S 380 floor the deck itself yields rather than pushing the foot */
 @container (max-width: 340px) { .panel-foot .foot-seg { display: none; } }
 .panel-foot .foot-seg::-webkit-scrollbar { display: none; }
@@ -1472,6 +1485,19 @@ a.tb-btn { display: inline-flex; align-items: center; justify-content: center; t
 @container (max-width: 430px) { .bar-meta { display: none; } }
 @container (max-width: 340px) { .panel-bar .eyebrow { display: none; } }
 @media (max-width: 640px) { .bar-meta { display: none; } }
+/* FOLDING THE NUMBERS IS NOT ENOUGH ON ITS OWN, because the title is the only
+   child of the bar that can shrink: every other one carries flex: none, so ANY
+   over-subscription lands on the title and nowhere else, which is the law
+   exactly backwards. Measured on the overview root forced to 380px, with the
+   numbers already folded: glyph 17 + title 215 + info 16 + spacer 0 + pin 32
+   + nav 24, plus 5 gaps of 10 and 26 of padding, needs 379.7 inside 378. The
+   title absorbed the 1.7px shortfall and reported scrollWidth 215 against
+   clientWidth 213. The fat is the gap ladder, not the content: the bar carries
+   a zero-width flex spacer that still pays a gap on BOTH sides, so 20 of those
+   50 gap pixels separate nothing from nothing. Tightening the rung to 8px at
+   the same S width that folds the numbers releases 10px, which covers the
+   shortfall five times over and keeps every element visibly separated. */
+@container (max-width: 430px) { .panel-bar { gap: 8px; } }
 
 /* the vertical spine: the title leaves the flow and becomes an edge */
 .panel-spine { position: absolute; top: 44px; bottom: 0; left: 0; width: 26px; border-right: 1px solid var(--border); background: var(--card); display: flex; align-items: center; justify-content: center; z-index: 2; }
