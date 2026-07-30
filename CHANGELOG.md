@@ -4,6 +4,10 @@ One line per catalog unit, grouped by the `stax-migrate` version that shipped it
 The catalog is the SSOT (`frameword/packages/stax-migrate/upgrades/manifest.json`);
 each unit is a DETECT / APPLY / VERIFY brief under `upgrades/`. Newest first.
 
+## 0.33.2
+- **fix** — Two design laws the gate was right about, red since before 0.31.0 and invisible locally because `PLAYWRIGHT_BROWSERS_PATH` pointed at a root-owned dir. The foot's create-view button was not painted over, it was scrolled out of its own scrollport with 8px showing, so it now stays pinned to the visible edge while the tabs slide. And folding the numbers never freed the title, because the title is the only child of the bar that can shrink: the S rung now tightens the gap ladder, where a zero-width spacer was paying 20px of gap to separate nothing from nothing
+- **docs** — The quickstart advertised 122 tests against a suite of 142
+
 ## 0.33.1
 - **fix** — The shipped starter did not build: `slugs.ts` imported `SPACES` to build its space to root map, `domain.ts` never exported it, and a real scaffold died in rollup. `templates/*` sits outside the bun workspace, so CI could not see it
 - **fix** — An unreachable design gate is an ABORT, not a fail: a target nobody could reach was scored as an app that broke its laws. Probes now carry the contract (exit 1 ran and broke a law, exit 2 never ran) and record the tool's own first words as the reason
