@@ -55,7 +55,7 @@ the address bar rewrites to the short form.
 git clone https://github.com/agentik-os/stax
 cd stax/frameword
 bun install          # workspaces: panels-core, panels-react, crm-specimen, stax-migrate
-bun run test         # 122 tests: the engine laws + the CLI cases
+bun run test         # 142 tests: the engine laws + the CLI cases
 bun run dev          # the specimen at http://localhost:5799
 ```
 
