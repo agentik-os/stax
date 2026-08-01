@@ -1785,3 +1785,64 @@ body[data-density="dense"] .panel-bar { height: 38px; }
 .dt tbody tr:focus-within .dt-open,
 .dt tbody tr:focus-within .dt-openchip,
 .dt tbody tr:focus-within .dt-selbox { opacity: 1; visibility: visible; }
+
+/* ── Canvas semantics: a diagram that says what it MEANS ────────────────
+   The node kind draws it, the semantic kind explains it, and both the
+   boundaries and the legend are DERIVED so neither can drift from the board. */
+
+/* the semantic mark, on the node's eyebrow rail */
+.cv-sem { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.15); line-height: 1; }
+.cv-sem[data-sem="system"]   { color: var(--foreground); }
+.cv-sem[data-sem="service"]  { color: var(--accent); }
+.cv-sem[data-sem="store"]    { color: var(--ink-2); }
+.cv-sem[data-sem="actor"]    { color: var(--success); }
+.cv-sem[data-sem="external"] { color: var(--muted-foreground); }
+.cv-sem[data-sem="decision"] { color: var(--amber); }
+.cv-sem[data-sem="artifact"] { color: var(--ink-2); }
+.cv-sem[data-sem="queue"]    { color: var(--accent); }
+
+/* a boundary is a reading aid: behind the nodes, never a pointer target */
+.cv-bound {
+  position: absolute; top: 0; left: 0; pointer-events: none; z-index: 0;
+  border: 1px dashed var(--rule-3); border-radius: 16px;
+  background: color-mix(in oklab, var(--foreground) 2.5%, transparent);
+}
+.cv-bound .lb {
+  position: absolute; top: -10px; left: 14px; display: inline-flex; align-items: center; gap: 7px;
+  padding: 1px 9px; border-radius: 999px; background: var(--background);
+  font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.02);
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground);
+}
+.cv-bound .lb .n { color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.cv-bound .nt {
+  position: absolute; bottom: 8px; left: 16px; right: 16px;
+  font-family: var(--font-sans); font-size: calc(var(--fz-mono, 10px) * 1.05);
+  color: var(--muted-foreground); font-style: italic;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* the legend rides the screen, not the viewport, so it never zooms away */
+.cv-legend {
+  position: absolute; left: 12px; bottom: 12px; z-index: 5;
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 9px 11px; border-radius: 11px;
+  background: color-mix(in oklab, var(--card) 92%, transparent);
+  border: 1px solid var(--border); box-shadow: var(--shadow-2xs);
+  backdrop-filter: blur(6px);
+}
+.cv-legend .hd {
+  font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 0.95);
+  letter-spacing: 0.14em; color: var(--muted-foreground); margin-bottom: 4px;
+}
+.cv-legend .rw { display: grid; grid-template-columns: 14px 1fr auto; align-items: baseline; gap: 8px; font-size: calc(var(--fz-body, 13px) * 0.86); }
+.cv-legend .rw .gl { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.15); }
+.cv-legend .rw .gl[data-sem="system"]   { color: var(--foreground); }
+.cv-legend .rw .gl[data-sem="service"]  { color: var(--accent); }
+.cv-legend .rw .gl[data-sem="store"]    { color: var(--ink-2); }
+.cv-legend .rw .gl[data-sem="actor"]    { color: var(--success); }
+.cv-legend .rw .gl[data-sem="external"] { color: var(--muted-foreground); }
+.cv-legend .rw .gl[data-sem="decision"] { color: var(--amber); }
+.cv-legend .rw .gl[data-sem="artifact"] { color: var(--ink-2); }
+.cv-legend .rw .gl[data-sem="queue"]    { color: var(--accent); }
+.cv-legend .rw .n { font-family: var(--font-mono); font-size: calc(var(--fz-mono, 10px) * 1.02); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+@container (max-width: 460px) { .cv-legend { display: none; } }

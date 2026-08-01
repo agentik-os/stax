@@ -36,7 +36,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useWorkspace } from "@frameword/panels-react";
-import { board, useBoard, useBoardsFile, SEED, DEFAULT_UI, type BoardUi, type CvNode, type CvEdge, type CvSub } from "./boardStore";
+import { board, useBoard, useBoardsFile, SEED, DEFAULT_UI, type BoardUi, type CvNode, type CvEdge, type CvSub, SEM, groupBox, legendFor, type CvGroup } from "./boardStore";
 import { RichNotes } from "./RichNotesLazy";
 
 /* element colors: the accent ramp only; they follow the Settings accent */
@@ -69,7 +69,11 @@ function CardNode({ data, selected }: NodeProps) {
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="4" y="11" width="16" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
         </span>
       )}
-      <div className="cv-eyebrow"><span className="sig">§</span> CARD</div>
+      <div className="cv-eyebrow">
+        {d.sem
+          ? <><span className="cv-sem" data-sem={d.sem} title={SEM[d.sem].hint}>{SEM[d.sem].glyph}</span> {SEM[d.sem].label.toUpperCase()}</>
+          : <><span className="sig">§</span> CARD</>}
+      </div>
       <div className="cv-title">{d.label}</div>
       {d.sub && <div className="cv-sub">{d.sub}</div>}
       {(d.subs?.length ?? 0) > 0 && (
@@ -517,9 +521,41 @@ function BoardInner({ panelId }: { panelId: string }) {
         <MiniMap className="cv-minimap" pannable zoomable
           nodeColor={() => "color-mix(in oklab, var(--accent) 30%, var(--secondary))"} maskColor="color-mix(in oklab, var(--background) 72%, transparent)" />
         <ViewportPortal>
+          {/* Boundaries are DERIVED from their members, so a group can never
+              drift from what it contains. They sit behind the nodes and take no
+              pointer events: a boundary is a reading aid, never a target. */}
+          {ui.boundaries !== false && (st.groups ?? []).map((g) => {
+            const b = groupBox(st.nodes, g.id);
+            if (!b) return null;
+            return (
+              <div key={g.id} className="cv-bound"
+                style={{ transform: `translate(${b.x}px, ${b.y}px)`, width: b.w, height: b.h }}>
+                <span className="lb">{g.label}<span className="n">{b.count}</span></span>
+                {g.note && <span className="nt">{g.note}</span>}
+              </div>
+            );
+          })}
           {guides.v.map((x) => <div key={"v" + x} className="cv-guide v" style={{ transform: `translate(${x}px, -5000px)` }} />)}
           {guides.h.map((y) => <div key={"h" + y} className="cv-guide h" style={{ transform: `translate(-5000px, ${y}px)` }} />)}
         </ViewportPortal>
+        {ui.legend !== false && (() => {
+          // The legend lists only what is ON the board, in frequency order. A
+          // legend showing the whole vocabulary teaches the reader it is decor.
+          const rows = legendFor(st.nodes);
+          if (!rows.length) return null;
+          return (
+            <div className="cv-legend">
+              <div className="hd">LEGEND</div>
+              {rows.map(({ sem, n }) => (
+                <div key={sem} className="rw" title={SEM[sem].hint}>
+                  <span className="gl" data-sem={sem}>{SEM[sem].glyph}</span>
+                  <span className="lb">{SEM[sem].label}</span>
+                  <span className="n">{n}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </ReactFlow>
 
       {menu && <div className="pop-bg" onMouseDown={() => { setMenu(null); setRen(null); }} />}

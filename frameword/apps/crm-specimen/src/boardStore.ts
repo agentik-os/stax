@@ -7,7 +7,40 @@ import { useSyncExternalStore } from "react";
 
 /* ── shared board store ──────────────────────────────────────────────── */
 export interface CvSub { id: string; label: string; done?: boolean }
-export interface CvNode { id: string; kind: "card" | "note" | "shape" | "label" | "step"; x: number; y: number; label: string; sub?: string; color?: string; notes?: string; pinned?: boolean; subs?: CvSub[] }
+/**
+ * A node's KIND is how it draws. Its SEM is what it means.
+ *
+ * Those were one field, so a diagram could say "this is a card" and never say
+ * whether the card was a service, a datastore or a human. A reader then has to
+ * hold the meaning in their head, which is exactly what a diagram exists to
+ * stop, and a legend cannot be derived from a board that never declared what
+ * its shapes stand for.
+ *
+ * Orthogonal on purpose: a service can be a card or a note, and a card can be
+ * a service or an actor. Rendering and meaning move independently.
+ */
+export type CvSem = "system" | "service" | "store" | "actor" | "external" | "decision" | "artifact" | "queue";
+
+export const SEM: Record<CvSem, { label: string; glyph: string; hint: string }> = {
+  system:   { label: "System",    glyph: "\u25a3", hint: "a bounded product or app you own" },
+  service:  { label: "Service",   glyph: "\u25c6", hint: "a running process that answers" },
+  store:    { label: "Store",     glyph: "\u25ac", hint: "state at rest: a table, a bucket, a cache" },
+  actor:    { label: "Actor",     glyph: "\u25cf", hint: "a human or an agent that acts" },
+  external: { label: "External",  glyph: "\u25cb", hint: "a third party you do not control" },
+  decision: { label: "Decision",  glyph: "\u25c7", hint: "a branch: the flow forks here" },
+  artifact: { label: "Artifact",  glyph: "\u25b2", hint: "a document, a report, a build output" },
+  queue:    { label: "Queue",     glyph: "\u25b8", hint: "work waiting to be picked up" },
+};
+
+export interface CvNode { id: string; kind: "card" | "note" | "shape" | "label" | "step"; sem?: CvSem; group?: string; x: number; y: number; label: string; sub?: string; color?: string; notes?: string; pinned?: boolean; subs?: CvSub[] }
+
+/**
+ * A GROUP is a named boundary, and it is DERIVED, never stored as a rectangle.
+ * Its box is the bounding box of its members plus padding, so moving a node
+ * moves the boundary and a boundary can never drift from what it contains. A
+ * stored rectangle is a second source of truth for the same fact.
+ */
+export interface CvGroup { id: string; label: string; note?: string }
 export interface CvEdge {
   id: string; source: string; target: string; label?: string;
   sourceHandle?: string; targetHandle?: string;
@@ -15,18 +48,22 @@ export interface CvEdge {
   shape?: "smoothstep" | "default" | "straight" | "step";
   mx?: number; my?: number;
 }
-export interface BoardUi { snap: boolean; grid: number; locked: boolean; showNotes?: boolean }
-export interface BoardState { nodes: CvNode[]; edges: CvEdge[]; seq: number; ui: BoardUi }
+export interface BoardUi { snap: boolean; grid: number; locked: boolean; showNotes?: boolean; legend?: boolean; boundaries?: boolean }
+export interface BoardState { nodes: CvNode[]; edges: CvEdge[]; groups?: CvGroup[]; seq: number; ui: BoardUi }
 
-export const DEFAULT_UI: BoardUi = { snap: true, grid: 18, locked: false };
+export const DEFAULT_UI: BoardUi = { snap: true, grid: 18, locked: false, legend: true, boundaries: true };
 
 export const SEED: BoardState = {
   seq: 9,
   ui: DEFAULT_UI,
+  groups: [
+    { id: "g-idea", label: "Where it came from", note: "the idea and the research behind it" },
+    { id: "g-make", label: "How it gets made", note: "design, build, ship" },
+  ],
   nodes: [
-    { id: "n1", kind: "card", x: 40, y: 60, label: "Concept", sub: "One mechanic: open right", notes: "The founding idea: panels inside panels." },
-    { id: "n2", kind: "card", x: 300, y: 40, label: "Research", sub: "LifeOS → laws → brief" },
-    { id: "n3", kind: "card", x: 300, y: 170, label: "Design", sub: "WhitePaper tokens" },
+    { id: "n1", kind: "card", sem: "system", group: "g-idea", x: 40, y: 60, label: "Concept", sub: "One mechanic: open right", notes: "The founding idea: panels inside panels." },
+    { id: "n2", kind: "card", sem: "actor", group: "g-idea", x: 300, y: 40, label: "Research", sub: "LifeOS → laws → brief" },
+    { id: "n3", kind: "card", sem: "artifact", group: "g-make", x: 300, y: 170, label: "Design", sub: "WhitePaper tokens" },
     { id: "n4", kind: "card", x: 560, y: 100, label: "Build", sub: "panels-core · react · app" },
     { id: "n5", kind: "note", x: 90, y: 230, label: "Ship it loud ✶", color: "soft" },
     { id: "n6", kind: "shape", x: 800, y: 112, label: "Launch" },
@@ -196,3 +233,72 @@ export function boardFromPrompt(q: string): string | null {
   return `Built a board with ${nodes.length} cards and ${edges.length} links${chains.length > 1 ? ` across ${chains.length} branches` : ""}. It replaced the previous board (⌘Z on the canvas restores it). Click any card to open its inspector: notes support rich text.`;
 }
 
+/* ── derived: the boundary, and the legend ───────────────────────────── */
+
+/** A group's box comes from its members, so it cannot disagree with them.
+ *  Returns null for an empty group rather than a zero-size rectangle, which
+ *  would draw as a dot nobody can explain. */
+export function groupBox(nodes: CvNode[], groupId: string, pad = 26) {
+  const mine = nodes.filter((n) => n.group === groupId);
+  if (!mine.length) return null;
+  const W = 190, H = 62; // a node's nominal box; the exact size is the renderer's
+  const x1 = Math.min(...mine.map((n) => n.x)) - pad;
+  const y1 = Math.min(...mine.map((n) => n.y)) - pad;
+  const x2 = Math.max(...mine.map((n) => n.x + W)) + pad;
+  const y2 = Math.max(...mine.map((n) => n.y + H)) + pad;
+  return { x: x1, y: y1, w: x2 - x1, h: y2 - y1, count: mine.length };
+}
+
+/** The legend lists what is ON the board, in board order, never the whole
+ *  vocabulary. A legend showing entries nothing uses teaches the reader that
+ *  the legend is decoration. */
+export function legendFor(nodes: CvNode[]): { sem: CvSem; n: number }[] {
+  const seen = new Map<CvSem, number>();
+  for (const n of nodes) if (n.sem) seen.set(n.sem, (seen.get(n.sem) ?? 0) + 1);
+  return [...seen.entries()].map(([sem, n]) => ({ sem, n })).sort((a, b) => b.n - a.n);
+}
+
+/* ── declarative: a diagram you write rather than draw ───────────────── */
+
+export interface CvDecl {
+  groups?: { id: string; label: string; note?: string }[];
+  /** "id: Label | sub" with an optional `sem` and `group` */
+  nodes: { id: string; label: string; sub?: string; sem?: CvSem; group?: string; kind?: CvNode["kind"] }[];
+  /** "a -> b" or "a -> b : label" */
+  edges: string[];
+}
+
+/**
+ * Build a board from a DECLARATION. Hand-placing nodes means the layout is the
+ * source of truth and the meaning is a comment; declaring them means the
+ * meaning is the source and the layout is derived, so a renamed service moves
+ * its box for free.
+ *
+ * Layout: nodes are laid out by GROUP in columns, in declaration order. It is
+ * deliberately simple and deliberately deterministic: the same declaration
+ * always produces the same board, so a diagram can be diffed.
+ */
+export function fromDecl(d: CvDecl): BoardState {
+  const COL = 260, ROW = 108, PAD_X = 60, PAD_Y = 80, GAP = 70;
+  const groups = d.groups ?? [];
+  const order = [...new Set([...groups.map((g) => g.id), ...d.nodes.map((n) => n.group ?? "")])];
+  const nodes: CvNode[] = [];
+  let x = PAD_X;
+  for (const g of order) {
+    const mine = d.nodes.filter((n) => (n.group ?? "") === g);
+    if (!mine.length) continue;
+    mine.forEach((n, i) => {
+      nodes.push({
+        id: n.id, kind: n.kind ?? "card", sem: n.sem, group: g || undefined,
+        x, y: PAD_Y + i * ROW, label: n.label, sub: n.sub,
+      });
+    });
+    x += COL + GAP;
+  }
+  const edges: CvEdge[] = d.edges.map((e, i) => {
+    const [pair, label] = e.split(":").map((p) => p.trim());
+    const [source, target] = pair.split("->").map((p) => p.trim());
+    return { id: `e${i + 1}`, source, target, label: label || undefined, arrow: true, shape: "smoothstep" };
+  });
+  return { nodes, edges, groups, seq: nodes.length + 1, ui: DEFAULT_UI };
+}
