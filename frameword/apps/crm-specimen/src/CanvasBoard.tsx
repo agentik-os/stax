@@ -524,8 +524,8 @@ function BoardInner({ panelId }: { panelId: string }) {
           {/* Boundaries are DERIVED from their members, so a group can never
               drift from what it contains. They sit behind the nodes and take no
               pointer events: a boundary is a reading aid, never a target. */}
-          {ui.boundaries !== false && (st.groups ?? []).map((g) => {
-            const b = groupBox(st.nodes, g.id);
+          {ui.boundaries !== false && (s.groups ?? []).map((g) => {
+            const b = groupBox(s.nodes, g.id);
             if (!b) return null;
             return (
               <div key={g.id} className="cv-bound"
@@ -541,7 +541,7 @@ function BoardInner({ panelId }: { panelId: string }) {
         {ui.legend !== false && (() => {
           // The legend lists only what is ON the board, in frequency order. A
           // legend showing the whole vocabulary teaches the reader it is decor.
-          const rows = legendFor(st.nodes);
+          const rows = legendFor(s.nodes);
           if (!rows.length) return null;
           return (
             <div className="cv-legend">
